@@ -1,9 +1,9 @@
 {
-    "name": "nativescript-webview-ext",
-    "version": "1.0.0",
-    "description": "Your awesome NativeScript plugin.",
+    "name": "@nota/nativescript-webview-ext",
+    "version": "0.0.1-alpha",
+    "description": "NativeScript webview forked from tns-core-modules",
     "main": "webview-ext",
-    "typings": "index.d.ts",
+    "typings": "webview-ext.d.ts",
     "nativescript": {
         "platforms": {
             "android": "next",
@@ -36,6 +36,12 @@
         "name": "Nota",
         "email": "app@nota.dk"
     },
+    "contributors": [
+        {
+            "name": "Morten Anton Bach Sjøgren",
+            "email": "mabs@mabs.dk"
+        }
+    ],
     "bugs": {
         "url": "https://github.com/Notalib/nativescript-webview-ext/issues"
     },
