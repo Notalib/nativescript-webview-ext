@@ -4,6 +4,9 @@
     "id": "dk.nota.webviewdemo",
     "tns-android": {
       "version": "4.0.0-2018.3.12.1"
+    },
+    "tns-ios": {
+      "version": "4.0.0-2018-03-05-01"
     }
   },
   "dependencies": {

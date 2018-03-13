@@ -1,7 +1,44 @@
-import { WebViewExtBase, knownFolders, traceWrite, traceEnabled, traceCategories, NavigationType } from "./webview-ext.common";
+import { WebViewExtBase, knownFolders, traceWrite, traceEnabled, traceCategories, NavigationType, extToMimeType } from "./webview-ext.common";
 import { profile } from "tns-core-modules/profiling";
 import { layout } from "tns-core-modules/ui/core/view";
+import * as fs from 'tns-core-modules/file-system';
+
 export * from "./webview-ext.common";
+
+declare const CustomUrlSchemeHandler: new () => WKURLSchemeHandler;
+
+class CustomUrlSchemeHandlerImpl extends CustomUrlSchemeHandler {
+    private _owner: WeakRef<WebViewExt>;
+
+    resolveFilePath(url: string) {
+        const owner = this._owner.get();
+        if (!owner) {
+            console.log(`resolveFilePath(${url}) - no owner`);
+            return null;
+        }
+
+        const path = this._owner.get().getRegistretLocalResource(url.replace('x-local://', ''));
+        if (!path) {
+            console.log(`resolveFilePath(${url}) - unknown path`);
+            return null;
+        }
+
+        if (!fs.File.exists(path)) {
+            console.log(`resolveFilePath(${url}) - no such file`);
+            return null;
+        }
+
+        const file = fs.File.fromPath(path);
+        console.log(`resolveFilePath(${url}) - ${file.path}`);
+        return file.path;
+    }
+
+    public static initWithOwner(owner: WeakRef<WebViewExt>): CustomUrlSchemeHandlerImpl {
+        const handler = new CustomUrlSchemeHandlerImpl();
+        handler._owner = owner;
+        return handler;
+    }
+}
 
 class WKNavigationDelegateImpl extends NSObject
     implements WKNavigationDelegate {
@@ -96,6 +133,7 @@ export class WebViewExt extends WebViewExtBase {
     constructor() {
         super();
         const configuration = WKWebViewConfiguration.new();
+        configuration.setURLSchemeHandlerForURLScheme(CustomUrlSchemeHandlerImpl.initWithOwner(new WeakRef(this)), 'x-local');
         this._delegate = WKNavigationDelegateImpl.initWithOwner(new WeakRef(this));
         const jScript = "var meta = document.createElement('meta'); meta.setAttribute('name', 'viewport'); meta.setAttribute('content', 'initial-scale=1.0'); document.getElementsByTagName('head')[0].appendChild(meta);";
         const wkUScript = WKUserScript.alloc().initWithSourceInjectionTimeForMainFrameOnly(jScript, WKUserScriptInjectionTime.AtDocumentEnd, true);

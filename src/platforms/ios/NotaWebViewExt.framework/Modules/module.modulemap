@@ -1,0 +1,11 @@
+framework module NotaWebViewExt {
+  umbrella header "NotaWebViewExt.h"
+
+  export *
+  module * { export * }
+}
+
+module NotaWebViewExt.Swift {
+    header "NotaWebViewExt-Swift.h"
+    requires objc
+}

@@ -1,4 +1,4 @@
-import { WebViewExtBase, knownFolders, traceEnabled, traceWrite, traceCategories } from "./webview-ext.common";
+import { WebViewExtBase, knownFolders, traceEnabled, traceWrite, traceCategories, extToMimeType } from "./webview-ext.common";
 import * as fs from 'tns-core-modules/file-system';
 
 export * from "./webview-ext.common";
@@ -11,16 +11,6 @@ interface WebViewClient {
 }
 
 let WebViewClient: any;
-
-const extToMimeType = new Map<string, string>([
-    ['css', 'text/css'],
-    ['js', 'text/javascript'],
-    ['jpg', 'image/jpeg'],
-    ['jpeg', 'image/jpeg'],
-    ['png', 'image/png'],
-    ['gif', 'image/gif'],
-    ['svg', 'image/svg+xml'],
-]);
 
 function initializeWebViewClient(): void {
     if (WebViewClient) {
@@ -48,11 +38,9 @@ function initializeWebViewClient(): void {
 
         public shouldInterceptRequest(view: android.webkit.WebView, request: any) {
             let url = request as string;
-            console.log(url);
             if (typeof request === 'object') {
                 url = request.getUrl().toString();
             }
-            console.log(url);
 
             if (typeof url !== 'string') {
                 return super.shouldInterceptRequest(view, request);
@@ -62,24 +50,16 @@ function initializeWebViewClient(): void {
                 return super.shouldInterceptRequest(view, request);
             }
             const path = this.owner.getRegistretLocalResource(url.replace('x-local://', ''));
-            console.log(path);
-            console.log(path && fs.File.exists(path));
             if (!path || !fs.File.exists(path)) {
                 return super.shouldInterceptRequest(view, request);
             }
 
             const file = fs.File.fromPath(path);
-            console.log(file);
 
             const javaFile = new java.io.File(file.path);
             const stream = new java.io.FileInputStream(javaFile);
             const mimeType = extToMimeType.get(file.extension.substr(1)) || 'application/octet-stream';
             const encoding = mimeType.startsWith('image/') || mimeType === 'application/octet-stream' ?  'binary' : 'UTF-8';
-
-            console.dir({
-                encoding,
-                mimeType,
-            });
 
             return new android.webkit.WebResourceResponse(mimeType, encoding, stream);
         }

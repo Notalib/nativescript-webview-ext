@@ -7,6 +7,16 @@ export * from "tns-core-modules/ui//core/view";
 
 export const srcProperty = new Property<WebViewExtBase, string>({ name: "src" });
 
+export const extToMimeType = new Map<string, string>([
+    ['css', 'text/css'],
+    ['js', 'text/javascript'],
+    ['jpg', 'image/jpeg'],
+    ['jpeg', 'image/jpeg'],
+    ['png', 'image/png'],
+    ['gif', 'image/gif'],
+    ['svg', 'image/svg+xml'],
+]);
+
 export abstract class WebViewExtBase extends View implements WebViewExtDefinition {
     public static loadStartedEvent = "loadStarted";
     public static loadFinishedEvent = "loadFinished";
