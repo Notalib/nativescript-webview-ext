@@ -1,19 +1,33 @@
 import { WebViewExtBase, knownFolders, traceEnabled, traceWrite, traceCategories } from "./webview-ext.common";
+import * as fs from 'tns-core-modules/file-system';
 
 export * from "./webview-ext.common";
 
+/* declare const com: any;
+const WebViewClientClass = com.shripalsoni.natiescriptwebviewinterface.WebViewClient as new () => android.webkit.WebViewClient;
+ */
 interface WebViewClient {
     new (owner: WebViewExt): android.webkit.WebViewClient;
 }
 
-let WebViewClient: WebViewClient;
+let WebViewClient: any;
+
+const extToMimeType = new Map<string, string>([
+    ['css', 'text/css'],
+    ['js', 'text/javascript'],
+    ['jpg', 'image/jpeg'],
+    ['jpeg', 'image/jpeg'],
+    ['png', 'image/png'],
+    ['gif', 'image/gif'],
+    ['svg', 'image/svg+xml'],
+]);
 
 function initializeWebViewClient(): void {
     if (WebViewClient) {
         return;
     }
 
-    class WebViewClientImpl extends android.webkit.WebViewClient {
+    class WebViewExtClientImpl extends android.webkit.WebViewClient {
 
         constructor(public owner: WebViewExtBase) {
             super();
@@ -30,6 +44,44 @@ function initializeWebViewClient(): void {
                 traceWrite("WebViewClientClass.shouldOverrideUrlLoading(" + url + ")", traceCategories.Debug);
             }
             return false;
+        }
+
+        public shouldInterceptRequest(view: android.webkit.WebView, request: any) {
+            let url = request as string;
+            console.log(url);
+            if (typeof request === 'object') {
+                url = request.getUrl().toString();
+            }
+            console.log(url);
+
+            if (typeof url !== 'string') {
+                return super.shouldInterceptRequest(view, request);
+            }
+
+            if (!url.startsWith('x-local://')) {
+                return super.shouldInterceptRequest(view, request);
+            }
+            const path = this.owner.getRegistretLocalResource(url.replace('x-local://', ''));
+            console.log(path);
+            console.log(path && fs.File.exists(path));
+            if (!path || !fs.File.exists(path)) {
+                return super.shouldInterceptRequest(view, request);
+            }
+
+            const file = fs.File.fromPath(path);
+            console.log(file);
+
+            const javaFile = new java.io.File(file.path);
+            const stream = new java.io.FileInputStream(javaFile);
+            const mimeType = extToMimeType.get(file.extension.substr(1)) || 'application/octet-stream';
+            const encoding = mimeType.startsWith('image/') || mimeType === 'application/octet-stream' ?  'binary' : 'UTF-8';
+
+            console.dir({
+                encoding,
+                mimeType,
+            });
+
+            return new android.webkit.WebResourceResponse(mimeType, encoding, stream);
         }
 
         public onPageStarted(view: android.webkit.WebView, url: string, favicon: android.graphics.Bitmap) {
@@ -87,11 +139,11 @@ function initializeWebViewClient(): void {
         }
     }
 
-    WebViewClient = WebViewClientImpl;
+    WebViewClient = WebViewExtClientImpl;
 }
 
 export class WebViewExt extends WebViewExtBase {
-    nativeViewProtected: android.webkit.WebView;
+    nativeViewProtected: any; /* android.webkit.WebView */
 
     public createNativeView() {
         initializeWebViewClient();

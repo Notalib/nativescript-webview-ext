@@ -6,8 +6,7 @@
     "typings": "webview-ext.d.ts",
     "nativescript": {
         "platforms": {
-            "android": "next",
-            "ios": "next"
+            "android": "3.4.1"
         }
     },
     "scripts": {

@@ -11,6 +11,8 @@ export abstract class WebViewExtBase extends View implements WebViewExtDefinitio
     public static loadStartedEvent = "loadStarted";
     public static loadFinishedEvent = "loadFinished";
 
+    protected readonly localResourceMap = new Map<string, string>();
+
     public src: string;
 
     public _onLoadFinished(url: string, error?: string) {
@@ -58,6 +60,7 @@ export abstract class WebViewExtBase extends View implements WebViewExtDefinitio
     abstract reload(): void;
 
     public urlOverrideHandler: urlOverrideHandlerFn;
+    public urlInterceptHandler: (url: string) => string | void;
 
     [srcProperty.getDefault](): string {
         return "";
@@ -92,6 +95,26 @@ export abstract class WebViewExtBase extends View implements WebViewExtDefinitio
     }
     set url(value: string) {
         throw new Error("Property url of WebView is deprecated. Use src instead");
+    }
+
+    registerLocalResource(name: string, filepath: string) {
+        if (!filepath) {
+            return;
+        }
+
+        if (filepath.startsWith('~')) {
+            filepath = path.normalize(knownFolders.currentApp().path + filepath.substr(1));
+        }
+
+        this.localResourceMap.set(name, filepath);
+    }
+
+    unregisterLocalResource(name: string) {
+        this.localResourceMap.delete(name);
+    }
+
+    getRegistretLocalResource(name: string) {
+        return this.localResourceMap.get(name);
     }
 }
 export interface WebViewExtBase {

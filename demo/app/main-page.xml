@@ -1,6 +1,6 @@
 <Page xmlns="http://schemas.nativescript.org/tns.xsd" loaded="pageLoaded" class="page"
-  xmlns:ui="nativescript-webview-ext">
-  <StackLayout class="p-20">
-    <Label text="{{ message }}" class="t-20 text-center c-black" textWrap="true"/>
-  </StackLayout>
+  xmlns:ui="@nota/nativescript-webview-ext">
+  <GridLayout class="p-2" rows="*" columns="*">
+    <ui:WebViewExt loaded="webviewLoaded"></ui:WebViewExt>
+  </GridLayout>
 </Page>
