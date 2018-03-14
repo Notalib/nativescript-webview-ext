@@ -7,17 +7,17 @@ export * from "./webview-ext.common";
 
 declare const CustomUrlSchemeHandler: new () => WKURLSchemeHandler;
 
-class CustomUrlSchemeHandlerImpl extends CustomUrlSchemeHandler {
-    private _owner: WeakRef<WebViewExt>;
+class TNSWKCustomUrlSchemeHandler extends CustomUrlSchemeHandler {
+    public owner: WeakRef<WebViewExt>;
 
-    resolveFilePath(url: string) {
-        const owner = this._owner.get();
+    public resolveFilePath(url: string) {
+        const owner = this.owner.get();
         if (!owner) {
             console.log(`resolveFilePath(${url}) - no owner`);
             return null;
         }
 
-        const path = this._owner.get().getRegistretLocalResource(url.replace('x-local://', ''));
+        const path = owner.getRegistretLocalResource(url.replace('x-local://', ''));
         if (!path) {
             console.log(`resolveFilePath(${url}) - unknown path`);
             return null;
@@ -28,14 +28,27 @@ class CustomUrlSchemeHandlerImpl extends CustomUrlSchemeHandler {
             return null;
         }
 
-        const file = fs.File.fromPath(path);
-        console.log(`resolveFilePath(${url}) - ${file.path}`);
-        return file.path;
+        const filepath = fs.File.fromPath(path).path;
+        console.log(`resolveFilePath(${url}) - ${filepath}`);
+        return filepath;
     }
 
-    public static initWithOwner(owner: WeakRef<WebViewExt>): CustomUrlSchemeHandlerImpl {
-        const handler = new CustomUrlSchemeHandlerImpl();
-        handler._owner = owner;
+    public webViewStartURLSchemeTask(webView, urlSchemeTask: WKURLSchemeTask) {
+        console.log(new Error().stack)
+        console.log(urlSchemeTask);
+        console.log(urlSchemeTask.request);
+        console.log(urlSchemeTask.request && urlSchemeTask.request.URL);
+        console.log(urlSchemeTask.request && urlSchemeTask.request.URL && urlSchemeTask.request.URL.absoluteString);
+        if (urlSchemeTask.request && urlSchemeTask.request.URL) {
+            return super.webViewStartURLSchemeTask(webView, urlSchemeTask);
+        }
+
+        return this.webViewStopURLSchemeTask(webView, urlSchemeTask);
+    }
+
+    public static initWithOwner(owner: WeakRef<WebViewExt>): WKURLSchemeHandler {
+        const handler = (<any>TNSWKCustomUrlSchemeHandler).new();
+        handler.owner = owner;
         return handler;
     }
 }
@@ -133,7 +146,7 @@ export class WebViewExt extends WebViewExtBase {
     constructor() {
         super();
         const configuration = WKWebViewConfiguration.new();
-        configuration.setURLSchemeHandlerForURLScheme(CustomUrlSchemeHandlerImpl.initWithOwner(new WeakRef(this)), 'x-local');
+        configuration.setURLSchemeHandlerForURLScheme(TNSWKCustomUrlSchemeHandler.initWithOwner(new WeakRef(this)), 'x-local');
         this._delegate = WKNavigationDelegateImpl.initWithOwner(new WeakRef(this));
         const jScript = "var meta = document.createElement('meta'); meta.setAttribute('name', 'viewport'); meta.setAttribute('content', 'initial-scale=1.0'); document.getElementsByTagName('head')[0].appendChild(meta);";
         const wkUScript = WKUserScript.alloc().initWithSourceInjectionTimeForMainFrameOnly(jScript, WKUserScriptInjectionTime.AtDocumentEnd, true);

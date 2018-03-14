@@ -13,19 +13,22 @@ enum WebErrors: Error {
 }
 
 @available(iOS 11.0, *)
-@objc class CustomUrlSchemeHandler: NSObject,WKURLSchemeHandler {
+@objc
+public class CustomUrlSchemeHandler: NSObject,WKURLSchemeHandler {
     @objc
-    func resolveFilePath(_ url: String) -> String? {
+    public func resolveFilePath(_ url: String) -> String? {
+        NSLog(url);
         return nil;
     }
     
     @objc
-    func webView(_ webView: WKWebView, start urlSchemeTask: WKURLSchemeTask) {
+    public func webView(_ webView: WKWebView, start urlSchemeTask: WKURLSchemeTask) {
         DispatchQueue.global().async {
             if let url = urlSchemeTask.request.url, url.scheme == Constants.customURLScheme {
                 if let filepath = self.resolveFilePath(url.path) {
+                    NSLog(filepath);
                     if let data = NSData.init(contentsOfFile: filepath) {
-                        let urlResponse = URLResponse(url: url, mimeType: "image/jpeg", expectedContentLength: -1, textEncodingName: nil)
+                        let urlResponse = URLResponse(url: url, mimeType: "text/css", expectedContentLength: -1, textEncodingName: nil)
                         urlSchemeTask.didReceive(urlResponse)
                         urlSchemeTask.didReceive(data as Data)
                         urlSchemeTask.didFinish()
@@ -37,10 +40,9 @@ enum WebErrors: Error {
             urlSchemeTask.didFailWithError(WebErrors.RequestFailedError)
         }
     }
-    
+
     @objc
-    func webView(_ webView: WKWebView, stop urlSchemeTask: WKURLSchemeTask) {
+    public func webView(_ webView: WKWebView, stop urlSchemeTask: WKURLSchemeTask) {
         urlSchemeTask.didFailWithError(WebErrors.RequestFailedError)
     }
 }
-
