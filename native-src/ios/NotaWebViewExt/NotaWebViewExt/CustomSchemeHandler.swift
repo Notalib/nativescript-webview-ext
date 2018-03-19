@@ -17,16 +17,19 @@ enum WebErrors: Error {
 public class CustomUrlSchemeHandler: NSObject,WKURLSchemeHandler {
     @objc
     public func resolveFilePath(_ url: String) -> String? {
-        NSLog(url);
+        NSLog("CustomUrlSchemeHandler.resolveFilePath(%@)", url);
         return nil;
     }
     
     @objc
     public func webView(_ webView: WKWebView, start urlSchemeTask: WKURLSchemeTask) {
+        NSLog("CustomUrlSchemeHandler");
         DispatchQueue.global().async {
+            NSLog("CustomUrlSchemeHandler -> global async");
             if let url = urlSchemeTask.request.url, url.scheme == Constants.customURLScheme {
-                if let filepath = self.resolveFilePath(url.path) {
-                    NSLog(filepath);
+                NSLog("CustomUrlSchemeHandler - URL(%@)", url.absoluteString)
+                if let filepath = self.resolveFilePath(url.absoluteString) {
+                    NSLog("CustomUrlSchemeHandler - URL(%@) path(%@)", url.absoluteString, filepath)
                     if let data = NSData.init(contentsOfFile: filepath) {
                         let urlResponse = URLResponse(url: url, mimeType: "text/css", expectedContentLength: -1, textEncodingName: nil)
                         urlSchemeTask.didReceive(urlResponse)
@@ -34,7 +37,11 @@ public class CustomUrlSchemeHandler: NSObject,WKURLSchemeHandler {
                         urlSchemeTask.didFinish()
                         return;
                     }
+                } else {
+                    NSLog("CustomUrlSchemeHandler - URL(%@) no path", url.absoluteString)
                 }
+            } else {
+                NSLog("CustomUrlSchemeHandler - NO URL")
             }
             
             urlSchemeTask.didFailWithError(WebErrors.RequestFailedError)

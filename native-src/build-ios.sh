@@ -6,7 +6,7 @@ set -e
 xcodebuild -project ./ios/NotaWebViewExt/NotaWebViewExt.xcodeproj -target NotaWebViewExt -sdk iphoneos -configuration Release ARCHS="armv7 arm64"
 xcodebuild -project ./ios/NotaWebViewExt/NotaWebViewExt.xcodeproj -target NotaWebViewExt -sdk iphonesimulator -configuration Release ARCHS="i386 x86_64"
 
-XCODE_BUILD_PATH=".//ios/NotaWebViewExt/build"
+XCODE_BUILD_PATH="./ios/NotaWebViewExt/build"
 DESTIONATION_PATH="../src/platforms/ios/NotaWebViewExt.framework"
 rm -rfv ${DESTIONATION_PATH}
 mkdir -p ${DESTIONATION_PATH}
