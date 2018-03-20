@@ -118,6 +118,12 @@ export class WebViewExt extends View {
     unregisterLocalResource(name: string): void;
 
     getRegistretLocalResource(name: string): string | null;
+
+    loadJavaScriptFile(scriptName: string, filepath?: string): void;
+
+    loadStyleSheetFile(scriptName: string, insertBefore?: boolean, filepath?: string);
+
+    executeJavaScript(scriptCode: string): void;
 }
 
 /**

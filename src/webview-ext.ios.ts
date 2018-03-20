@@ -1,10 +1,11 @@
 /// <reference path="./node_modules/tns-platform-declarations/ios.d.ts" />
 /// <reference path="./platforms/ios/NotaWebViewExt.d.ts" />
 
-import { WebViewExtBase, knownFolders, traceWrite, traceEnabled, traceCategories, NavigationType, extToMimeType } from "./webview-ext.common";
+import { WebViewExtBase, knownFolders, traceWrite, traceEnabled, traceCategories, NavigationType } from "./webview-ext.common";
 import { profile } from "tns-core-modules/profiling";
 import { layout } from "tns-core-modules/ui/core/view";
 import * as fs from 'tns-core-modules/file-system';
+import { LoadEventData } from "./webview-ext";
 
 export * from "./webview-ext.common";
 
@@ -122,7 +123,14 @@ export class WebViewExt extends WebViewExtBase {
             frame: CGRectZero,
             configuration: configuration
         });
-        console.log(this._ios);
+    }
+
+    public executeJavaScript(scriptCode) {
+        this.ios.evaluateJavaScriptCompletionHandler(scriptCode, (data, error) => {
+            if (error) {
+                throw error;
+            }
+        });
     }
 
     @profile

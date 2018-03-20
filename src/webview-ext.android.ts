@@ -1,7 +1,9 @@
 /// <reference path="./node_modules/tns-platform-declarations/android.d.ts" />
 
-import { WebViewExtBase, knownFolders, traceEnabled, traceWrite, traceCategories, extToMimeType } from "./webview-ext.common";
-import * as fs from 'tns-core-modules/file-system';
+import { File, path } from "tns-core-modules/file-system";
+
+import { WebViewExtBase, knownFolders, traceEnabled, traceWrite, traceCategories } from "./webview-ext.common";
+import { LoadEventData, } from "./webview-ext";
 
 export * from "./webview-ext.common";
 
@@ -10,6 +12,16 @@ interface WebViewClient {
 }
 
 let WebViewClient: any;
+
+const extToMimeType = new Map<string, string>([
+    ['css', 'text/css'],
+    ['js', 'text/javascript'],
+    ['jpg', 'image/jpeg'],
+    ['jpeg', 'image/jpeg'],
+    ['png', 'image/png'],
+    ['gif', 'image/gif'],
+    ['svg', 'image/svg+xml'],
+]);
 
 function initializeWebViewClient(): void {
     if (WebViewClient) {
@@ -48,16 +60,19 @@ function initializeWebViewClient(): void {
             if (!url.startsWith('x-local://')) {
                 return super.shouldInterceptRequest(view, request);
             }
-            const path = this.owner.getRegistretLocalResource(url.replace('x-local://', ''));
-            if (!path || !fs.File.exists(path)) {
+
+            console.log(url);
+            const filepath = this.owner.getRegistretLocalResource(url.replace('x-local://', ''));
+            console.log(filepath);
+            if (!filepath || !File.exists(filepath)) {
                 return super.shouldInterceptRequest(view, request);
             }
 
-            const file = fs.File.fromPath(path);
+            const tnsFile = File.fromPath(filepath);
 
-            const javaFile = new java.io.File(file.path);
+            const javaFile = new java.io.File(tnsFile.path);
             const stream = new java.io.FileInputStream(javaFile);
-            const mimeType = extToMimeType.get(file.extension.substr(1)) || 'application/octet-stream';
+            const mimeType = extToMimeType.get(tnsFile.extension.substr(1)) || 'application/octet-stream';
             const encoding = mimeType.startsWith('image/') || mimeType === 'application/octet-stream' ?  'binary' : 'UTF-8';
 
             return new android.webkit.WebResourceResponse(mimeType, encoding, stream);
@@ -121,6 +136,8 @@ function initializeWebViewClient(): void {
     WebViewClient = WebViewExtClientImpl;
 }
 
+declare function escape(input: string): string;
+
 export class WebViewExt extends WebViewExtBase {
     public nativeViewProtected: android.webkit.WebView;
 
@@ -147,10 +164,9 @@ export class WebViewExt extends WebViewExtBase {
         const nativeView = this.nativeViewProtected;
         if (nativeView) {
             nativeView.destroy();
-
-            (<any>nativeView).client.owner = null;
         }
 
+        (<any>nativeView).client.owner = null;
         super.disposeNativeView();
     }
 
@@ -219,7 +235,7 @@ export class WebViewExt extends WebViewExtBase {
         }
 
         if (filepath.startsWith('~')) {
-            filepath = fs.path.normalize(knownFolders.currentApp().path + filepath.substr(1));
+            filepath = path.normalize(knownFolders.currentApp().path + filepath.substr(1));
         }
 
         this.localResourceMap.set(name, filepath);
@@ -231,5 +247,10 @@ export class WebViewExt extends WebViewExtBase {
 
     public getRegistretLocalResource(name: string) {
         return this.localResourceMap.get(name);
+    }
+
+    public executeJavaScript(scriptCode) {
+        console.log(scriptCode);
+        this.android.loadUrl(`javascript:${escape(scriptCode)}`);
     }
 }

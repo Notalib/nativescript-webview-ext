@@ -1,7 +1,13 @@
 <!DOCTYPE html>
 <html>
   <head>
-    <link href="x-local://local-stylesheet.css" rel="stylesheet" type="text/css" />
+    <script>
+      function callFromNativeScript() {
+        console.log('got a message from nativescript');
+
+        window.nsWebViewInterface.emit('gotMessage', { huba: "hop" });
+      }
+    </script>
   </head>
   <body>
     <p class="red">RED</p>

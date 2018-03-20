@@ -13,15 +13,16 @@
     "scripts": {
         "tsc": "tsc -skipLibCheck",
         "build": "npm i && tsc",
-        "postclone": "npm i && node scripts/postclone.js && cd ../demo && npm i && cd ../src && npm run plugin.link",
         "test.android": "npm i && npm run tsc && npm run tslint && cd ../demo && tns build android && tns test android --justlaunch",
         "test.ios": "npm i && npm run tsc && npm run tslint && cd ../demo && tns build ios && tns test ios --justlaunch",
         "tslint": "cd .. && tslint \"**/*.ts\" --config tslint.json --exclude \"**/node_modules/**\"",
         "plugin.link": "npm link && cd ../demo && npm link nativescript-webview-ext && cd ../src",
         "plugin.tscwatch": "npm run tsc -- -w",
-        "demo.ios": "npm i && npm run tsc && cd ../demo && tns run ios --syncAllFiles",
-        "demo.android": "npm i && npm run tsc && cd ../demo && tns run android --syncAllFiles",
-        "demo.reset": "cd ../demo && rimraf platforms",
+        "run.demo.android": "cd ../demo && tns run android --syncAllFiles",
+        "run.demo.ios": "cd ../demo && tns run ios --syncAllFiles",
+        "demo.ios": "npm i && npm run tsc && npm-run-all --parallel plugin.tscwatch run.demo.ios",
+        "demo.android": "npm i && npm run tsc && npm-run-all --parallel plugin.tscwatch run.demo.android",
+        "demo.reset": "cd ../demo && rimraf platforms hooks node_modules && npm install",
         "plugin.prepare": "npm run tsc && cd ../demo && tns plugin remove nativescript-webview-ext && tns plugin add ../src",
         "clean": "cd ../demo && rimraf hooks node_modules platforms && cd ../src && rimraf node_modules && npm run plugin.link",
         "ci.tslint": "npm i && tslint '**/*.ts' --config '../tslint.json' --exclude '**/node_modules/**'"
@@ -48,13 +49,18 @@
     "license": "Apache-2.0",
     "homepage": "https://github.com/Notalib/nativescript-webview-ext",
     "readmeFilename": "README.md",
+    "peerDependencies": {
+        "nativescript-webview-interface": "^1.4.2"
+    },
     "devDependencies": {
-        "tns-core-modules": "next",
-        "tns-platform-declarations": "next",
-        "typescript": "~2.6.0",
+        "nativescript-webview-interface": "^1.4.2",
+        "npm-run-all": "^4.1.2",
         "prompt": "^1.0.0",
         "rimraf": "^2.5.0",
-        "tslint": "^5.0.0"
+        "tns-core-modules": "next",
+        "tns-platform-declarations": "next",
+        "tslint": "^5.0.0",
+        "typescript": "~2.6.0"
     },
     "dependencies": {},
     "bootstrapper": "nativescript-plugin-seed"
