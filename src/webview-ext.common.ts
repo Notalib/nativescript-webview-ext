@@ -17,6 +17,7 @@ export const extToMimeType = new Map<string, string>([
     ['svg', 'image/svg+xml'],
 ]);
 
+
 export abstract class WebViewExtBase extends View implements WebViewExtDefinition {
     public static loadStartedEvent = "loadStarted";
     public static loadFinishedEvent = "loadFinished";
