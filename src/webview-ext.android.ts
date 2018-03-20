@@ -122,7 +122,9 @@ function initializeWebViewClient(): void {
 }
 
 export class WebViewExt extends WebViewExtBase {
-    nativeViewProtected: any; /* android.webkit.WebView */
+    public nativeViewProtected: android.webkit.WebView;
+
+    protected readonly localResourceMap = new Map<string, string>();
 
     public createNativeView() {
         initializeWebViewClient();
@@ -145,9 +147,10 @@ export class WebViewExt extends WebViewExtBase {
         const nativeView = this.nativeViewProtected;
         if (nativeView) {
             nativeView.destroy();
+
+            (<any>nativeView).client.owner = null;
         }
 
-        (<any>nativeView).client.owner = null;
         super.disposeNativeView();
     }
 
@@ -208,5 +211,25 @@ export class WebViewExt extends WebViewExtBase {
         if (nativeView) {
             return nativeView.reload();
         }
+    }
+
+    public registerLocalResource(name: string, filepath: string) {
+        if (!filepath) {
+            return;
+        }
+
+        if (filepath.startsWith('~')) {
+            filepath = fs.path.normalize(knownFolders.currentApp().path + filepath.substr(1));
+        }
+
+        this.localResourceMap.set(name, filepath);
+    }
+
+    public unregisterLocalResource(name: string) {
+        this.localResourceMap.delete(name);
+    }
+
+    public getRegistretLocalResource(name: string) {
+        return this.localResourceMap.get(name);
     }
 }

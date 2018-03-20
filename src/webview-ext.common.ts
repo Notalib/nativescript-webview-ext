@@ -18,10 +18,9 @@ export const extToMimeType = new Map<string, string>([
 ]);
 
 export abstract class WebViewExtBase extends View implements WebViewExtDefinition {
+    public android: any;
     public static loadStartedEvent = "loadStarted";
     public static loadFinishedEvent = "loadFinished";
-
-    protected readonly localResourceMap = new Map<string, string>();
 
     public src: string;
 
@@ -107,25 +106,11 @@ export abstract class WebViewExtBase extends View implements WebViewExtDefinitio
         throw new Error("Property url of WebView is deprecated. Use src instead");
     }
 
-    registerLocalResource(name: string, filepath: string) {
-        if (!filepath) {
-            return;
-        }
+    public abstract registerLocalResource(name: string, filepath: string);
 
-        if (filepath.startsWith('~')) {
-            filepath = path.normalize(knownFolders.currentApp().path + filepath.substr(1));
-        }
+    public abstract unregisterLocalResource(name: string);
 
-        this.localResourceMap.set(name, filepath);
-    }
-
-    unregisterLocalResource(name: string) {
-        this.localResourceMap.delete(name);
-    }
-
-    getRegistretLocalResource(name: string) {
-        return this.localResourceMap.get(name);
-    }
+    public abstract getRegistretLocalResource(name: string);
 }
 export interface WebViewExtBase {
     on(eventNames: string, callback: (data: EventData) => void, thisArg?: any);
