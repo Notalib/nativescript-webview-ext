@@ -1,3 +1,6 @@
+/// <reference path="./node_modules/tns-platform-declarations/ios.d.ts" />
+/// <reference path="./platforms/ios/NotaWebViewExt.d.ts" />
+
 import { WebViewExtBase, knownFolders, traceWrite, traceEnabled, traceCategories, NavigationType, extToMimeType } from "./webview-ext.common";
 import { profile } from "tns-core-modules/profiling";
 import { layout } from "tns-core-modules/ui/core/view";
@@ -5,9 +8,7 @@ import * as fs from 'tns-core-modules/file-system';
 
 export * from "./webview-ext.common";
 
-declare const CustomUrlSchemeHandler: any;
-
-class WKNavigationDelegateImpl extends NSObject
+export class WKNavigationDelegateImpl extends NSObject
     implements WKNavigationDelegate {
     public static ObjCProtocols = [WKNavigationDelegate];
     public static initWithOwner(owner: WeakRef<WebViewExt>): WKNavigationDelegateImpl {
@@ -20,7 +21,7 @@ class WKNavigationDelegateImpl extends NSObject
     public webViewDecidePolicyForNavigationActionDecisionHandler(webView: WKWebView, navigationAction: WKNavigationAction, decisionHandler: any): void {
         const owner = this._owner.get();
 
-        console.log(navigationAction.request.URL && navigationAction.request.URL.absoluteString);
+        console.log(`webViewDecidePolicyForNavigationActionDecisionHandler: ${navigationAction.request.URL && navigationAction.request.URL.absoluteString}`);
         if (owner && navigationAction.request.URL) {
             let urlOverrideHandlerFn = owner.urlOverrideHandler;
             if (urlOverrideHandlerFn && urlOverrideHandlerFn(navigationAction.request.URL.absoluteString) === true) {
@@ -68,9 +69,9 @@ class WKNavigationDelegateImpl extends NSObject
         }
         const owner = this._owner.get();
         if (owner) {
-           webView.evaluateJavaScriptCompletionHandler("document.body.height", (val, err) => {
-               console.log(val);
-           });
+            webView.evaluateJavaScriptCompletionHandler("document.body.height", (val, err) => {
+                console.log(val);
+            });
             let src = owner.src;
             if (webView.URL) {
                 src = webView.URL.absoluteString;
@@ -97,6 +98,7 @@ class WKNavigationDelegateImpl extends NSObject
 
 export class WebViewExt extends WebViewExtBase {
     private _ios: WKWebView;
+    private _customUrlSchemeHandler: CustomUrlSchemeHandler;
     private _delegate: any;
 
     constructor() {
@@ -113,7 +115,8 @@ export class WebViewExt extends WebViewExtBase {
             'allowFileAccessFromFileURLs'
         );
 
-        configuration.setURLSchemeHandlerForURLScheme(new CustomUrlSchemeHandler(), 'x-local');
+        this._customUrlSchemeHandler = new CustomUrlSchemeHandler();
+        configuration.setURLSchemeHandlerForURLScheme(this._customUrlSchemeHandler, 'x-local');
 
         this.nativeViewProtected = this._ios = new WKWebView({
             frame: CGRectZero,
@@ -171,5 +174,29 @@ export class WebViewExt extends WebViewExtBase {
 
     public reload() {
         this._ios.reload();
+    }
+
+    registerLocalResource(name: string, filepath: string) {
+        if (!filepath) {
+            return;
+        }
+
+        if (filepath.startsWith('~')) {
+            filepath = fs.path.normalize(knownFolders.currentApp().path + filepath.substr(1));
+        }
+
+        if (!fs.File.exists(filepath)) {
+            return;
+        }
+
+        this._customUrlSchemeHandler.registerLocalResourceForKeyFilepath(name, fs.File.fromPath(filepath).path);
+    }
+
+    unregisterLocalResource(name: string) {
+        this._customUrlSchemeHandler.unregisterLocalResourceForKey(name);
+    }
+
+    getRegistretLocalResource(name: string) {
+        return this._customUrlSchemeHandler.getRegisteredLocalResourceForKey(name);
     }
 }

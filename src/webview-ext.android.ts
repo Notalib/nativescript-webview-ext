@@ -1,11 +1,10 @@
+/// <reference path="./node_modules/tns-platform-declarations/android.d.ts" />
+
 import { WebViewExtBase, knownFolders, traceEnabled, traceWrite, traceCategories, extToMimeType } from "./webview-ext.common";
 import * as fs from 'tns-core-modules/file-system';
 
 export * from "./webview-ext.common";
 
-/* declare const com: any;
-const WebViewClientClass = com.shripalsoni.natiescriptwebviewinterface.WebViewClient as new () => android.webkit.WebViewClient;
- */
 interface WebViewClient {
     new (owner: WebViewExt): android.webkit.WebViewClient;
 }

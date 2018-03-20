@@ -174,6 +174,7 @@ typedef unsigned int swift_uint4  __attribute__((__ext_vector_type__(4)));
 #if __has_feature(modules)
 @import ObjectiveC;
 @import WebKit;
+@import Foundation;
 #endif
 
 #pragma clang diagnostic ignored "-Wproperty-attribute-mismatch"
@@ -190,9 +191,12 @@ SWIFT_MODULE_NAMESPACE_PUSH("NotaWebViewExt")
 
 SWIFT_CLASS("_TtC14NotaWebViewExt22CustomUrlSchemeHandler") SWIFT_AVAILABILITY(ios,introduced=11.0)
 @interface CustomUrlSchemeHandler : NSObject <WKURLSchemeHandler>
-- (NSString * _Nullable)resolveFilePath:(NSString * _Nonnull)url SWIFT_WARN_UNUSED_RESULT;
+- (NSString * _Nullable)resolveFilePath:(NSURL * _Nonnull)url SWIFT_WARN_UNUSED_RESULT;
 - (void)webView:(WKWebView * _Nonnull)webView startURLSchemeTask:(id <WKURLSchemeTask> _Nonnull)urlSchemeTask;
 - (void)webView:(WKWebView * _Nonnull)webView stopURLSchemeTask:(id <WKURLSchemeTask> _Nonnull)urlSchemeTask;
+- (void)registerLocalResourceForKey:(NSString * _Nonnull)forKey filepath:(NSString * _Nonnull)filepath;
+- (void)unregisterLocalResourceForKey:(NSString * _Nonnull)forKey;
+- (NSString * _Nullable)getRegisteredLocalResourceForKey:(NSString * _Nonnull)forKey SWIFT_WARN_UNUSED_RESULT;
 - (nonnull instancetype)init OBJC_DESIGNATED_INITIALIZER;
 @end
 
