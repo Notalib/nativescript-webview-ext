@@ -192,6 +192,7 @@ SWIFT_MODULE_NAMESPACE_PUSH("NotaWebViewExt")
 SWIFT_CLASS("_TtC14NotaWebViewExt22CustomUrlSchemeHandler") SWIFT_AVAILABILITY(ios,introduced=11.0)
 @interface CustomUrlSchemeHandler : NSObject <WKURLSchemeHandler>
 - (NSString * _Nullable)resolveFilePath:(NSURL * _Nonnull)url SWIFT_WARN_UNUSED_RESULT;
+- (NSString * _Nonnull)resolveMimeTypeFromFilepath:(NSString * _Nonnull)filepath SWIFT_WARN_UNUSED_RESULT;
 - (void)webView:(WKWebView * _Nonnull)webView startURLSchemeTask:(id <WKURLSchemeTask> _Nonnull)urlSchemeTask;
 - (void)webView:(WKWebView * _Nonnull)webView stopURLSchemeTask:(id <WKURLSchemeTask> _Nonnull)urlSchemeTask;
 - (void)registerLocalResourceForKey:(NSString * _Nonnull)forKey filepath:(NSString * _Nonnull)filepath;

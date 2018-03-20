@@ -16,6 +16,16 @@ enum WebErrors: Error {
 @objc
 public class CustomUrlSchemeHandler: NSObject,WKURLSchemeHandler {
     var resourceDict: [String: String] = [:];
+    
+    var mimeType: [String: String] = [
+        "css": "text/css",
+        "js": "text/javascript",
+        "jpg": "image/jpeg",
+        "jpeg": "image/jpeg",
+        "png": "image/png",
+        "gif": "image/gif",
+        "svg": "image/svg+xml",
+    ];
 
     @objc
     public func resolveFilePath(_ url: URL) -> String? {
@@ -32,6 +42,18 @@ public class CustomUrlSchemeHandler: NSObject,WKURLSchemeHandler {
     }
     
     @objc
+    public func resolveMimeTypeFrom(filepath: String) -> String {
+        let ext = URL(fileURLWithPath: filepath).pathExtension;
+        NSLog("CustomUrlSchemeHandler.resolveMimeTypeFrom(%@) - ext(%@)", filepath, ext)
+        if let mimetype = self.mimeType[ext] {
+            NSLog("CustomUrlSchemeHandler.resolveMimeTypeFrom(%@) - ext(%@) -> mimetype(%@)", filepath, ext, mimetype)
+            return mimetype
+        }
+        
+        return "application/octet-stream"
+    }
+    
+    @objc
     public func webView(_ webView: WKWebView, start urlSchemeTask: WKURLSchemeTask) {
         NSLog("CustomUrlSchemeHandler");
         DispatchQueue.global().async {
@@ -39,9 +61,10 @@ public class CustomUrlSchemeHandler: NSObject,WKURLSchemeHandler {
             if let url = urlSchemeTask.request.url, url.scheme == Constants.customURLScheme {
                 NSLog("CustomUrlSchemeHandler - URL(%@)", url.absoluteString)
                 if let filepath = self.resolveFilePath(url) {
+                    let mimeType = self.resolveMimeTypeFrom(filepath: filepath);
                     NSLog("CustomUrlSchemeHandler - URL(%@) path(%@)", url.absoluteString, filepath)
                     if let data = NSData.init(contentsOfFile: filepath) {
-                        let urlResponse = URLResponse(url: url, mimeType: "text/css", expectedContentLength: -1, textEncodingName: nil)
+                        let urlResponse = URLResponse(url: url, mimeType: mimeType, expectedContentLength: -1, textEncodingName: nil)
                         urlSchemeTask.didReceive(urlResponse)
                         urlSchemeTask.didReceive(data as Data)
                         urlSchemeTask.didFinish()
