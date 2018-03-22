@@ -15,8 +15,10 @@ enum WebErrors: Error {
 @available(iOS 11.0, *)
 @objc
 public class CustomUrlSchemeHandler: NSObject,WKURLSchemeHandler {
+    var customURLScheme = Constants.customURLScheme;
+
     var resourceDict: [String: String] = [:];
-    
+
     var mimeType: [String: String] = [
         "css": "text/css",
         "js": "text/javascript",
@@ -40,7 +42,7 @@ public class CustomUrlSchemeHandler: NSObject,WKURLSchemeHandler {
         }
         return nil;
     }
-    
+
     @objc
     public func resolveMimeTypeFrom(filepath: String) -> String {
         let ext = URL(fileURLWithPath: filepath).pathExtension;
@@ -49,16 +51,16 @@ public class CustomUrlSchemeHandler: NSObject,WKURLSchemeHandler {
             NSLog("CustomUrlSchemeHandler.resolveMimeTypeFrom(%@) - ext(%@) -> mimetype(%@)", filepath, ext, mimetype)
             return mimetype
         }
-        
+
         return "application/octet-stream"
     }
-    
+
     @objc
     public func webView(_ webView: WKWebView, start urlSchemeTask: WKURLSchemeTask) {
         NSLog("CustomUrlSchemeHandler");
         DispatchQueue.global().async {
             NSLog("CustomUrlSchemeHandler -> global async");
-            if let url = urlSchemeTask.request.url, url.scheme == Constants.customURLScheme {
+            if let url = urlSchemeTask.request.url, url.scheme == customURLScheme {
                 NSLog("CustomUrlSchemeHandler - URL(%@)", url.absoluteString)
                 if let filepath = self.resolveFilePath(url) {
                     let mimeType = self.resolveMimeTypeFrom(filepath: filepath);
@@ -76,7 +78,7 @@ public class CustomUrlSchemeHandler: NSObject,WKURLSchemeHandler {
             } else {
                 NSLog("CustomUrlSchemeHandler - NO URL")
             }
-            
+
             urlSchemeTask.didFailWithError(WebErrors.RequestFailedError)
         }
     }
@@ -85,19 +87,24 @@ public class CustomUrlSchemeHandler: NSObject,WKURLSchemeHandler {
     public func webView(_ webView: WKWebView, stop urlSchemeTask: WKURLSchemeTask) {
         urlSchemeTask.didFailWithError(WebErrors.RequestFailedError)
     }
-    
+
     @objc
     public func registerLocalResource(forKey: String, filepath: String) {
         self.resourceDict[forKey] = filepath;
     }
-    
+
     @objc
     public func unregisterLocalResource(forKey: String) {
         self.resourceDict.removeValue(forKey: forKey)
     }
-    
+
     @objc
     public func getRegisteredLocalResource(forKey: String) -> String? {
         return self.resourceDict[forKey]
+    }
+
+    @objc
+    public func setURLSchem(_ scheme: String) -> void {
+        customURLScheme = scheme;
     }
 }

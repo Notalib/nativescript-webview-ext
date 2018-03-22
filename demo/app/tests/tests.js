@@ -1,12 +1,12 @@
-var WebviewExt = require("nativescript-webview-ext").WebviewExt;
-var webviewExt = new WebviewExt();
+var WebViewExt = require("@nota/nativescript-webview-ext").WebViewExt;
+var WebViewExt = new WebViewExt();
 
 describe("greet function", function() {
     it("exists", function() {
-        expect(webviewExt.greet).toBeDefined();
+        expect(WebViewExt.greet).toBeDefined();
     });
 
     it("returns a string", function() {
-        expect(webviewExt.greet()).toEqual("Hello, NS");
+        expect(WebViewExt.greet()).toEqual("Hello, NS");
     });
 });

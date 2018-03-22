@@ -1,5 +1,5 @@
 import { WebViewExt as WebViewExtDefinition, LoadEventData, NavigationType, urlOverrideHandlerFn } from ".";
-import { View, Property, EventData } from "tns-core-modules/ui/core/view";
+import { View, Property, EventData, ViewBase } from "tns-core-modules/ui/core/view";
 import { File, knownFolders, path } from "tns-core-modules/file-system";
 import { WebViewInterface } from 'nativescript-webview-interface';
 
@@ -8,8 +8,7 @@ export * from "tns-core-modules/ui//core/view";
 
 export const srcProperty = new Property<WebViewExtBase, string>({ name: "src" });
 
-let webviewInterfaceScriptPath: string;
-function loadJSInterface() {
+const webviewInterfaceScriptPath = (function loadJSInterface() {
     let jsDataFilePath = "tns_modules/nativescript-webview-interface/www/nativescript-webview-interface.js";
     if (global.TNS_WEBPACK) {
         jsDataFilePath = "assets/js/nativescript-webview-interface.js";
@@ -20,13 +19,14 @@ function loadJSInterface() {
         throw new Error(`"nativescript-webview-interface.js" cannot be loaded`);
     }
 
-    webviewInterfaceScriptPath = realPath;
-}
-loadJSInterface();
+    return realPath;
+})();
 
 export abstract class WebViewExtBase extends View implements WebViewExtDefinition {
     public android: any;
     public ios: any;
+    public interceptScheme = 'x-local';
+
     public static loadStartedEvent = "loadStarted";
     public static loadFinishedEvent = "loadFinished";
 
@@ -57,25 +57,25 @@ export abstract class WebViewExtBase extends View implements WebViewExtDefinitio
         this.notify(args);
     }
 
-    abstract _loadUrl(src: string): void;
+    public abstract _loadUrl(src: string): void;
 
-    abstract _loadData(src: string): void;
+    public abstract _loadData(src: string): void;
 
-    abstract stopLoading(): void;
+    public abstract stopLoading(): void;
 
-    get canGoBack(): boolean {
+    public get canGoBack(): boolean {
         throw new Error("This member is abstract.");
     }
 
-    get canGoForward(): boolean {
+    public get canGoForward(): boolean {
         throw new Error("This member is abstract.");
     }
 
-    abstract goBack(): void;
+    public abstract goBack(): void;
 
-    abstract goForward(): void;
+    public abstract goForward(): void;
 
-    abstract reload(): void;
+    public abstract reload(): void;
 
     public urlOverrideHandler: urlOverrideHandlerFn;
     public urlInterceptHandler: (url: string) => string | void;
@@ -101,7 +101,9 @@ export abstract class WebViewExtBase extends View implements WebViewExtDefinitio
 
         if (src.toLowerCase().indexOf("http://") === 0 ||
             src.toLowerCase().indexOf("https://") === 0 ||
-            src.toLowerCase().indexOf("file:///") === 0) {
+            src.toLowerCase().indexOf("file:///") === 0 ||
+            src.toLowerCase().startsWith(this.interceptScheme)
+        ) {
             this.setupWebViewInterface();
             this._loadUrl(src);
         } else {
@@ -109,13 +111,43 @@ export abstract class WebViewExtBase extends View implements WebViewExtDefinitio
         }
     }
 
-    get url(): string {
+    public get url(): string {
         throw new Error("Property url of WebView is deprecated. Use src instead");
     }
-    set url(value: string) {
+    public set url(value: string) {
         throw new Error("Property url of WebView is deprecated. Use src instead");
     }
 
+    public on(eventName, callback, typeArgs) {
+        super.on(eventName, callback, typeArgs);
+
+        switch (eventName) {
+            case ViewBase.loadedEvent:
+            case ViewBase.unloadedEvent:
+            case WebViewExtBase.loadFinishedEvent:
+            case WebViewExtBase.loadStartedEvent:
+            {
+                // NativeScript event don't bind inside to the WebView
+                return;
+            }
+            default: {
+                this.setupWebViewInterface();
+                this.webViewInterface.on(eventName, callback);
+            }
+        }
+    }
+
+    public off(eventName, callback?, typeArgs?) {
+        if (this.webViewInterface) {
+            this.webViewInterface.off(eventName, callback);
+        }
+
+        super.off(eventName, callback, typeArgs);
+    }
+
+    /**
+     * Setups of the WebViewInterface and makes sure the nativescript-webview-interface is loaded on the webpage.
+     */
     protected setupWebViewInterface() {
         if (!this.webViewInterface) {
             this.webViewInterface = new WebViewInterface(this);
@@ -175,6 +207,15 @@ export abstract class WebViewExtBase extends View implements WebViewExtDefinitio
                 document.head.appendChild(linkElement);
             }
         })();`;
+    }
+
+    protected disposeWebViewInterface() {
+        if (!this.webViewInterface) {
+            return;
+        }
+
+        this.webViewInterface.destroy();
+        this.webViewInterface = null;
     }
 }
 export interface WebViewExtBase {

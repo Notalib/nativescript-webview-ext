@@ -100,11 +100,24 @@ export class WKNavigationDelegateImpl extends NSObject
 export class WebViewExt extends WebViewExtBase {
     private _ios: WKWebView;
     private _customUrlSchemeHandler: CustomUrlSchemeHandler;
+    private _webViewConfiguration: WKWebViewConfiguration;
     private _delegate: any;
+
+    private _interceptScheme = 'x-local';
+    public set interceptScheme(scheme: string) {
+        this._interceptScheme = scheme;
+
+        (<any>this._customUrlSchemeHandler).setURLSchem(scheme);
+        this._webViewConfiguration.setURLSchemeHandlerForURLScheme(this._customUrlSchemeHandler, scheme);
+    }
+
+    public get interceptScheme() {
+        return this._interceptScheme;
+    }
 
     constructor() {
         super();
-        const configuration = WKWebViewConfiguration.new();
+        const configuration = this._webViewConfiguration = WKWebViewConfiguration.new();
         this._delegate = WKNavigationDelegateImpl.initWithOwner(new WeakRef(this));
         const jScript = "var meta = document.createElement('meta'); meta.setAttribute('name', 'viewport'); meta.setAttribute('content', 'initial-scale=1.0'); document.getElementsByTagName('head')[0].appendChild(meta);";
         const wkUScript = WKUserScript.alloc().initWithSourceInjectionTimeForMainFrameOnly(jScript, WKUserScriptInjectionTime.AtDocumentEnd, true);
@@ -117,7 +130,6 @@ export class WebViewExt extends WebViewExtBase {
         );
 
         this._customUrlSchemeHandler = new CustomUrlSchemeHandler();
-        configuration.setURLSchemeHandlerForURLScheme(this._customUrlSchemeHandler, 'x-local');
 
         this.nativeViewProtected = this._ios = new WKWebView({
             frame: CGRectZero,
@@ -141,6 +153,7 @@ export class WebViewExt extends WebViewExtBase {
 
     public onUnloaded() {
         this._ios.navigationDelegate = null;
+        this.disposeWebViewInterface();
         super.onUnloaded();
     }
 

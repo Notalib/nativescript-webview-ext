@@ -30,7 +30,7 @@ function initializeWebViewClient(): void {
 
     class WebViewExtClientImpl extends android.webkit.WebViewClient {
 
-        constructor(public owner: WebViewExtBase) {
+        constructor(public readonly owner: WebViewExtBase) {
             super();
             return global.__native(this);
         }
@@ -57,13 +57,12 @@ function initializeWebViewClient(): void {
                 return super.shouldInterceptRequest(view, request);
             }
 
-            if (!url.startsWith('x-local://')) {
+            const scheme = `${this.owner.interceptScheme}://`;
+            if (!url.startsWith(scheme)) {
                 return super.shouldInterceptRequest(view, request);
             }
 
-            console.log(url);
-            const filepath = this.owner.getRegistretLocalResource(url.replace('x-local://', ''));
-            console.log(filepath);
+            const filepath = this.owner.getRegistretLocalResource(url.replace(scheme, ''));
             if (!filepath || !File.exists(filepath)) {
                 return super.shouldInterceptRequest(view, request);
             }
@@ -161,12 +160,15 @@ export class WebViewExt extends WebViewExtBase {
     }
 
     public disposeNativeView() {
+        this.disposeWebViewInterface();
+
         const nativeView = this.nativeViewProtected;
         if (nativeView) {
             nativeView.destroy();
+
+            (<any>nativeView).client.owner = null;
         }
 
-        (<any>nativeView).client.owner = null;
         super.disposeNativeView();
     }
 
@@ -250,7 +252,6 @@ export class WebViewExt extends WebViewExtBase {
     }
 
     public executeJavaScript(scriptCode) {
-        console.log(scriptCode);
         this.android.loadUrl(`javascript:${escape(scriptCode)}`);
     }
 }
