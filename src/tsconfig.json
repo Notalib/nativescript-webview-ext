@@ -10,7 +10,7 @@
         "lib": ["es6", "dom"],
         "inlineSourceMap": true,
         "inlineSources": true,
-        "pretty": true,
+        "pretty": false,
         "allowUnreachableCode": false,
         "allowUnusedLabels": false,
         "noEmitHelpers": true,

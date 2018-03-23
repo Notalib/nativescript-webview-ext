@@ -18,6 +18,7 @@ pack() {
 
     # copy src
     echo 'Copying src...'
+    git clean -d -f -x "$SOURCE_DIR" && (cd $SOURCE_DIR && npm i && npm run apply-patches)
     node_modules/.bin/ncp "$SOURCE_DIR" "$TO_SOURCE_DIR"
 
     # copy README & LICENSE to src
