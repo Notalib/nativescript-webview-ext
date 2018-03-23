@@ -49,11 +49,15 @@ declare class CustomUrlSchemeHandler extends NSObject implements WKURLSchemeTask
 
 	resolveFilePath(url: NSURL): string;
 
+	resolveMimeTypeFromFilepath(filepath: string): string;
+
 	respondsToSelector(aSelector: string): boolean;
 
 	retainCount(): number;
 
 	self(): this;
+
+	setURLSchem(scheme: string): void;
 
 	unregisterLocalResourceForKey(forKey: string): void;
 

@@ -60,7 +60,7 @@ public class CustomUrlSchemeHandler: NSObject,WKURLSchemeHandler {
         NSLog("CustomUrlSchemeHandler");
         DispatchQueue.global().async {
             NSLog("CustomUrlSchemeHandler -> global async");
-            if let url = urlSchemeTask.request.url, url.scheme == customURLScheme {
+            if let url = urlSchemeTask.request.url, url.scheme == self.customURLScheme {
                 NSLog("CustomUrlSchemeHandler - URL(%@)", url.absoluteString)
                 if let filepath = self.resolveFilePath(url) {
                     let mimeType = self.resolveMimeTypeFrom(filepath: filepath);
@@ -104,7 +104,7 @@ public class CustomUrlSchemeHandler: NSObject,WKURLSchemeHandler {
     }
 
     @objc
-    public func setURLSchem(_ scheme: String) -> void {
+    public func setURLSchem(_ scheme: String) {
         customURLScheme = scheme;
     }
 }

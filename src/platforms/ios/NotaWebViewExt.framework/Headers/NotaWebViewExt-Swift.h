@@ -198,6 +198,7 @@ SWIFT_CLASS("_TtC14NotaWebViewExt22CustomUrlSchemeHandler") SWIFT_AVAILABILITY(i
 - (void)registerLocalResourceForKey:(NSString * _Nonnull)forKey filepath:(NSString * _Nonnull)filepath;
 - (void)unregisterLocalResourceForKey:(NSString * _Nonnull)forKey;
 - (NSString * _Nullable)getRegisteredLocalResourceForKey:(NSString * _Nonnull)forKey SWIFT_WARN_UNUSED_RESULT;
+- (void)setURLSchem:(NSString * _Nonnull)scheme;
 - (nonnull instancetype)init OBJC_DESIGNATED_INITIALIZER;
 @end
 

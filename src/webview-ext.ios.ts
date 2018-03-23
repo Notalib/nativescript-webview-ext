@@ -94,7 +94,6 @@ export class WKNavigationDelegateImpl extends NSObject
             owner._onLoadFinished(src, error.localizedDescription);
         }
     }
-
 }
 
 export class WebViewExt extends WebViewExtBase {
@@ -102,18 +101,6 @@ export class WebViewExt extends WebViewExtBase {
     private _customUrlSchemeHandler: CustomUrlSchemeHandler;
     private _webViewConfiguration: WKWebViewConfiguration;
     private _delegate: any;
-
-    private _interceptScheme = 'x-local';
-    public set interceptScheme(scheme: string) {
-        this._interceptScheme = scheme;
-
-        (<any>this._customUrlSchemeHandler).setURLSchem(scheme);
-        this._webViewConfiguration.setURLSchemeHandlerForURLScheme(this._customUrlSchemeHandler, scheme);
-    }
-
-    public get interceptScheme() {
-        return this._interceptScheme;
-    }
 
     constructor() {
         super();
@@ -130,6 +117,8 @@ export class WebViewExt extends WebViewExtBase {
         );
 
         this._customUrlSchemeHandler = new CustomUrlSchemeHandler();
+        this._customUrlSchemeHandler.setURLSchem(this.interceptScheme);
+        this._webViewConfiguration.setURLSchemeHandlerForURLScheme(this._customUrlSchemeHandler, this.interceptScheme);
 
         this.nativeViewProtected = this._ios = new WKWebView({
             frame: CGRectZero,

@@ -69,16 +69,6 @@ export class WebViewExt extends View {
     urlOverrideHandler: urlOverrideHandlerFn;
 
     /**
-     * Which scheme should be used to intercept resource loading in the webview?
-     * Defaults to: "x-local"
-     *
-     * Example:
-     * x-local://<name-of-resource.js> will load the locale file resource for 'name-of-resource.js' registered with registerLocalResource.
-     * This can only be a local file.
-     */
-    interceptScheme: string;
-
-    /**
      * Stops loading the current content (if any).
      */
     stopLoading(): void;
