@@ -15,8 +15,6 @@ enum WebErrors: Error {
 @available(iOS 11.0, *)
 @objc
 public class CustomUrlSchemeHandler: NSObject,WKURLSchemeHandler {
-    var customURLScheme = Constants.customURLScheme;
-
     var resourceDict: [String: String] = [:];
 
     var mimeType: [String: String] = [
@@ -60,7 +58,7 @@ public class CustomUrlSchemeHandler: NSObject,WKURLSchemeHandler {
         NSLog("CustomUrlSchemeHandler");
         DispatchQueue.global().async {
             NSLog("CustomUrlSchemeHandler -> global async");
-            if let url = urlSchemeTask.request.url, url.scheme == self.customURLScheme {
+            if let url = urlSchemeTask.request.url, url.scheme == Constants.customURLScheme {
                 NSLog("CustomUrlSchemeHandler - URL(%@)", url.absoluteString)
                 if let filepath = self.resolveFilePath(url) {
                     let mimeType = self.resolveMimeTypeFrom(filepath: filepath);
@@ -101,10 +99,5 @@ public class CustomUrlSchemeHandler: NSObject,WKURLSchemeHandler {
     @objc
     public func getRegisteredLocalResource(forKey: String) -> String? {
         return self.resourceDict[forKey]
-    }
-
-    @objc
-    public func setURLSchem(_ scheme: String) {
-        customURLScheme = scheme;
     }
 }

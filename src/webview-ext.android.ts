@@ -1,6 +1,7 @@
 /// <reference path="./node_modules/tns-platform-declarations/android.d.ts" />
 
 import { File, path } from "tns-core-modules/file-system";
+import * as platform from "tns-core-modules/platform";
 
 import { WebViewExtBase, knownFolders, traceEnabled, traceWrite, traceCategories } from "./webview-ext.common";
 import { LoadEventData, } from "./webview-ext";
@@ -252,6 +253,17 @@ export class WebViewExt extends WebViewExtBase {
     }
 
     public executeJavaScript(scriptCode) {
-        this.android.loadUrl(`javascript:${escape(scriptCode)}`);
+        return new Promise<any>((resolve) => {
+            if (Number(platform.device.sdkVersion) >= 19) {
+                this.android.evaluateJavascript(scriptCode, new android.webkit.ValueCallback({
+                    onReceiveValue(result) {
+                        resolve(result);
+                    },
+                }));
+            } else {
+                this.android.loadUrl(`javascript:${escape(scriptCode)}`);
+                resolve();
+            }
+        });
     }
 }

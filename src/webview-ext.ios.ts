@@ -5,6 +5,8 @@ import { WebViewExtBase, knownFolders, traceWrite, traceEnabled, traceCategories
 import { profile } from "tns-core-modules/profiling";
 import { layout } from "tns-core-modules/ui/core/view";
 import * as fs from 'tns-core-modules/file-system';
+import * as platform from "tns-core-modules/platform";
+
 import { LoadEventData } from "./webview-ext";
 
 export * from "./webview-ext.common";
@@ -96,40 +98,146 @@ export class WKNavigationDelegateImpl extends NSObject
     }
 }
 
+class UIWebViewDelegateImpl extends NSObject implements UIWebViewDelegate {
+    public static ObjCProtocols = [UIWebViewDelegate];
+
+    private _owner: WeakRef<WebViewExt>;
+
+    public static initWithOwner(owner: WeakRef<WebViewExt>): UIWebViewDelegateImpl {
+        let delegate = <UIWebViewDelegateImpl>UIWebViewDelegateImpl.new();
+        delegate._owner = owner;
+        return delegate;
+    }
+
+    public webViewShouldStartLoadWithRequestNavigationType(webView: UIWebView, request: NSURLRequest, navigationType: number) {
+        let owner = this._owner.get();
+
+        if (owner && request.URL) {
+            let navType: NavigationType = "other";
+
+            switch (navigationType) {
+                case UIWebViewNavigationType.LinkClicked:
+                    navType = "linkClicked";
+                    break;
+                case UIWebViewNavigationType.FormSubmitted:
+                    navType = "formSubmitted";
+                    break;
+                case UIWebViewNavigationType.BackForward:
+                    navType = "backForward";
+                    break;
+                case UIWebViewNavigationType.Reload:
+                    navType = "reload";
+                    break;
+                case UIWebViewNavigationType.FormResubmitted:
+                    navType = "formResubmitted";
+                    break;
+            }
+
+            owner.writeTrace("UIWebViewDelegateClass.webViewShouldStartLoadWithRequestNavigationType(" + request.URL.absoluteString + ", " + navigationType + ")");
+            owner._onLoadStarted(request.URL.absoluteString, navType);
+        }
+
+        return true;
+    }
+
+    public webViewDidStartLoad(webView: UIWebView) {
+        let owner = this._owner.get();
+        if (owner) {
+            owner.writeTrace("UIWebViewDelegateClass.webViewDidStartLoad(" + webView.request.URL + ")");
+        }
+    }
+
+    public webViewDidFinishLoad(webView: UIWebView) {
+        let owner = this._owner.get();
+
+        if (owner) {
+            owner.writeTrace("UIWebViewDelegateClass.webViewDidFinishLoad(" + webView.request.URL + ")");
+
+            let src = owner.src;
+            if (webView.request && webView.request.URL) {
+                src = webView.request.URL.absoluteString;
+            }
+            owner._onLoadFinished(src);
+        }
+    }
+
+    public webViewDidFailLoadWithError(webView: UIWebView, error: NSError) {
+        let owner = this._owner.get();
+        if (owner) {
+            let src = owner.src;
+            if (webView.request && webView.request.URL) {
+                src = webView.request.URL.absoluteString;
+            }
+
+            owner.writeTrace("UIWebViewDelegateClass.webViewDidFailLoadWithError(" + error.localizedDescription + ")");
+            if (owner) {
+                owner._onLoadFinished(src, error.localizedDescription);
+            }
+        }
+    }
+}
+
+let registeredCustomNSURLProtocol = false;
+
 export class WebViewExt extends WebViewExtBase {
-    private _ios: WKWebView;
-    private _customUrlSchemeHandler: CustomUrlSchemeHandler;
+    private _wkWebView: WKWebView;
     private _webViewConfiguration: WKWebViewConfiguration;
-    private _delegate: any;
+    private _wkNavigationDelegate: WKNavigationDelegateImpl;
+    private _wkCustomUrlSchemeHandler: CustomUrlSchemeHandler;
+
+    private _uiWebView: UIWebView;
+    private _uiWebViewDelegate: UIWebViewDelegateImpl;
 
     constructor() {
         super();
-        const configuration = this._webViewConfiguration = WKWebViewConfiguration.new();
-        this._delegate = WKNavigationDelegateImpl.initWithOwner(new WeakRef(this));
-        const jScript = "var meta = document.createElement('meta'); meta.setAttribute('name', 'viewport'); meta.setAttribute('content', 'initial-scale=1.0'); document.getElementsByTagName('head')[0].appendChild(meta);";
-        const wkUScript = WKUserScript.alloc().initWithSourceInjectionTimeForMainFrameOnly(jScript, WKUserScriptInjectionTime.AtDocumentEnd, true);
-        const wkUController = WKUserContentController.new();
-        wkUController.addUserScript(wkUScript);
-        configuration.userContentController = wkUController;
-        configuration.preferences.setValueForKey(
-            true,
-            'allowFileAccessFromFileURLs'
-        );
 
-        this._customUrlSchemeHandler = new CustomUrlSchemeHandler();
-        this._customUrlSchemeHandler.setURLSchem(this.interceptScheme);
-        this._webViewConfiguration.setURLSchemeHandlerForURLScheme(this._customUrlSchemeHandler, this.interceptScheme);
+        if (Number(platform.device.sdkVersion) >= 11) {
+            const configuration = this._webViewConfiguration = WKWebViewConfiguration.new();
+            this._wkNavigationDelegate = WKNavigationDelegateImpl.initWithOwner(new WeakRef(this));
+            const jScript = "var meta = document.createElement('meta'); meta.setAttribute('name', 'viewport'); meta.setAttribute('content', 'initial-scale=1.0'); document.getElementsByTagName('head')[0].appendChild(meta);";
+            const wkUScript = WKUserScript.alloc().initWithSourceInjectionTimeForMainFrameOnly(jScript, WKUserScriptInjectionTime.AtDocumentEnd, true);
+            const wkUController = WKUserContentController.new();
+            wkUController.addUserScript(wkUScript);
+            configuration.userContentController = wkUController;
+            configuration.preferences.setValueForKey(
+                true,
+                'allowFileAccessFromFileURLs'
+            );
 
-        this.nativeViewProtected = this._ios = new WKWebView({
-            frame: CGRectZero,
-            configuration: configuration
-        });
+            this._wkCustomUrlSchemeHandler = new CustomUrlSchemeHandler();
+            this._webViewConfiguration.setURLSchemeHandlerForURLScheme(this._wkCustomUrlSchemeHandler, this.interceptScheme);
+
+            this.nativeViewProtected = this._wkWebView = new WKWebView({
+                frame: CGRectZero,
+                configuration: configuration
+            });
+        } else {
+            if (!registeredCustomNSURLProtocol) {
+                NSURLProtocol.registerClass(CustomNSURLProtocol as any);
+                registeredCustomNSURLProtocol = true;
+            }
+
+            this.nativeViewProtected = this._uiWebView = UIWebView.new();
+            this._uiWebViewDelegate = UIWebViewDelegateImpl.initWithOwner(new WeakRef(this));
+
+            this.nativeViewProtected.scrollView.bounce = false;
+            this.nativeViewProtected.scrollView.scrollEnabled = false;
+            this.nativeViewProtected.scalesPageToFit = false;
+        }
     }
 
     public executeJavaScript(scriptCode) {
-        this.ios.evaluateJavaScriptCompletionHandler(scriptCode, (data, error) => {
-            if (error) {
-                throw error;
+        return new Promise<any>((resolve, reject) => {
+            if (this._wkWebView) {
+                this._wkWebView.evaluateJavaScriptCompletionHandler(scriptCode, (data, error) => {
+                    if (error) {
+                        reject(error);
+                        return;
+                    }
+                    resolve(data);
+                });
+            } else if (this._uiWebView) {
+                resolve(this._uiWebView.stringByEvaluatingJavaScriptFromString(scriptCode));
             }
         });
     }
@@ -137,53 +245,97 @@ export class WebViewExt extends WebViewExtBase {
     @profile
     public onLoaded() {
         super.onLoaded();
-        this._ios.navigationDelegate = this._delegate;
+        if (this._wkWebView) {
+            this._wkWebView.navigationDelegate = this._wkNavigationDelegate;
+        } else if (this._uiWebView) {
+            this._uiWebView.delegate = this._uiWebViewDelegate;
+        }
     }
 
     public onUnloaded() {
-        this._ios.navigationDelegate = null;
+        if (this._wkWebView) {
+            this._wkWebView.navigationDelegate = null;
+        } else if (this._uiWebView) {
+            this._uiWebView.delegate = null;
+        }
         this.disposeWebViewInterface();
         super.onUnloaded();
     }
 
-    get ios(): WKWebView {
-        return this._ios;
+    get ios(): WKWebView | UIWebView {
+        return this._wkWebView || this._uiWebView;
     }
 
     public stopLoading() {
-        this._ios.stopLoading();
+        if (this._wkWebView) {
+            this._wkWebView.stopLoading();
+        } else if (this._uiWebView) {
+            this._uiWebView.stopLoading();
+        }
     }
 
     public _loadUrl(src: string) {
-        if (src.startsWith('file:///')) {
-            this._ios.loadFileURLAllowingReadAccessToURL(NSURL.URLWithString(src), NSURL.URLWithString(src));
-        } else {
-            this._ios.loadRequest(NSURLRequest.requestWithURL(NSURL.URLWithString(src)));
+        if (this._wkWebView) {
+            if (src.startsWith('file:///')) {
+                this._wkWebView.loadFileURLAllowingReadAccessToURL(NSURL.URLWithString(src), NSURL.URLWithString(src));
+            } else {
+                this._wkWebView.loadRequest(NSURLRequest.requestWithURL(NSURL.URLWithString(src)));
+            }
+        } else if (this._wkWebView) {
+            this._uiWebView.loadRequest(NSURLRequest.requestWithURL(NSURL.URLWithString(src)));
         }
     }
 
     public _loadData(content: string) {
-        this._ios.loadHTMLStringBaseURL(content, NSURL.alloc().initWithString(`file:///${knownFolders.currentApp().path}/`));
+        if (this._wkWebView) {
+            this._wkWebView.loadHTMLStringBaseURL(content, NSURL.alloc().initWithString(`file:///${knownFolders.currentApp().path}/`));
+        } else if (this._wkWebView) {
+            this._uiWebView.loadHTMLStringBaseURL(content, NSURL.alloc().initWithString(`file:///${knownFolders.currentApp().path}/`));
+        }
     }
 
     get canGoBack(): boolean {
-        return this._ios.canGoBack;
+        if (this._wkWebView) {
+            return this._wkWebView.canGoBack;
+        } else if (this._wkWebView) {
+            return this._wkWebView.canGoBack;
+        } else {
+            return false;
+        }
     }
 
     get canGoForward(): boolean {
-        return this._ios.canGoForward;
+        if (this._wkWebView) {
+            return this._wkWebView.canGoForward;
+        } else if (this._wkWebView) {
+            return this._wkWebView.canGoForward;
+        } else {
+            return false;
+        }
     }
 
     public goBack() {
-        this._ios.goBack();
+        if (this._wkWebView) {
+            this._wkWebView.goBack();
+        } else if (this._wkWebView) {
+            this._wkWebView.goBack();
+        }
     }
 
     public goForward() {
-        this._ios.goForward();
+        if (this._wkWebView) {
+            this._wkWebView.goForward();
+        } else if (this._wkWebView) {
+            this._wkWebView.goForward();
+        }
     }
 
     public reload() {
-        this._ios.reload();
+        if (this._wkWebView) {
+            this._wkWebView.reload();
+        } else if (this._wkWebView) {
+            this._wkWebView.reload();
+        }
     }
 
     registerLocalResource(name: string, filepath: string) {
@@ -199,14 +351,29 @@ export class WebViewExt extends WebViewExtBase {
             return;
         }
 
-        this._customUrlSchemeHandler.registerLocalResourceForKeyFilepath(name, fs.File.fromPath(filepath).path);
+        const path = fs.File.fromPath(filepath).path;
+        if (this._wkWebView) {
+            this._wkCustomUrlSchemeHandler.registerLocalResourceForKeyFilepath(name, path);
+        } else if (this._wkWebView) {
+            CustomNSURLProtocol.registerLocalResourceForKeyFilepath(name, path);
+        }
     }
 
     unregisterLocalResource(name: string) {
-        this._customUrlSchemeHandler.unregisterLocalResourceForKey(name);
+        if (this._wkWebView) {
+            this._wkCustomUrlSchemeHandler.unregisterLocalResourceForKey(name);
+        } else if (this._wkWebView) {
+            CustomNSURLProtocol.unregisterLocalResourceForKey(name);
+        }
     }
 
     getRegistretLocalResource(name: string) {
-        return this._customUrlSchemeHandler.getRegisteredLocalResourceForKey(name);
+        if (this._wkWebView) {
+            return this._wkCustomUrlSchemeHandler.getRegisteredLocalResourceForKey(name);
+        } else if (this._uiWebView) {
+            return CustomNSURLProtocol.getRegisteredLocalResourceForKey(name);
+        } else {
+            throw new Error('Not implemented for UIWebView');
+        }
     }
 }

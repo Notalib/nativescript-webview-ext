@@ -8,16 +8,18 @@
 
 /* Begin PBXBuildFile section */
 		7A45BB5820582773008AB08B /* NotaWebViewExt.h in Headers */ = {isa = PBXBuildFile; fileRef = 7A45BB5620582773008AB08B /* NotaWebViewExt.h */; settings = {ATTRIBUTES = (Public, ); }; };
-		7A45BB5F205827BE008AB08B /* CustomSchemeHandler.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7A45BB5E205827BE008AB08B /* CustomSchemeHandler.swift */; };
+		7A45BB5F205827BE008AB08B /* WKWebviewCustomSchemeHandler.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7A45BB5E205827BE008AB08B /* WKWebviewCustomSchemeHandler.swift */; };
 		7A45BB6120582802008AB08B /* Constants.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7A45BB6020582802008AB08B /* Constants.swift */; };
+		7A8DA4D3207EA0D7007775B8 /* UIWebViewCustomURLProtocol.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7A8DA4D2207EA0D7007775B8 /* UIWebViewCustomURLProtocol.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
 		7A45BB5320582773008AB08B /* NotaWebViewExt.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = NotaWebViewExt.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		7A45BB5620582773008AB08B /* NotaWebViewExt.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = NotaWebViewExt.h; sourceTree = "<group>"; };
 		7A45BB5720582773008AB08B /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
-		7A45BB5E205827BE008AB08B /* CustomSchemeHandler.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CustomSchemeHandler.swift; sourceTree = "<group>"; };
+		7A45BB5E205827BE008AB08B /* WKWebviewCustomSchemeHandler.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WKWebviewCustomSchemeHandler.swift; sourceTree = "<group>"; };
 		7A45BB6020582802008AB08B /* Constants.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Constants.swift; sourceTree = "<group>"; };
+		7A8DA4D2207EA0D7007775B8 /* UIWebViewCustomURLProtocol.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UIWebViewCustomURLProtocol.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -52,8 +54,9 @@
 			children = (
 				7A45BB5620582773008AB08B /* NotaWebViewExt.h */,
 				7A45BB5720582773008AB08B /* Info.plist */,
-				7A45BB5E205827BE008AB08B /* CustomSchemeHandler.swift */,
+				7A45BB5E205827BE008AB08B /* WKWebviewCustomSchemeHandler.swift */,
 				7A45BB6020582802008AB08B /* Constants.swift */,
+				7A8DA4D2207EA0D7007775B8 /* UIWebViewCustomURLProtocol.swift */,
 			);
 			path = NotaWebViewExt;
 			sourceTree = "<group>";
@@ -138,7 +141,8 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				7A45BB5F205827BE008AB08B /* CustomSchemeHandler.swift in Sources */,
+				7A8DA4D3207EA0D7007775B8 /* UIWebViewCustomURLProtocol.swift in Sources */,
+				7A45BB5F205827BE008AB08B /* WKWebviewCustomSchemeHandler.swift in Sources */,
 				7A45BB6120582802008AB08B /* Constants.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;

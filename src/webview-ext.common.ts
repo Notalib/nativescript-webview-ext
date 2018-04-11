@@ -1,5 +1,5 @@
 import { WebViewExt as WebViewExtDefinition, LoadEventData, NavigationType, urlOverrideHandlerFn } from ".";
-import { View, Property, EventData, ViewBase } from "tns-core-modules/ui/core/view";
+import { View, Property, EventData, ViewBase, traceEnabled, traceWrite, traceMessageType } from "tns-core-modules/ui/core/view";
 import { File, knownFolders, path } from "tns-core-modules/file-system";
 import { WebViewInterface } from 'nativescript-webview-interface';
 
@@ -182,7 +182,7 @@ export abstract class WebViewExtBase extends View implements WebViewExtDefinitio
         this.executeJavaScript(scriptCode);
     }
 
-    public abstract executeJavaScript(scriptCode: string): void;
+    public abstract executeJavaScript(scriptCode: string): Promise<any>;
 
     protected getInjectScriptCode(scriptHref: string) {
         return `(function() {
@@ -216,6 +216,12 @@ export abstract class WebViewExtBase extends View implements WebViewExtDefinitio
 
         this.webViewInterface.destroy();
         this.webViewInterface = null;
+    }
+
+    public writeTrace(message: string, type = traceMessageType.info) {
+        if (traceEnabled()) {
+            traceWrite(message, 'NOTA', type);
+        }
     }
 }
 export interface WebViewExtBase {
