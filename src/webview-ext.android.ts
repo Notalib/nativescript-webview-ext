@@ -35,7 +35,17 @@ function initializeWebViewClient(): void {
             return global.__native(this);
         }
 
-        public shouldOverrideUrlLoading(view: android.webkit.WebView, url: string) {
+        public shouldOverrideUrlLoading(view: android.webkit.WebView, request: any) {
+            let url = request as string;
+            if (typeof request === 'object') {
+                url = request.getUrl().toString();
+            }
+
+            const scheme = `${this.owner.interceptScheme}://`;
+            if (url.startsWith(scheme)) {
+                return true;
+            }
+
             let urlOverrideHandlerFn = this.owner.urlOverrideHandler;
             if (urlOverrideHandlerFn && urlOverrideHandlerFn(url) === true) {
                 return true;
@@ -146,8 +156,10 @@ export class WebViewExt extends WebViewExtBase {
         initializeWebViewClient();
 
         const nativeView = new android.webkit.WebView(this._context);
-        nativeView.getSettings().setJavaScriptEnabled(true);
-        nativeView.getSettings().setBuiltInZoomControls(true);
+        const settings = nativeView.getSettings();
+        settings.setJavaScriptEnabled(true);
+        settings.setBuiltInZoomControls(true);
+
         const client = new WebViewClient(this);
         nativeView.setWebViewClient(client);
         (<any>nativeView).client = client;
@@ -233,12 +245,15 @@ export class WebViewExt extends WebViewExtBase {
 
     public registerLocalResource(name: string, filepath: string) {
         if (!filepath) {
+            console.log('registerLocalResource no filepath');
             return;
         }
 
         if (filepath.startsWith('~')) {
             filepath = path.normalize(knownFolders.currentApp().path + filepath.substr(1));
         }
+
+        console.log(`registerLocalResource "${name}" => ${filepath}`);
 
         this.localResourceMap.set(name, filepath);
     }
@@ -248,10 +263,16 @@ export class WebViewExt extends WebViewExtBase {
     }
 
     public getRegistretLocalResource(name: string) {
-        return this.localResourceMap.get(name);
+        const res = this.localResourceMap.get(name);
+        console.log(`getRegistretLocalResource("${name}") -> ${res}`);
+        return res;
     }
 
     public executeJavaScript(scriptCode) {
+        if (!this.android) {
+            return;
+        }
+
         this.android.loadUrl(`javascript:${escape(scriptCode)}`);
     }
 }

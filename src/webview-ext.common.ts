@@ -84,6 +84,9 @@ export abstract class WebViewExtBase extends View implements WebViewExtDefinitio
         return "";
     }
     [srcProperty.setNative](src: string) {
+        if (!src) {
+            return;
+        }
         this.stopLoading();
 
         // Add file:/// prefix for local files.
@@ -185,19 +188,34 @@ export abstract class WebViewExtBase extends View implements WebViewExtDefinitio
     public abstract executeJavaScript(scriptCode: string): void;
 
     protected getInjectScriptCode(scriptHref: string) {
+        const elId = scriptHref.replace(/[^a-z0-9]/g, '');
         return `(function() {
-            var script = document.createElement("SCRIPT");
-            script.src = "${scriptHref}";
+            if (document.getElementById("${elId}")) {
+                console.log("${elId} already exists");
+                return;
+            }
 
-            document.head.appendChild(script);
+            var script = document.createElement("script");
+            script.setAttribute("id", "${elId}");
+            script.src = "${scriptHref}";
+            script.onError = function(error) {
+                console.log("Failed to load ${scriptHref} - error: " + error);
+            };
+
+            document.body.appendChild(script);
         })();`;
     }
 
     protected getInjectCSSCode(stylesheetHref: string, insertBefore = false) {
+        const elId = stylesheetHref.replace(/[^a-z0-9]/g, '');
         return `(function() {
-            var linkElement = document.createElement("LINK");
-            var insertBefore = !!JSON.parse(${JSON.stringify(insertBefore)});
-            linkElement.setAttribute("id", "${stylesheetHref}");
+            if (document.getElementById("${elId}")) {
+                console.log("${elId} already exists");
+                return;
+            }
+            var linkElement = document.createElement("link");
+            var insertBefore = !!JSON.parse("${!!insertBefore}");
+            linkElement.setAttribute("id", "${elId}");
             linkElement.setAttribute("rel", "stylesheet");
             linkElement.setAttribute("type", "text/css");
             linkElement.setAttribute("href", "${stylesheetHref}");

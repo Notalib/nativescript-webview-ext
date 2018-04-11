@@ -6,6 +6,7 @@ Extended version of the NativeScript's built'in WebView.
 * Capture page-loading for custom actions
 * Inject JavaScript and StyleSheets into the webpage.
 * Custom schemehandler for loading local files in remote webpages.
+
 ## Installation
 
 Describe your plugin installation steps. Ideally it would be something like:
