@@ -2,6 +2,7 @@ import { WebViewExt as WebViewExtDefinition, LoadEventData, NavigationType, urlO
 import { View, Property, EventData, ViewBase } from "tns-core-modules/ui/core/view";
 import { File, knownFolders, path } from "tns-core-modules/file-system";
 import { WebViewInterface } from 'nativescript-webview-interface';
+import { webViewInterfaceJsCodePromise } from "./nativescript-script-interface";
 
 export { File, knownFolders, path, NavigationType };
 export * from "tns-core-modules/ui//core/view";
@@ -156,7 +157,7 @@ export abstract class WebViewExtBase extends View implements WebViewExtDefinitio
             this.webViewInterface = new WebViewInterface(this);
 
             this.on(WebViewExtBase.loadFinishedEvent, () => {
-                this.loadJavaScriptFile("nativescript-webview-interface.js", webviewInterfaceScriptPath);
+                webViewInterfaceJsCodePromise.then((webViewInterfaceJsCode) => this.executeJavaScript(webViewInterfaceJsCode));
             });
         }
     }
