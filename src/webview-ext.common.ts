@@ -1,32 +1,33 @@
 import { WebViewExt as WebViewExtDefinition, LoadEventData, NavigationType, urlOverrideHandlerFn } from ".";
 import { View, Property, EventData, ViewBase, traceEnabled, traceWrite, traceMessageType } from "tns-core-modules/ui/core/view";
-import { File, knownFolders, path } from "tns-core-modules/file-system";
+
+import * as fs from "tns-core-modules/file-system";
 import { WebViewInterface } from 'nativescript-webview-interface';
 import { webViewInterfaceJsCodePromise } from "./nativescript-script-interface";
 
-export { File, knownFolders, path, NavigationType };
+export { NavigationType };
+export { File, knownFolders, path } from "tns-core-modules/file-system";
 export * from "tns-core-modules/ui//core/view";
 
 export const srcProperty = new Property<WebViewExtBase, string>({ name: "src" });
 
-const webviewInterfaceScriptPath = (function loadJSInterface() {
-    let jsDataFilePath = "tns_modules/nativescript-webview-interface/www/nativescript-webview-interface.js";
-    if (global.TNS_WEBPACK) {
-        jsDataFilePath = "assets/js/nativescript-webview-interface.js";
-    }
+export interface AutoLoadJavaScriptFile {
+    scriptName: string;
+    filepath: string;
+}
 
-    const realPath = path.join(knownFolders.currentApp().path, jsDataFilePath);
-    if (!File.exists(realPath)) {
-        throw new Error(`"nativescript-webview-interface.js" cannot be loaded`);
-    }
-
-    return realPath;
-})();
+export interface AutoLoadStyleSheetFile {
+    stylesheetName: string;
+    filepath: string;
+    insertBefore?: boolean;
+}
 
 export abstract class WebViewExtBase extends View implements WebViewExtDefinition {
     public android: any;
     public ios: any;
-    public interceptScheme = 'x-local';
+    public get interceptScheme() {
+        return 'x-local';
+    }
 
     public static loadStartedEvent = "loadStarted";
     public static loadFinishedEvent = "loadFinished";
@@ -36,6 +37,9 @@ export abstract class WebViewExtBase extends View implements WebViewExtDefinitio
 
     public src: string;
     public webViewInterface: WebViewInterface;
+
+    protected autoLoadScriptFiles = [] as AutoLoadJavaScriptFile[];
+    protected autoLoadStyleSheetFiles = [] as AutoLoadStyleSheetFile[];
 
     public _onLoadFinished(url: string, error?: string) {
         let args = <LoadEventData>{
@@ -96,7 +100,7 @@ export abstract class WebViewExtBase extends View implements WebViewExtDefinitio
         // Add file:/// prefix for local files.
         // They should be loaded with _loadUrl() method as it handles query params.
         if (src.indexOf("~/") === 0) {
-            src = `file:///${knownFolders.currentApp().path}/` + src.substr(2);
+            src = `file:///${fs.knownFolders.currentApp().path}/` + src.substr(2);
         } else if (src.indexOf("/") === 0) {
             src = "file://" + src;
         }
@@ -161,8 +165,34 @@ export abstract class WebViewExtBase extends View implements WebViewExtDefinitio
 
             this.on(WebViewExtBase.loadFinishedEvent, () => {
                 webViewInterfaceJsCodePromise.then((webViewInterfaceJsCode) => this.executeJavaScript(webViewInterfaceJsCode));
+
+                for (const {scriptName, filepath} of this.autoLoadScriptFiles) {
+                    this.loadJavaScriptFile(scriptName, filepath);
+                }
+
+                for (const {stylesheetName, filepath, insertBefore} of this.autoLoadStyleSheetFiles) {
+                    this.loadStyleSheetFile(stylesheetName, filepath, !!insertBefore);
+                }
             });
         }
+    }
+
+    protected resolveLocalResourceFilePath(filepath: string): string | void {
+        if (!filepath) {
+            console.error('WebViewExt.resolveLocalResourceFilePath() no filepath');
+            return;
+        }
+
+        if (filepath.startsWith('~')) {
+            filepath = fs.path.normalize(fs.knownFolders.currentApp().path + filepath.substr(1));
+        }
+
+        if (!fs.File.exists(filepath)) {
+            console.error(`WebViewExt.resolveLocalResourceFilePath("${name}", "${filepath}") - no such file`);
+            return;
+        }
+
+        return filepath;
     }
 
     public abstract registerLocalResource(name: string, filepath: string);
@@ -174,19 +204,31 @@ export abstract class WebViewExtBase extends View implements WebViewExtDefinitio
     public loadJavaScriptFile(scriptName: string, filepath?: string) {
         if (filepath) {
             this.registerLocalResource(scriptName, filepath);
-            scriptName = `x-local://${scriptName}`;
+            scriptName = `${this.interceptScheme}://${scriptName}`;
         }
         const scriptCode = this.getInjectScriptCode(scriptName);
         this.executeJavaScript(scriptCode);
     }
 
-    public loadStyleSheetFile(stylesheetName: string, insertBefore = true, filepath?: string) {
-        if (filepath) {
-            this.registerLocalResource(stylesheetName, filepath);
-            stylesheetName = `x-local://${stylesheetName}`;
-        }
-        const scriptCode = this.getInjectCSSCode(stylesheetName, insertBefore);
+    public loadStyleSheetFile(stylesheetName: string, filepath: string, insertBefore = true) {
+        this.registerLocalResource(stylesheetName, filepath);
+        const sheetUrl = `${this.interceptScheme}://${stylesheetName}`;
+        const scriptCode = this.getInjectCSSCode(sheetUrl, insertBefore);
         this.executeJavaScript(scriptCode);
+    }
+
+    public autoLoadJavaScriptFile(scriptName: string, filepath: string) {
+        if (this.webViewInterface) {
+            this.loadJavaScriptFile(scriptName, filepath);
+        }
+        this.autoLoadScriptFiles.push({scriptName, filepath});
+    }
+
+    public autoLoadStyleSheetFile(stylesheetName: string, filepath: string, insertBefore?: boolean) {
+        if (this.webViewInterface) {
+            this.loadStyleSheetFile(stylesheetName, filepath, insertBefore);
+        }
+        this.autoLoadStyleSheetFiles.push({stylesheetName, filepath, insertBefore});
     }
 
     public abstract executeJavaScript(scriptCode: string): Promise<any>;

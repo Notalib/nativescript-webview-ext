@@ -268,7 +268,7 @@ export class WebViewExt extends WebViewExtBase {
         super.onUnloaded();
     }
 
-    get ios(): WKWebView | UIWebView {
+    get ios(): WKWebView | UIWebView {
         return this._wkWebView || this._uiWebView;
     }
 
@@ -344,24 +344,16 @@ export class WebViewExt extends WebViewExtBase {
         }
     }
 
-    registerLocalResource(name: string, filepath: string) {
+    registerLocalResource(name: string, path: string) {
+        const filepath = this.resolveLocalResourceFilePath(path);
         if (!filepath) {
             return;
         }
 
-        if (filepath.startsWith('~')) {
-            filepath = fs.path.normalize(knownFolders.currentApp().path + filepath.substr(1));
-        }
-
-        if (!fs.File.exists(filepath)) {
-            return;
-        }
-
-        const path = fs.File.fromPath(filepath).path;
         if (this._wkWebView) {
-            this._wkCustomUrlSchemeHandler.registerLocalResourceForKeyFilepath(name, path);
+            this._wkCustomUrlSchemeHandler.registerLocalResourceForKeyFilepath(name, filepath);
         } else if (this._uiWebView) {
-            CustomNSURLProtocol.registerLocalResourceForKeyFilepath(name, path);
+            CustomNSURLProtocol.registerLocalResourceForKeyFilepath(name, filepath);
         }
     }
 

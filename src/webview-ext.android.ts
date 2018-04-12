@@ -1,6 +1,6 @@
 /// <reference path="./node_modules/tns-platform-declarations/android.d.ts" />
 
-import { File, path } from "tns-core-modules/file-system";
+import * as fs from 'tns-core-modules/file-system';
 import * as platform from "tns-core-modules/platform";
 
 import { WebViewExtBase, knownFolders, traceEnabled, traceWrite, traceCategories } from "./webview-ext.common";
@@ -74,11 +74,11 @@ function initializeWebViewClient(): void {
             }
 
             const filepath = this.owner.getRegistretLocalResource(url.replace(scheme, ''));
-            if (!filepath || !File.exists(filepath)) {
+            if (!filepath || !fs.File.exists(filepath)) {
                 return super.shouldInterceptRequest(view, request);
             }
 
-            const tnsFile = File.fromPath(filepath);
+            const tnsFile = fs.File.fromPath(filepath);
 
             const javaFile = new java.io.File(tnsFile.path);
             const stream = new java.io.FileInputStream(javaFile);
@@ -252,17 +252,11 @@ export class WebViewExt extends WebViewExtBase {
         }
     }
 
-    public registerLocalResource(name: string, filepath: string) {
+    public registerLocalResource(name: string, path: string) {
+        const filepath = this.resolveLocalResourceFilePath(path);
         if (!filepath) {
-            console.log('registerLocalResource no filepath');
             return;
         }
-
-        if (filepath.startsWith('~')) {
-            filepath = path.normalize(knownFolders.currentApp().path + filepath.substr(1));
-        }
-
-        console.log(`registerLocalResource "${name}" => ${filepath}`);
 
         this.localResourceMap.set(name, filepath);
     }

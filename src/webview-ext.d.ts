@@ -132,12 +132,22 @@ export class WebViewExt extends View {
     /**
      * Load a JavaScript file on the current page in the webview.
      */
-    loadJavaScriptFile(scriptName: string, filepath?: string): void;
+    loadJavaScriptFile(scriptName: string, filepath: string): void;
 
     /**
      * Load a stylesheet file on the current page in the webview.
      */
-    loadStyleSheetFile(scriptName: string, insertBefore?: boolean, filepath?: string);
+    loadStyleSheetFile(scriptName: string, filepath: string, insertBefore?: boolean);
+
+    /**
+     * Auto-load a JavaScript-file after the page have been loaded.
+     */
+    autoLoadJavaScriptFile(scriptName: string, filepath: string): void;
+
+    /**
+     * Auto-load a stylesheet-file after the page have been loaded.
+     */
+    autoLoadStyleSheetFile(scriptName: string, filepath: string, insertBefore?: boolean): void;
 
     /**
      * Execute JavaScript inside the webview.
