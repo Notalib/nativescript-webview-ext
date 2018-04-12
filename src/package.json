@@ -14,6 +14,7 @@
         "tsc": "tsc -skipLibCheck",
         "apply-patches": "../patches/apply-patches.sh",
         "build": "npm i && npm run apply-patches && tsc",
+        "build:typings": "npm run build && (cd ../demo && TNS_TYPESCRIPT_DECLARATIONS_PATH=\"$PWD/../typings\" tns build ios) && cp ../typings/i386/*NotaWebViewExt.d.ts platforms/ios/NotaWebViewExt.d.ts",
         "test.android": "npm i && npm run tsc && npm run tslint && cd ../demo && tns build android && tns test android --justlaunch",
         "test.ios": "npm i && npm run tsc && npm run tslint && cd ../demo && tns build ios && tns test ios --justlaunch",
         "tslint": "cd .. && tslint \"**/*.ts\" --config tslint.json --exclude \"**/node_modules/**\" --exclude \"**/*.d.ts\" --exclude \"**/platforms/**\"",

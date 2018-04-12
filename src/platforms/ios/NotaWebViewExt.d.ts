@@ -1,9 +1,23 @@
 
-declare class CustomUrlSchemeHandler extends NSObject implements WKURLSchemeTask {
+declare class CustomNSURLProtocol extends NSURLProtocol implements NSURLConnectionDelegate, NSURLSessionTaskDelegate {
 
-	static alloc(): CustomUrlSchemeHandler; // inherited from NSObject
+	static alloc(): CustomNSURLProtocol; // inherited from NSObject
 
-	static new(): CustomUrlSchemeHandler; // inherited from NSObject
+	static clearRegisteredLocalResource(): void;
+
+	static getRegisteredLocalResourceForKey(forKey: string): string;
+
+	static new(): CustomNSURLProtocol; // inherited from NSObject
+
+	static registerLocalResourceForKeyFilepath(forKey: string, filepath: string): void;
+
+	static resolveFilePath(url: NSURL): string;
+
+	static setResourceDict(value: NSDictionary<string, string>): void;
+
+	static unregisterLocalResourceForKey(forKey: string): void;
+
+	static resourceDict: NSDictionary<string, string>;
 
 	readonly debugDescription: string; // inherited from NSObjectProtocol
 
@@ -13,25 +27,47 @@ declare class CustomUrlSchemeHandler extends NSObject implements WKURLSchemeTask
 
 	readonly isProxy: boolean; // inherited from NSObjectProtocol
 
-	readonly request: NSURLRequest; // inherited from WKURLSchemeTask
-
 	readonly superclass: typeof NSObject; // inherited from NSObjectProtocol
 
 	readonly  // inherited from NSObjectProtocol
+
+	URLSessionDidBecomeInvalidWithError(session: NSURLSession, error: NSError): void;
+
+	URLSessionDidFinishEventsForBackgroundURLSession(session: NSURLSession): void;
+
+	URLSessionDidReceiveChallengeCompletionHandler(session: NSURLSession, challenge: NSURLAuthenticationChallenge, completionHandler: (p1: NSURLSessionAuthChallengeDisposition, p2: NSURLCredential) => void): void;
+
+	URLSessionTaskDidCompleteWithError(session: NSURLSession, task: NSURLSessionTask, error: NSError): void;
+
+	URLSessionTaskDidFinishCollectingMetrics(session: NSURLSession, task: NSURLSessionTask, metrics: NSURLSessionTaskMetrics): void;
+
+	URLSessionTaskDidReceiveChallengeCompletionHandler(session: NSURLSession, task: NSURLSessionTask, challenge: NSURLAuthenticationChallenge, completionHandler: (p1: NSURLSessionAuthChallengeDisposition, p2: NSURLCredential) => void): void;
+
+	URLSessionTaskDidSendBodyDataTotalBytesSentTotalBytesExpectedToSend(session: NSURLSession, task: NSURLSessionTask, bytesSent: number, totalBytesSent: number, totalBytesExpectedToSend: number): void;
+
+	URLSessionTaskIsWaitingForConnectivity(session: NSURLSession, task: NSURLSessionTask): void;
+
+	URLSessionTaskNeedNewBodyStream(session: NSURLSession, task: NSURLSessionTask, completionHandler: (p1: NSInputStream) => void): void;
+
+	URLSessionTaskWillBeginDelayedRequestCompletionHandler(session: NSURLSession, task: NSURLSessionTask, request: NSURLRequest, completionHandler: (p1: NSURLSessionDelayedRequestDisposition, p2: NSURLRequest) => void): void;
+
+	URLSessionTaskWillPerformHTTPRedirectionNewRequestCompletionHandler(session: NSURLSession, task: NSURLSessionTask, response: NSHTTPURLResponse, request: NSURLRequest, completionHandler: (p1: NSURLRequest) => void): void;
 
 	class(): typeof NSObject;
 
 	conformsToProtocol(aProtocol: any /* Protocol */): boolean;
 
-	didFailWithError(error: NSError): void;
+	connectionCanAuthenticateAgainstProtectionSpace(connection: NSURLConnection, protectionSpace: NSURLProtectionSpace): boolean;
 
-	didFinish(): void;
+	connectionDidCancelAuthenticationChallenge(connection: NSURLConnection, challenge: NSURLAuthenticationChallenge): void;
 
-	didReceiveData(data: NSData): void;
+	connectionDidFailWithError(connection: NSURLConnection, error: NSError): void;
 
-	didReceiveResponse(response: NSURLResponse): void;
+	connectionDidReceiveAuthenticationChallenge(connection: NSURLConnection, challenge: NSURLAuthenticationChallenge): void;
 
-	getRegisteredLocalResourceForKey(forKey: string): string;
+	connectionShouldUseCredentialStorage(connection: NSURLConnection): boolean;
+
+	connectionWillSendRequestForAuthenticationChallenge(connection: NSURLConnection, challenge: NSURLAuthenticationChallenge): void;
 
 	isEqual(object: any): boolean;
 
@@ -45,10 +81,6 @@ declare class CustomUrlSchemeHandler extends NSObject implements WKURLSchemeTask
 
 	performSelectorWithObjectWithObject(aSelector: string, object1: any, object2: any): any;
 
-	registerLocalResourceForKeyFilepath(forKey: string, filepath: string): void;
-
-	resolveFilePath(url: NSURL): string;
-
 	resolveMimeTypeFromFilepath(filepath: string): string;
 
 	respondsToSelector(aSelector: string): boolean;
@@ -56,8 +88,23 @@ declare class CustomUrlSchemeHandler extends NSObject implements WKURLSchemeTask
 	retainCount(): number;
 
 	self(): this;
+}
 
-	setURLSchem(scheme: string): void;
+declare class CustomUrlSchemeHandler extends NSObject {
+
+	static alloc(): CustomUrlSchemeHandler; // inherited from NSObject
+
+	static new(): CustomUrlSchemeHandler; // inherited from NSObject
+
+	clearRegisteredLocalResource(): void;
+
+	getRegisteredLocalResourceForKey(forKey: string): string;
+
+	registerLocalResourceForKeyFilepath(forKey: string, filepath: string): void;
+
+	resolveFilePath(url: NSURL): string;
+
+	resolveMimeTypeFromFilepath(filepath: string): string;
 
 	unregisterLocalResourceForKey(forKey: string): void;
 
