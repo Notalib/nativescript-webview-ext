@@ -24,10 +24,16 @@ export class WKNavigationDelegateImpl extends NSObject
     public webViewDecidePolicyForNavigationActionDecisionHandler(webView: WKWebView, navigationAction: WKNavigationAction, decisionHandler: any): void {
         const owner = this._owner.get();
 
-        console.log(`webViewDecidePolicyForNavigationActionDecisionHandler: ${navigationAction.request.URL && navigationAction.request.URL.absoluteString}`);
-        if (owner && navigationAction.request.URL) {
+        if (!owner) {
+            decisionHandler(WKNavigationActionPolicy.Allow);
+            return;
+        }
+
+        const url = navigationAction.request.URL && navigationAction.request.URL.absoluteString;
+        owner.writeTrace(`webViewDecidePolicyForNavigationActionDecisionHandler: ${url}`);
+        if (url) {
             let urlOverrideHandlerFn = owner.urlOverrideHandler;
-            if (urlOverrideHandlerFn && urlOverrideHandlerFn(navigationAction.request.URL.absoluteString) === true) {
+            if (urlOverrideHandlerFn && urlOverrideHandlerFn(url) === true) {
                 decisionHandler(WKNavigationActionPolicy.Cancel);
                 return;
             }
@@ -72,9 +78,6 @@ export class WKNavigationDelegateImpl extends NSObject
         }
         const owner = this._owner.get();
         if (owner) {
-            webView.evaluateJavaScriptCompletionHandler("document.body.height", (val, err) => {
-                console.log(val);
-            });
             let src = owner.src;
             if (webView.URL) {
                 src = webView.URL.absoluteString;
@@ -181,7 +184,7 @@ let registeredCustomNSURLProtocol = false;
 
 export class WebViewExt extends WebViewExtBase {
     private _wkWebView: WKWebView;
-    private _webViewConfiguration: WKWebViewConfiguration;
+    private _wkWebViewConfiguration: WKWebViewConfiguration;
     private _wkNavigationDelegate: WKNavigationDelegateImpl;
     private _wkCustomUrlSchemeHandler: CustomUrlSchemeHandler;
     public get isWKWebView() {
@@ -198,7 +201,7 @@ export class WebViewExt extends WebViewExtBase {
         super();
 
         if (Number(platform.device.sdkVersion) >= 11) {
-            const configuration = this._webViewConfiguration = WKWebViewConfiguration.new();
+            const configuration = this._wkWebViewConfiguration = WKWebViewConfiguration.new();
             this._wkNavigationDelegate = WKNavigationDelegateImpl.initWithOwner(new WeakRef(this));
             const jScript = "var meta = document.createElement('meta'); meta.setAttribute('name', 'viewport'); meta.setAttribute('content', 'initial-scale=1.0'); document.getElementsByTagName('head')[0].appendChild(meta);";
             const wkUScript = WKUserScript.alloc().initWithSourceInjectionTimeForMainFrameOnly(jScript, WKUserScriptInjectionTime.AtDocumentEnd, true);
@@ -211,7 +214,7 @@ export class WebViewExt extends WebViewExtBase {
             );
 
             this._wkCustomUrlSchemeHandler = new CustomUrlSchemeHandler();
-            this._webViewConfiguration.setURLSchemeHandlerForURLScheme(this._wkCustomUrlSchemeHandler, this.interceptScheme);
+            this._wkWebViewConfiguration.setURLSchemeHandlerForURLScheme(this._wkCustomUrlSchemeHandler, this.interceptScheme);
 
             this.nativeViewProtected = this._wkWebView = new WKWebView({
                 frame: CGRectZero,

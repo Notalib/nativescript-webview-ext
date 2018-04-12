@@ -86,7 +86,6 @@ export abstract class WebViewExtBase extends View implements WebViewExtDefinitio
     public abstract reload(): void;
 
     public urlOverrideHandler: urlOverrideHandlerFn;
-    public urlInterceptHandler: (url: string) => string | void;
 
     [srcProperty.getDefault](): string {
         return "";
@@ -188,7 +187,7 @@ export abstract class WebViewExtBase extends View implements WebViewExtDefinitio
         }
 
         if (!fs.File.exists(filepath)) {
-            console.error(`WebViewExt.resolveLocalResourceFilePath("${name}", "${filepath}") - no such file`);
+            console.error(`WebViewExt.resolveLocalResourceFilePath("${filepath}") - no such file`);
             return;
         }
 
