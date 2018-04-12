@@ -10,4 +10,13 @@ import Foundation
 
 struct Constants {
     static let customURLScheme = "x-local"
+    static let mimeType: [String: String] = [
+        "css": "text/css",
+        "js": "text/javascript",
+        "jpg": "image/jpeg",
+        "jpeg": "image/jpeg",
+        "png": "image/png",
+        "gif": "image/gif",
+        "svg": "image/svg+xml",
+    ]
 }

@@ -17,35 +17,29 @@ enum WebErrors: Error {
 public class CustomUrlSchemeHandler: NSObject,WKURLSchemeHandler {
     var resourceDict: [String: String] = [:];
 
-    var mimeType: [String: String] = [
-        "css": "text/css",
-        "js": "text/javascript",
-        "jpg": "image/jpeg",
-        "jpeg": "image/jpeg",
-        "png": "image/png",
-        "gif": "image/gif",
-        "svg": "image/svg+xml",
-    ];
-
     @objc
     public func resolveFilePath(_ url: URL) -> String? {
         NSLog("CustomUrlSchemeHandler.resolveFilePath(%@)", url.absoluteString);
-        if url.absoluteString.starts(with: Constants.customURLScheme) {
-            let urlStr = url.host! + url.path
-            NSLog("CustomUrlSchemeHandler.resolveFilePath(%@) - path(%@)", url.absoluteString, urlStr);
-            if let filepath = self.getRegisteredLocalResource(forKey: urlStr) {
-                NSLog("CustomUrlSchemeHandler.resolveFilePath(%@) - path(%@) - filepath(%@)", url.absoluteString, urlStr, filepath);
-                return filepath
-            }
+        guard url.absoluteString.starts(with: Constants.customURLScheme) else {
+            NSLog("CustomUrlSchemeHandler.resolveFilePath(%@) - invalid scheme", url.absoluteString);
+            return nil
         }
-        return nil;
+        let urlStr = url.host! + url.path
+        NSLog("CustomUrlSchemeHandler.resolveFilePath(%@) - path(%@)", url.absoluteString, urlStr);
+        guard let filepath = self.getRegisteredLocalResource(forKey: urlStr) else {
+            NSLog("CustomUrlSchemeHandler.resolveFilePath(%@) - no path", url.absoluteString);
+            return nil;
+        }
+
+        NSLog("CustomUrlSchemeHandler.resolveFilePath(%@) - path(%@) - filepath(%@)", url.absoluteString, urlStr, filepath);
+        return filepath
     }
 
     @objc
     public func resolveMimeTypeFrom(filepath: String) -> String {
         let ext = URL(fileURLWithPath: filepath).pathExtension;
         NSLog("CustomUrlSchemeHandler.resolveMimeTypeFrom(%@) - ext(%@)", filepath, ext)
-        if let mimetype = self.mimeType[ext] {
+        if let mimetype = Constants.mimeType[ext] {
             NSLog("CustomUrlSchemeHandler.resolveMimeTypeFrom(%@) - ext(%@) -> mimetype(%@)", filepath, ext, mimetype)
             return mimetype
         }
@@ -58,26 +52,29 @@ public class CustomUrlSchemeHandler: NSObject,WKURLSchemeHandler {
         NSLog("CustomUrlSchemeHandler");
         DispatchQueue.global().async {
             NSLog("CustomUrlSchemeHandler -> global async");
-            if let url = urlSchemeTask.request.url, url.scheme == Constants.customURLScheme {
-                NSLog("CustomUrlSchemeHandler - URL(%@)", url.absoluteString)
-                if let filepath = self.resolveFilePath(url) {
-                    let mimeType = self.resolveMimeTypeFrom(filepath: filepath);
-                    NSLog("CustomUrlSchemeHandler - URL(%@) path(%@)", url.absoluteString, filepath)
-                    if let data = NSData.init(contentsOfFile: filepath) {
-                        let urlResponse = URLResponse(url: url, mimeType: mimeType, expectedContentLength: -1, textEncodingName: nil)
-                        urlSchemeTask.didReceive(urlResponse)
-                        urlSchemeTask.didReceive(data as Data)
-                        urlSchemeTask.didFinish()
-                        return;
-                    }
-                } else {
-                    NSLog("CustomUrlSchemeHandler - URL(%@) no path", url.absoluteString)
-                }
-            } else {
+            guard let url = urlSchemeTask.request.url, url.scheme == Constants.customURLScheme else {
                 NSLog("CustomUrlSchemeHandler - NO URL")
+                urlSchemeTask.didFailWithError(WebErrors.RequestFailedError)
+                return;
             }
-
-            urlSchemeTask.didFailWithError(WebErrors.RequestFailedError)
+            NSLog("CustomUrlSchemeHandler - URL(%@)", url.absoluteString)
+            guard let filepath = self.resolveFilePath(url) else {
+                NSLog("CustomUrlSchemeHandler - URL(%@) no path", url.absoluteString)
+                urlSchemeTask.didFailWithError(WebErrors.RequestFailedError)
+                return;
+            }
+            let mimeType = self.resolveMimeTypeFrom(filepath: filepath);
+            NSLog("CustomUrlSchemeHandler - URL(%@) path(%@)", url.absoluteString, filepath)
+            guard let data = NSData.init(contentsOfFile: filepath) else {
+                NSLog("CustomUrlSchemeHandler - URL(%@) path(%@) no data", url.absoluteString, filepath)
+                urlSchemeTask.didFailWithError(WebErrors.RequestFailedError)
+                return;
+            }
+            
+            let urlResponse = URLResponse(url: url, mimeType: mimeType, expectedContentLength: -1, textEncodingName: nil)
+            urlSchemeTask.didReceive(urlResponse)
+            urlSchemeTask.didReceive(data as Data)
+            urlSchemeTask.didFinish()
         }
     }
 
@@ -99,5 +96,10 @@ public class CustomUrlSchemeHandler: NSObject,WKURLSchemeHandler {
     @objc
     public func getRegisteredLocalResource(forKey: String) -> String? {
         return self.resourceDict[forKey]
+    }
+    
+    @objc
+    public func clearRegisteredLocalResource() {
+        self.resourceDict = [:]
     }
 }

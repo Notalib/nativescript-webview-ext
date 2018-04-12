@@ -3,6 +3,8 @@ declare class CustomNSURLProtocol extends NSURLProtocol implements NSURLConnecti
 
 	static alloc(): CustomNSURLProtocol; // inherited from NSObject
 
+	static clearRegisteredLocalResource(): void;
+
 	static getRegisteredLocalResourceForKey(forKey: string): string;
 
 	static new(): CustomNSURLProtocol; // inherited from NSObject
@@ -93,6 +95,8 @@ declare class CustomUrlSchemeHandler extends NSObject {
 	static alloc(): CustomUrlSchemeHandler; // inherited from NSObject
 
 	static new(): CustomUrlSchemeHandler; // inherited from NSObject
+
+	clearRegisteredLocalResource(): void;
 
 	getRegisteredLocalResourceForKey(forKey: string): string;
 

@@ -30,6 +30,9 @@ export abstract class WebViewExtBase extends View implements WebViewExtDefinitio
     public static loadStartedEvent = "loadStarted";
     public static loadFinishedEvent = "loadFinished";
 
+    public isUIWebView: boolean;
+    public isWKWebView: boolean;
+
     public src: string;
     public webViewInterface: WebViewInterface;
 

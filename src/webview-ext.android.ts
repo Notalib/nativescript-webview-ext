@@ -143,6 +143,14 @@ export class WebViewExt extends WebViewExtBase {
 
     protected readonly localResourceMap = new Map<string, string>();
 
+    public get isUIWebView() {
+        return false;
+    }
+
+    public get isWKWebView() {
+        return false;
+    }
+
     public createNativeView() {
         initializeWebViewClient();
 

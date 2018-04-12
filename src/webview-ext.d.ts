@@ -46,7 +46,17 @@ export class WebViewExt extends View {
     /**
      * Gets the native [WKWebView](https://developer.apple.com/documentation/webkit/wkwebview/) that represents the user interface for this component. Valid only when running on iOS.
      */
-    ios: any /* WKWebView */;
+    ios: any /* WKWebView | UIWebView */;
+
+    /**
+     * iOS 11+ uses an WKWebView
+     */
+    isUIWebView: boolean;
+
+    /**
+     * iOS <11 uses a UIWebview
+     */
+    isWKWebView: boolean;
 
     /**
      * Gets or sets the url, local file path or HTML string.

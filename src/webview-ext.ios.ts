@@ -184,9 +184,15 @@ export class WebViewExt extends WebViewExtBase {
     private _webViewConfiguration: WKWebViewConfiguration;
     private _wkNavigationDelegate: WKNavigationDelegateImpl;
     private _wkCustomUrlSchemeHandler: CustomUrlSchemeHandler;
+    public get isWKWebView() {
+        return !!this._wkWebView;
+    }
 
     private _uiWebView: UIWebView;
     private _uiWebViewDelegate: UIWebViewDelegateImpl;
+    public get isUIWebView() {
+        return !!this._uiWebView;
+    }
 
     constructor() {
         super();
@@ -281,7 +287,7 @@ export class WebViewExt extends WebViewExtBase {
             } else {
                 this._wkWebView.loadRequest(NSURLRequest.requestWithURL(NSURL.URLWithString(src)));
             }
-        } else if (this._wkWebView) {
+        } else if (this._uiWebView) {
             this._uiWebView.loadRequest(NSURLRequest.requestWithURL(NSURL.URLWithString(src)));
         }
     }
@@ -289,7 +295,7 @@ export class WebViewExt extends WebViewExtBase {
     public _loadData(content: string) {
         if (this._wkWebView) {
             this._wkWebView.loadHTMLStringBaseURL(content, NSURL.alloc().initWithString(`file:///${knownFolders.currentApp().path}/`));
-        } else if (this._wkWebView) {
+        } else if (this._uiWebView) {
             this._uiWebView.loadHTMLStringBaseURL(content, NSURL.alloc().initWithString(`file:///${knownFolders.currentApp().path}/`));
         }
     }
@@ -297,8 +303,8 @@ export class WebViewExt extends WebViewExtBase {
     get canGoBack(): boolean {
         if (this._wkWebView) {
             return this._wkWebView.canGoBack;
-        } else if (this._wkWebView) {
-            return this._wkWebView.canGoBack;
+        } else if (this._uiWebView) {
+            return this._uiWebView.canGoBack;
         } else {
             return false;
         }
@@ -307,8 +313,8 @@ export class WebViewExt extends WebViewExtBase {
     get canGoForward(): boolean {
         if (this._wkWebView) {
             return this._wkWebView.canGoForward;
-        } else if (this._wkWebView) {
-            return this._wkWebView.canGoForward;
+        } else if (this._uiWebView) {
+            return this._uiWebView.canGoForward;
         } else {
             return false;
         }
@@ -317,24 +323,24 @@ export class WebViewExt extends WebViewExtBase {
     public goBack() {
         if (this._wkWebView) {
             this._wkWebView.goBack();
-        } else if (this._wkWebView) {
-            this._wkWebView.goBack();
+        } else if (this._uiWebView) {
+            this._uiWebView.goBack();
         }
     }
 
     public goForward() {
         if (this._wkWebView) {
             this._wkWebView.goForward();
-        } else if (this._wkWebView) {
-            this._wkWebView.goForward();
+        } else if (this._uiWebView) {
+            this._uiWebView.goForward();
         }
     }
 
     public reload() {
         if (this._wkWebView) {
             this._wkWebView.reload();
-        } else if (this._wkWebView) {
-            this._wkWebView.reload();
+        } else if (this._uiWebView) {
+            this._uiWebView.reload();
         }
     }
 
@@ -354,7 +360,7 @@ export class WebViewExt extends WebViewExtBase {
         const path = fs.File.fromPath(filepath).path;
         if (this._wkWebView) {
             this._wkCustomUrlSchemeHandler.registerLocalResourceForKeyFilepath(name, path);
-        } else if (this._wkWebView) {
+        } else if (this._uiWebView) {
             CustomNSURLProtocol.registerLocalResourceForKeyFilepath(name, path);
         }
     }
@@ -362,7 +368,7 @@ export class WebViewExt extends WebViewExtBase {
     unregisterLocalResource(name: string) {
         if (this._wkWebView) {
             this._wkCustomUrlSchemeHandler.unregisterLocalResourceForKey(name);
-        } else if (this._wkWebView) {
+        } else if (this._uiWebView) {
             CustomNSURLProtocol.unregisterLocalResourceForKey(name);
         }
     }

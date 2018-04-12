@@ -1,32 +1,33 @@
-# Your Plugin Name
+# Nativescript webview extended
 
-Add your plugin badges here. See [nativescript-urlhandler](https://github.com/hypery2k/nativescript-urlhandler) for example.
+This is an extended version of the webview from tns-core-modules.
 
-Then describe what's the purpose of your plugin. 
-
-In case you develop UI plugin, this is where you can add some screenshots.
+## Features
+* Adds a custom-scheme handler for x-local:// to the webview for loading of resources inside the webview.
+    * Note: For iOS 11+ WKWebView is used, but for iOS <11 UIWebView is used
+* Adds support for capturing URLs This allows the app to open external links in an external browser and handle tel-links
+* Adds `executeJavaScript` function.
+* Adds functions to load `css`- and `javascript`-files in the running webpage.
 
 ## (Optional) Prerequisites / Requirements
 
-Describe the prerequisites that the user need to have installed before using your plugin. See [nativescript-firebase plugin](https://github.com/eddyverbruggen/nativescript-plugin-firebase) for example.
+TODO
 
 ## Installation
 
 Describe your plugin installation steps. Ideally it would be something like:
 
-```javascript
-tns plugin add <your-plugin-name>
+```bash
+tns plugin add @nota/nativescript-webview-ext
 ```
 
 ## Usage 
 
-Describe any usage specifics for your plugin. Give examples for Android, iOS, Angular if needed. See [nativescript-drop-down](https://www.npmjs.com/package/nativescript-drop-down) for example.
-	
-	```javascript
-    Usage code snippets here
-    ```)
+TODO
 
 ## API
+
+TODO
 
 Describe your plugin methods and properties here. See [nativescript-feedback](https://github.com/EddyVerbruggen/nativescript-feedback) for example.
     
@@ -38,3 +39,9 @@ Describe your plugin methods and properties here. See [nativescript-feedback](ht
 ## License
 
 Apache License Version 2.0, January 2004
+
+## About Nota
+
+Nota is the Danish Library and Expertise Center for people with print disabilities.
+To become a member of Nota you must be able to document that you cannot read ordinary printed text. Members of Nota are visually impaired, dyslexic or otherwise impaired.
+Our purpose is to ensure equal access to knowledge, community participation and experiences for people who're unable to read ordinary printed text.
