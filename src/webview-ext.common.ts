@@ -1,8 +1,8 @@
-import { WebViewExt as WebViewExtDefinition, LoadEventData, NavigationType, urlOverrideHandlerFn } from ".";
-import { View, Property, EventData, ViewBase, traceEnabled, traceWrite, traceMessageType } from "tns-core-modules/ui/core/view";
-
-import * as fs from "tns-core-modules/file-system";
 import { WebViewInterface } from 'nativescript-webview-interface';
+import * as fs from "tns-core-modules/file-system";
+import { EventData, Property, traceEnabled, traceMessageType, traceWrite, View, ViewBase } from "tns-core-modules/ui/core/view";
+import { LoadEventData, NavigationType, urlOverrideHandlerFn, WebViewExt as WebViewExtDefinition } from ".";
+
 import { webViewInterfaceJsCodePromise } from "./nativescript-webview-interface-loader";
 
 export { NavigationType };

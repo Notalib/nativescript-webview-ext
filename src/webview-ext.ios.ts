@@ -1,11 +1,11 @@
 /// <reference path="./node_modules/tns-platform-declarations/ios.d.ts" />
 /// <reference path="./platforms/ios/NotaWebViewExt.d.ts" />
 
-import { WebViewExtBase, knownFolders, traceWrite, traceEnabled, traceCategories, NavigationType } from "./webview-ext.common";
-import { profile } from "tns-core-modules/profiling";
-import { layout } from "tns-core-modules/ui/core/view";
 import * as fs from 'tns-core-modules/file-system';
 import * as platform from "tns-core-modules/platform";
+import { profile } from "tns-core-modules/profiling";
+import { layout } from "tns-core-modules/ui/core/view";
+import { knownFolders, NavigationType, traceCategories, traceEnabled, traceWrite, WebViewExtBase } from "./webview-ext.common";
 
 import { LoadEventData } from "./webview-ext";
 
