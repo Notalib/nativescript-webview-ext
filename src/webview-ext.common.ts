@@ -3,7 +3,7 @@ import { View, Property, EventData, ViewBase, traceEnabled, traceWrite, traceMes
 
 import * as fs from "tns-core-modules/file-system";
 import { WebViewInterface } from 'nativescript-webview-interface';
-import { webViewInterfaceJsCodePromise } from "./nativescript-script-interface";
+import { webViewInterfaceJsCodePromise } from "./nativescript-webview-interface-loader";
 
 export { NavigationType };
 export { File, knownFolders, path } from "tns-core-modules/file-system";
