@@ -1,7 +1,7 @@
 import { WebViewInterface } from 'nativescript-webview-interface';
 import * as fs from "tns-core-modules/file-system";
 import { EventData, Property, traceEnabled, traceMessageType, traceWrite, View, ViewBase } from "tns-core-modules/ui/core/view";
-import { LoadEventData, NavigationType, urlOverrideHandlerFn, WebViewExt as WebViewExtDefinition } from ".";
+import { LoadEventData, NavigationType, urlOverrideHandlerFn, WebViewExt as WebViewExtDefinition } from "./";
 
 import { webViewInterfaceJsCodePromise } from "./nativescript-webview-interface-loader";
 
@@ -23,8 +23,9 @@ export interface AutoLoadStyleSheetFile {
 }
 
 export abstract class WebViewExtBase extends View implements WebViewExtDefinition {
-    public android: any;
-    public ios: any;
+    public android: any /* android.webkit.WebView */;
+    public ios: any /* WKWebView | UIWebView */;
+
     public get interceptScheme() {
         return 'x-local';
     }
@@ -32,7 +33,10 @@ export abstract class WebViewExtBase extends View implements WebViewExtDefinitio
     public static loadStartedEvent = "loadStarted";
     public static loadFinishedEvent = "loadFinished";
 
+    /** is this.ios a UIWebView? */
     public isUIWebView: boolean;
+
+    /** is this.ios a WKWebView? */
     public isWKWebView: boolean;
 
     public src: string;
@@ -98,21 +102,23 @@ export abstract class WebViewExtBase extends View implements WebViewExtDefinitio
 
         // Add file:/// prefix for local files.
         // They should be loaded with _loadUrl() method as it handles query params.
-        if (src.indexOf("~/") === 0) {
+        if (src.startsWith("~/")) {
             src = `file:///${fs.knownFolders.currentApp().path}/` + src.substr(2);
-        } else if (src.indexOf("/") === 0) {
+        } else if (src.startsWith("/")) {
             src = "file://" + src;
         }
 
+        const lcSrc = src.toLowerCase();
+
         // loading local files from paths with spaces may fail
-        if (src.toLowerCase().indexOf("file:///") === 0) {
+        if (lcSrc.startsWith("file:///")) {
             src = encodeURI(src);
         }
 
-        if (src.toLowerCase().indexOf("http://") === 0 ||
-            src.toLowerCase().indexOf("https://") === 0 ||
-            src.toLowerCase().indexOf("file:///") === 0 ||
-            src.toLowerCase().startsWith(this.interceptScheme)
+        if (lcSrc.startsWith("http://") ||
+            lcSrc.startsWith("https://") ||
+            lcSrc.startsWith("file:///") ||
+            lcSrc.startsWith(this.interceptScheme)
         ) {
             this.setupWebViewInterface();
             this._loadUrl(src);

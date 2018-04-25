@@ -4,9 +4,9 @@ import * as fs from 'tns-core-modules/file-system';
 import * as platform from "tns-core-modules/platform";
 
 import { LoadEventData } from "./webview-ext";
-import { knownFolders, traceCategories, traceEnabled, traceWrite, WebViewExtBase } from "./webview-ext.common";
+import { knownFolders, traceCategories, traceEnabled, traceWrite, WebViewExtBase } from "./webview-ext-common";
 
-export * from "./webview-ext.common";
+export * from "./webview-ext-common";
 
 interface WebViewClient {
     new (owner: WebViewExt): android.webkit.WebViewClient;

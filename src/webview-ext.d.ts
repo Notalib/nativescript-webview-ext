@@ -4,6 +4,7 @@
  */ /** */
 
 import { View, Property, EventData } from "tns-core-modules/ui/core/view";
+import { WebViewInterface } from "nativescript-webview-interface";
 
 /**
  * Represents the observable property backing the Url property of each WebView instance.
@@ -37,6 +38,8 @@ export class WebViewExt extends View {
      * String value used when hooking to loadFinished event.
      */
     public static loadFinishedEvent: string;
+
+    public webViewInterface?: WebViewInterface;
 
     /**
      * Gets the native [android widget](http://developer.android.com/reference/android/webkit/WebView.html) that represents the user interface for this component. Valid only when running on Android OS.
@@ -154,7 +157,7 @@ export class WebViewExt extends View {
      * The code should be wrapped inside an anonymous-function.
      * Larger scripts should be injected with loadJavaScriptFile.
      */
-    executeJavaScript(scriptCode: string): void;
+    executeJavaScript(scriptCode: string): Promise<any>;
 }
 
 /**

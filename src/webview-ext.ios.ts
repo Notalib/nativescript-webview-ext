@@ -5,11 +5,10 @@ import * as fs from 'tns-core-modules/file-system';
 import * as platform from "tns-core-modules/platform";
 import { profile } from "tns-core-modules/profiling";
 import { layout } from "tns-core-modules/ui/core/view";
-import { knownFolders, NavigationType, traceCategories, traceEnabled, traceWrite, WebViewExtBase } from "./webview-ext.common";
-
 import { LoadEventData } from "./webview-ext";
+import { knownFolders, NavigationType, traceCategories, traceEnabled, traceWrite, WebViewExtBase } from "./webview-ext-common";
 
-export * from "./webview-ext.common";
+export * from "./webview-ext-common";
 
 export class WKNavigationDelegateImpl extends NSObject
     implements WKNavigationDelegate {
@@ -183,24 +182,37 @@ class UIWebViewDelegateImpl extends NSObject implements UIWebViewDelegate {
 let registeredCustomNSURLProtocol = false;
 
 export class WebViewExt extends WebViewExtBase {
-    private _wkWebView: WKWebView;
+    public get ios() {
+        return this._ios;
+    }
+
+    private _ios: WKWebView | UIWebView;
+
     private _wkWebViewConfiguration: WKWebViewConfiguration;
     private _wkNavigationDelegate: WKNavigationDelegateImpl;
     private _wkCustomUrlSchemeHandler: CustomUrlSchemeHandler;
-    public get isWKWebView() {
-        return !!this._wkWebView;
+
+    private _uiWebViewDelegate: UIWebViewDelegateImpl;
+
+    private get _uiWebView(): UIWebView | void {
+        if (this.isUIWebView) {
+            return this._ios as UIWebView;
+        }
     }
 
-    private _uiWebView: UIWebView;
-    private _uiWebViewDelegate: UIWebViewDelegateImpl;
-    public get isUIWebView() {
-        return !!this._uiWebView;
+    private get _wkWebView(): WKWebView | void {
+        if (this.isWKWebView) {
+            return this._ios as WKWebView;
+        }
     }
 
     constructor() {
         super();
 
         if (Number(platform.device.sdkVersion) >= 11) {
+            this.isUIWebView = false;
+            this.isWKWebView = true;
+
             const configuration = this._wkWebViewConfiguration = WKWebViewConfiguration.new();
             this._wkNavigationDelegate = WKNavigationDelegateImpl.initWithOwner(new WeakRef(this));
             const jScript = "var meta = document.createElement('meta'); meta.setAttribute('name', 'viewport'); meta.setAttribute('content', 'initial-scale=1.0'); document.getElementsByTagName('head')[0].appendChild(meta);";
@@ -216,22 +228,26 @@ export class WebViewExt extends WebViewExtBase {
             this._wkCustomUrlSchemeHandler = new CustomUrlSchemeHandler();
             this._wkWebViewConfiguration.setURLSchemeHandlerForURLScheme(this._wkCustomUrlSchemeHandler, this.interceptScheme);
 
-            this.nativeViewProtected = this._wkWebView = new WKWebView({
+            this.nativeViewProtected = this._ios = new WKWebView({
                 frame: CGRectZero,
                 configuration: configuration
             });
         } else {
+            this.isUIWebView = true;
+            this.isWKWebView = false;
+
             if (!registeredCustomNSURLProtocol) {
                 NSURLProtocol.registerClass(CustomNSURLProtocol as any);
                 registeredCustomNSURLProtocol = true;
             }
 
-            this.nativeViewProtected = this._uiWebView = UIWebView.new();
+            const uiWebView = UIWebView.new();
+            this.nativeViewProtected = this._ios = uiWebView;
             this._uiWebViewDelegate = UIWebViewDelegateImpl.initWithOwner(new WeakRef(this));
 
-            this.nativeViewProtected.scrollView.bounce = false;
-            this.nativeViewProtected.scrollView.scrollEnabled = false;
-            this.nativeViewProtected.scalesPageToFit = false;
+            uiWebView.scrollView.bounces = false;
+            uiWebView.scrollView.scrollEnabled = false;
+            uiWebView.scalesPageToFit = false;
         }
     }
 
@@ -269,10 +285,6 @@ export class WebViewExt extends WebViewExtBase {
         }
         this.disposeWebViewInterface();
         super.onUnloaded();
-    }
-
-    get ios(): WKWebView | UIWebView {
-        return this._wkWebView || this._uiWebView;
     }
 
     public stopLoading() {
