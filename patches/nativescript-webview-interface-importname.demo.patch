@@ -1,0 +1,8 @@
+--- demo/node_modules/nativescript-webview-interface/index.d.ts.orig	2018-03-23 13:54:27.520901553 +0100
++++ demo/node_modules/nativescript-webview-interface/index.d.ts	2018-03-23 13:54:50.485016944 +0100
+@@ -1,4 +1,4 @@
+-import {WebView} from 'ui/web-view';
++import {WebView} from 'tns-core-modules/ui/web-view';
+ 
+ /**
+  * WebViewInterface Class containing common functionalities for Android and iOS
