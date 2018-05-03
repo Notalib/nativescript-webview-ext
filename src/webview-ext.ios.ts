@@ -278,14 +278,12 @@ export class WebViewExt extends WebViewExtBase {
                         reject(error);
                         return;
                     }
-                    result = this.parseWebviewJavascriptResult(data);
+                    resolve(this.parseWebviewJavascriptResult(data));
                 });
             } else if (this._uiWebView) {
                 const resStr = this._uiWebView.stringByEvaluatingJavaScriptFromString(scriptCode);
-                result = this.parseWebviewJavascriptResult(resStr);
+                resolve(this.parseWebviewJavascriptResult(resStr));
             }
-            // this.writeTrace(`Executed Javascript, with result: ${result}`);
-            resolve(result);
         });
     }
 
