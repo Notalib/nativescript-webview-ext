@@ -7,6 +7,30 @@
 
         window.nsWebViewInterface.emit('gotMessage', { huba: "hop" });
       }
+
+      function getNumber() {
+        return 42;
+      }
+
+      function getNumberFloat() {
+        return 3.14;
+      }
+
+      function getBoolean() {
+        return false;
+      }
+
+      function getString() {
+        return 'string result from webview JS function';
+      }
+
+      function getArray() {
+        return [1.5, true, "hello"];
+      }
+
+      function getObject() {
+        return { prop: "test", name: "object-test", values: [ 42, 3.14 ] };
+      }
     </script>
   </head>
   <body>

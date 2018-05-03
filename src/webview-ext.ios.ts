@@ -137,10 +137,16 @@ class UIWebViewDelegateImpl extends NSObject implements UIWebViewDelegate {
 
             owner.writeTrace("UIWebViewDelegateClass.webViewShouldStartLoadWithRequestNavigationType(" + request.URL.absoluteString + ", " + navigationType + ")");
             owner._onLoadStarted(request.URL.absoluteString, navType);
+
+            if (navType === "other" && request.URL.absoluteString.startsWith("js2ios:")) {
+                owner.skipNextLoadFinished = true;
+            }
         }
 
         return true;
     }
+
+    public uiWebViewJSNavigation = false;
 
     public webViewDidStartLoad(webView: UIWebView) {
         let owner = this._owner.get();
@@ -153,6 +159,10 @@ class UIWebViewDelegateImpl extends NSObject implements UIWebViewDelegate {
         let owner = this._owner.get();
 
         if (owner) {
+            if (owner.skipNextLoadFinished) {
+                owner.skipNextLoadFinished = false;
+                return;
+            }
             owner.writeTrace("UIWebViewDelegateClass.webViewDidFinishLoad(" + webView.request.URL + ")");
 
             let src = owner.src;
@@ -166,15 +176,18 @@ class UIWebViewDelegateImpl extends NSObject implements UIWebViewDelegate {
     public webViewDidFailLoadWithError(webView: UIWebView, error: NSError) {
         let owner = this._owner.get();
         if (owner) {
+            if (owner.skipNextLoadFinished) {
+                owner.skipNextLoadFinished = false;
+                return;
+            }
+
             let src = owner.src;
             if (webView.request && webView.request.URL) {
                 src = webView.request.URL.absoluteString;
             }
 
-            owner.writeTrace("UIWebViewDelegateClass.webViewDidFailLoadWithError(" + error.localizedDescription + ")");
-            if (owner) {
-                owner._onLoadFinished(src, error.localizedDescription);
-            }
+            owner.writeTrace("UIWebViewDelegateClass.webViewDidFailLoadWithError(" + error.localizedDescription + ") url: " + src);
+            owner._onLoadFinished(src, error.localizedDescription);
         }
     }
 }
@@ -251,19 +264,28 @@ export class WebViewExt extends WebViewExtBase {
         }
     }
 
-    public executeJavaScript(scriptCode) {
-        return new Promise<any>((resolve, reject) => {
+    public executeJavaScript<T>(scriptCode: string, stringifyResult = true): Promise<T> {
+        if (stringifyResult) {
+            scriptCode = `var result = ${scriptCode};
+            try { JSON.stringify(result); } catch (err) { result }`;
+        }
+        // this.writeTrace('Executing Javascript: ' + scriptCode);
+        return new Promise((resolve, reject) => {
+            let result: any;
             if (this._wkWebView) {
                 this._wkWebView.evaluateJavaScriptCompletionHandler(scriptCode, (data, error) => {
                     if (error) {
                         reject(error);
                         return;
                     }
-                    resolve(data);
+                    result = this.parseWebviewJavascriptResult(data);
                 });
             } else if (this._uiWebView) {
-                resolve(this._uiWebView.stringByEvaluatingJavaScriptFromString(scriptCode));
+                const resStr = this._uiWebView.stringByEvaluatingJavaScriptFromString(scriptCode);
+                result = this.parseWebviewJavascriptResult(resStr);
             }
+            // this.writeTrace(`Executed Javascript, with result: ${result}`);
+            resolve(result);
         });
     }
 

@@ -271,18 +271,18 @@ export class WebViewExt extends WebViewExtBase {
         return res;
     }
 
-    public executeJavaScript(scriptCode) {
-        return new Promise<any>((resolve) => {
-            if (Number(platform.device.sdkVersion) >= 19) {
-                this.android.evaluateJavascript(scriptCode, new android.webkit.ValueCallback({
-                    onReceiveValue(result) {
-                        resolve(result);
-                    },
-                }));
-            } else {
-                this.android.loadUrl(`javascript:${escape(scriptCode)}`);
-                resolve();
+    public executeJavaScript<T>(scriptCode): Promise<T> {
+        return new Promise<any>((resolve, reject) => {
+            if (Number(platform.device.sdkVersion) < 19) {
+                reject(new Error('Android API < 19 not supported'));
+                return;
             }
+            const that = this;
+            this.android.evaluateJavascript(scriptCode, new android.webkit.ValueCallback({
+                onReceiveValue(result) {
+                    resolve(that.parseWebviewJavascriptResult(result));
+                },
+            }));
         });
     }
 }

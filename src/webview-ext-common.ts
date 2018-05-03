@@ -42,6 +42,9 @@ export abstract class WebViewExtBase extends View implements WebViewExtDefinitio
     public src: string;
     public webViewInterface: WebViewInterface;
 
+    /** Flag to skip next loadFinished event. Used when UIWebView does a pseudo-navigation to exec js */
+    public skipNextLoadFinished: boolean;
+
     protected autoLoadScriptFiles = [] as AutoLoadJavaScriptFile[];
     protected autoLoadStyleSheetFiles = [] as AutoLoadStyleSheetFile[];
 
@@ -166,10 +169,17 @@ export abstract class WebViewExtBase extends View implements WebViewExtDefinitio
      */
     protected setupWebViewInterface() {
         if (!this.webViewInterface) {
+            this.writeTrace('Setting up webview interface');
             this.webViewInterface = new WebViewInterface(this);
 
-            this.on(WebViewExtBase.loadFinishedEvent, () => {
-                webViewInterfaceJsCodePromise.then((webViewInterfaceJsCode) => this.executeJavaScript(webViewInterfaceJsCode));
+            this.on(WebViewExtBase.loadFinishedEvent, (evt: LoadEventData) => {
+                if (evt && evt.error) {
+                    this.writeTrace('Error injecting webview-interface JS code: ' + evt.error);
+                    return;
+                }
+                this.writeTrace('Injecting webview-interface JS code');
+                webViewInterfaceJsCodePromise
+                    .then((webViewInterfaceJsCode) => this.executeJavaScript(webViewInterfaceJsCode, false))
 
                 for (const {scriptName, filepath} of this.autoLoadScriptFiles) {
                     this.loadJavaScriptFile(scriptName, filepath);
@@ -212,14 +222,16 @@ export abstract class WebViewExtBase extends View implements WebViewExtDefinitio
             scriptName = `${this.interceptScheme}://${scriptName}`;
         }
         const scriptCode = this.getInjectScriptCode(scriptName);
-        this.executeJavaScript(scriptCode);
+        this.writeTrace('Loading javascript file: ' + scriptName);
+        this.executeJavaScript(scriptCode, false);
     }
 
     public loadStyleSheetFile(stylesheetName: string, filepath: string, insertBefore = true) {
         this.registerLocalResource(stylesheetName, filepath);
         const sheetUrl = `${this.interceptScheme}://${stylesheetName}`;
         const scriptCode = this.getInjectCSSCode(sheetUrl, insertBefore);
-        this.executeJavaScript(scriptCode);
+        this.writeTrace('Loading stylesheet file: ' + sheetUrl);
+        this.executeJavaScript(scriptCode, false);
     }
 
     public autoLoadJavaScriptFile(scriptName: string, filepath: string) {
@@ -236,7 +248,7 @@ export abstract class WebViewExtBase extends View implements WebViewExtDefinitio
         this.autoLoadStyleSheetFiles.push({stylesheetName, filepath, insertBefore});
     }
 
-    public abstract executeJavaScript(scriptCode: string): Promise<any>;
+    public abstract executeJavaScript(scriptCode: string, stringifyResult?: boolean): Promise<any>;
 
     protected getInjectScriptCode(scriptHref: string) {
         const elId = scriptHref.replace(/[^a-z0-9]/g, '');
@@ -285,6 +297,17 @@ export abstract class WebViewExtBase extends View implements WebViewExtDefinitio
 
         this.webViewInterface.destroy();
         this.webViewInterface = null;
+    }
+
+    protected parseWebviewJavascriptResult(result: any) {
+        if (result === undefined) {
+            return undefined;
+        }
+        try {
+            return JSON.parse(result);
+        } catch (err) {
+            return result;
+        }
     }
 
     public writeTrace(message: string, type = traceMessageType.info) {

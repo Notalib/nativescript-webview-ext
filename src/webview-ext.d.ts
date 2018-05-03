@@ -157,7 +157,7 @@ export class WebViewExt extends View {
      * The code should be wrapped inside an anonymous-function.
      * Larger scripts should be injected with loadJavaScriptFile.
      */
-    executeJavaScript(scriptCode: string): Promise<any>;
+    executeJavaScript<T>(scriptCode: string, stringifyResult?: boolean): Promise<T>;
 }
 
 /**

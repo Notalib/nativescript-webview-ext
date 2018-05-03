@@ -1,6 +1,7 @@
 <Page xmlns="http://schemas.nativescript.org/tns.xsd" loaded="pageLoaded" class="page"
   xmlns:ui="@nota/nativescript-webview-ext">
-  <GridLayout class="p-2" rows="*" columns="*">
-    <ui:WebViewExt loaded="webviewLoaded"></ui:WebViewExt>
+  <GridLayout class="p-2" rows="auto, *" columns="*">
+    <Button row="0" text="Run Tests" tap="runTests" class="btn btn-primary"></Button>
+    <ui:WebViewExt row="1" loaded="webviewLoaded"></ui:WebViewExt>
   </GridLayout>
 </Page>
