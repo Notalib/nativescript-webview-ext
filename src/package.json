@@ -1,6 +1,6 @@
 {
     "name": "@nota/nativescript-webview-ext",
-    "version": "0.0.1-alpha.4",
+    "version": "0.0.1-alpha.5",
     "description": "NativeScript webview forked from tns-core-modules",
     "main": "webview-ext",
     "typings": "webview-ext.d.ts",
