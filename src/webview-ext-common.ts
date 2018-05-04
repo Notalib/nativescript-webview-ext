@@ -1,4 +1,3 @@
-import { WebViewInterface } from 'nativescript-webview-interface';
 import * as fs from "tns-core-modules/file-system";
 import { EventData, Property, traceEnabled, traceMessageType, traceWrite, View, ViewBase } from "tns-core-modules/ui/core/view";
 import { LoadEventData, NavigationType, urlOverrideHandlerFn, WebViewExt as WebViewExtDefinition } from "./";
@@ -40,13 +39,14 @@ export abstract class WebViewExtBase extends View implements WebViewExtDefinitio
     public isWKWebView: boolean;
 
     public src: string;
-    public webViewInterface: WebViewInterface;
-
-    /** Flag to skip next loadFinished event. Used when UIWebView does a pseudo-navigation to exec js */
-    public skipNextLoadFinished: boolean;
 
     protected autoLoadScriptFiles = [] as AutoLoadJavaScriptFile[];
     protected autoLoadStyleSheetFiles = [] as AutoLoadStyleSheetFile[];
+
+    constructor() {
+        super();
+        this.setupWebViewInterface();
+    }
 
     public _onLoadFinished(url: string, error?: string) {
         let args = <LoadEventData>{
@@ -123,7 +123,6 @@ export abstract class WebViewExtBase extends View implements WebViewExtDefinitio
             lcSrc.startsWith("file:///") ||
             lcSrc.startsWith(this.interceptScheme)
         ) {
-            this.setupWebViewInterface();
             this._loadUrl(src);
         } else {
             this._loadData(src);
@@ -137,59 +136,27 @@ export abstract class WebViewExtBase extends View implements WebViewExtDefinitio
         throw new Error("Property url of WebView is deprecated. Use src instead");
     }
 
-    public on(eventName, callback, typeArgs) {
-        super.on(eventName, callback, typeArgs);
-
-        switch (eventName) {
-            case ViewBase.loadedEvent:
-            case ViewBase.unloadedEvent:
-            case WebViewExtBase.loadFinishedEvent:
-            case WebViewExtBase.loadStartedEvent:
-            {
-                // NativeScript event don't bind inside to the WebView
-                return;
-            }
-            default: {
-                this.setupWebViewInterface();
-                this.webViewInterface.on(eventName, callback);
-            }
-        }
-    }
-
-    public off(eventName, callback?, typeArgs?) {
-        if (this.webViewInterface) {
-            this.webViewInterface.off(eventName, callback);
-        }
-
-        super.off(eventName, callback, typeArgs);
-    }
-
     /**
-     * Setups of the WebViewInterface and makes sure the nativescript-webview-interface is loaded on the webpage.
+     * Setups of the WebViewInterface and makes sure the bridge is loaded on the webpage.
      */
     protected setupWebViewInterface() {
-        if (!this.webViewInterface) {
-            this.writeTrace('Setting up webview interface');
-            this.webViewInterface = new WebViewInterface(this);
+        this.on(WebViewExtBase.loadFinishedEvent, (evt: LoadEventData) => {
+            if (evt && evt.error) {
+                this.writeTrace('Error injecting webview-interface JS code: ' + evt.error);
+                return;
+            }
+            this.writeTrace('Injecting webview-interface JS code');
+            webViewInterfaceJsCodePromise
+                .then((webViewInterfaceJsCode) => this.executeJavaScript(webViewInterfaceJsCode, false));
 
-            this.on(WebViewExtBase.loadFinishedEvent, (evt: LoadEventData) => {
-                if (evt && evt.error) {
-                    this.writeTrace('Error injecting webview-interface JS code: ' + evt.error);
-                    return;
-                }
-                this.writeTrace('Injecting webview-interface JS code');
-                webViewInterfaceJsCodePromise
-                    .then((webViewInterfaceJsCode) => this.executeJavaScript(webViewInterfaceJsCode, false))
+            for (const { scriptName, filepath } of this.autoLoadScriptFiles) {
+                this.loadJavaScriptFile(scriptName, filepath);
+            }
 
-                for (const {scriptName, filepath} of this.autoLoadScriptFiles) {
-                    this.loadJavaScriptFile(scriptName, filepath);
-                }
-
-                for (const {stylesheetName, filepath, insertBefore} of this.autoLoadStyleSheetFiles) {
-                    this.loadStyleSheetFile(stylesheetName, filepath, !!insertBefore);
-                }
-            });
-        }
+            for (const { stylesheetName, filepath, insertBefore } of this.autoLoadStyleSheetFiles) {
+                this.loadStyleSheetFile(stylesheetName, filepath, !!insertBefore);
+            }
+        });
     }
 
     protected resolveLocalResourceFilePath(filepath: string): string | void {
@@ -235,17 +202,13 @@ export abstract class WebViewExtBase extends View implements WebViewExtDefinitio
     }
 
     public autoLoadJavaScriptFile(scriptName: string, filepath: string) {
-        if (this.webViewInterface) {
-            this.loadJavaScriptFile(scriptName, filepath);
-        }
-        this.autoLoadScriptFiles.push({scriptName, filepath});
+        this.loadJavaScriptFile(scriptName, filepath);
+        this.autoLoadScriptFiles.push({ scriptName, filepath });
     }
 
     public autoLoadStyleSheetFile(stylesheetName: string, filepath: string, insertBefore?: boolean) {
-        if (this.webViewInterface) {
-            this.loadStyleSheetFile(stylesheetName, filepath, insertBefore);
-        }
-        this.autoLoadStyleSheetFiles.push({stylesheetName, filepath, insertBefore});
+        this.loadStyleSheetFile(stylesheetName, filepath, insertBefore);
+        this.autoLoadStyleSheetFiles.push({ stylesheetName, filepath, insertBefore });
     }
 
     public abstract executeJavaScript(scriptCode: string, stringifyResult?: boolean): Promise<any>;
@@ -290,15 +253,6 @@ export abstract class WebViewExtBase extends View implements WebViewExtDefinitio
         })();`;
     }
 
-    protected disposeWebViewInterface() {
-        if (!this.webViewInterface) {
-            return;
-        }
-
-        this.webViewInterface.destroy();
-        this.webViewInterface = null;
-    }
-
     protected parseWebviewJavascriptResult(result: any) {
         if (result === undefined) {
             return undefined;
@@ -315,7 +269,24 @@ export abstract class WebViewExtBase extends View implements WebViewExtDefinitio
             traceWrite(message, 'NOTA', type);
         }
     }
+
+    public emitToWebView(eventName: string, data: any) {
+        const scriptCode = `
+            window.nsWebViewInterface && nsWebViewInterface.onNativeEvent(${JSON.stringify(eventName)}, ${JSON.stringify(data)});
+        `;
+
+        this.executeJavaScript(scriptCode, false);
+    }
+
+    public onWebViewEvent(eventName: string, data: any) {
+        this.notify({
+            eventName,
+            object: this,
+            data,
+        });
+    }
 }
+
 export interface WebViewExtBase {
     on(eventNames: string, callback: (data: EventData) => void, thisArg?: any);
     on(event: "loadFinished", callback: (args: LoadEventData) => void, thisArg?: any);

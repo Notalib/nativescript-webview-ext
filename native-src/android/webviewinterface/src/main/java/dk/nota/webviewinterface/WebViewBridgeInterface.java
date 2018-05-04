@@ -2,18 +2,16 @@ package dk.nota.webviewinterface;
 
 import android.webkit.JavascriptInterface;
 
-public class WebViewBridgeInterface  {
-    private String id = null;
-    public WebViewBridgeInterface(String id) {
-        this.id = id;
+public class WebViewBridgeInterface {
+    public WebViewBridgeInterface() {
     }
 
     @JavascriptInterface
     public void emitEvent(String eventName, String data) {
-        this.emitEventToNativeScript(this.id, eventName, data);
+        this.emitEventToNativeScript(eventName, data);
     }
 
-    public void emitEventToNativeScript(String id, String eventName, String data) {
+    public void emitEventToNativeScript(String eventName, String data) {
         // Extend this function in nativescript
     }
 }

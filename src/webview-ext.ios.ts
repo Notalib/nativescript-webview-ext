@@ -4,7 +4,7 @@
 import * as fs from 'tns-core-modules/file-system';
 import * as platform from "tns-core-modules/platform";
 import { profile } from "tns-core-modules/profiling";
-import { layout } from "tns-core-modules/ui/core/view";
+import { layout, traceMessageType } from "tns-core-modules/ui/core/view";
 import { LoadEventData } from "./webview-ext";
 import { knownFolders, NavigationType, traceCategories, traceEnabled, traceWrite, WebViewExtBase } from "./webview-ext-common";
 
@@ -100,6 +100,34 @@ export class WKNavigationDelegateImpl extends NSObject
     }
 }
 
+class WKScriptMessageHandlerImpl extends NSObject implements WKScriptMessageHandler {
+    public static ObjCProtocols = [WKScriptMessageHandler];
+
+    private _owner: WeakRef<WebViewExt>;
+
+    public static initWithOwner(owner: WeakRef<WebViewExt>): WKScriptMessageHandlerImpl {
+        let delegate = <WKScriptMessageHandlerImpl>WKScriptMessageHandlerImpl.new();
+        delegate._owner = owner;
+        return delegate;
+    }
+
+    public userContentControllerDidReceiveScriptMessage(userContentController: WKUserContentController, webViewMessage: WKScriptMessage) {
+        const owner = this._owner.get();
+        if (!owner) {
+            return;
+        }
+
+        try {
+            const message = JSON.parse(webViewMessage.body as string);
+            console.log(message);
+            owner.onWebViewEvent(message.eventName, message.data);
+        } catch (err) {
+            console.log(err);
+            console.log(webViewMessage);
+        }
+    }
+}
+
 class UIWebViewDelegateImpl extends NSObject implements UIWebViewDelegate {
     public static ObjCProtocols = [UIWebViewDelegate];
 
@@ -135,12 +163,13 @@ class UIWebViewDelegateImpl extends NSObject implements UIWebViewDelegate {
                     break;
             }
 
-            owner.writeTrace("UIWebViewDelegateClass.webViewShouldStartLoadWithRequestNavigationType(" + request.URL.absoluteString + ", " + navigationType + ")");
-            owner._onLoadStarted(request.URL.absoluteString, navType);
-
-            if (navType === "other" && request.URL.absoluteString.startsWith("js2ios:")) {
-                owner.skipNextLoadFinished = true;
+            const absoluteUrl = request.URL.absoluteString;
+            owner.writeTrace("UIWebViewDelegateClass.webViewShouldStartLoadWithRequestNavigationType(" + absoluteUrl + ", " + navigationType + ")");
+            if (navType === "other" && absoluteUrl.startsWith("js2ios:")) {
+                owner.onUIWebViewEvent(absoluteUrl);
+                return false;
             }
+            owner._onLoadStarted(request.URL.absoluteString, navType);
         }
 
         return true;
@@ -159,10 +188,6 @@ class UIWebViewDelegateImpl extends NSObject implements UIWebViewDelegate {
         let owner = this._owner.get();
 
         if (owner) {
-            if (owner.skipNextLoadFinished) {
-                owner.skipNextLoadFinished = false;
-                return;
-            }
             owner.writeTrace("UIWebViewDelegateClass.webViewDidFinishLoad(" + webView.request.URL + ")");
 
             let src = owner.src;
@@ -176,11 +201,6 @@ class UIWebViewDelegateImpl extends NSObject implements UIWebViewDelegate {
     public webViewDidFailLoadWithError(webView: UIWebView, error: NSError) {
         let owner = this._owner.get();
         if (owner) {
-            if (owner.skipNextLoadFinished) {
-                owner.skipNextLoadFinished = false;
-                return;
-            }
-
             let src = owner.src;
             if (webView.request && webView.request.URL) {
                 src = webView.request.URL.absoluteString;
@@ -230,8 +250,10 @@ export class WebViewExt extends WebViewExtBase {
             this._wkNavigationDelegate = WKNavigationDelegateImpl.initWithOwner(new WeakRef(this));
             const jScript = "var meta = document.createElement('meta'); meta.setAttribute('name', 'viewport'); meta.setAttribute('content', 'initial-scale=1.0'); document.getElementsByTagName('head')[0].appendChild(meta);";
             const wkUScript = WKUserScript.alloc().initWithSourceInjectionTimeForMainFrameOnly(jScript, WKUserScriptInjectionTime.AtDocumentEnd, true);
+            const messageHandler = WKScriptMessageHandlerImpl.initWithOwner(new WeakRef(this));
             const wkUController = WKUserContentController.new();
             wkUController.addUserScript(wkUScript);
+            wkUController.addScriptMessageHandlerName(messageHandler, 'nsBridge');
             configuration.userContentController = wkUController;
             configuration.preferences.setValueForKey(
                 true,
@@ -303,7 +325,6 @@ export class WebViewExt extends WebViewExtBase {
         } else if (this._uiWebView) {
             this._uiWebView.delegate = null;
         }
-        this.disposeWebViewInterface();
         super.onUnloaded();
     }
 
@@ -407,6 +428,21 @@ export class WebViewExt extends WebViewExtBase {
             return CustomNSURLProtocol.getRegisteredLocalResourceForKey(name);
         } else {
             throw new Error('Not implemented for UIWebView');
+        }
+    }
+
+    public onUIWebViewEvent(url: string) {
+        try {
+            const { eventName, resId } = JSON.parse(url.replace(/^js2ios:/, ''));
+            this.executeJavaScript(`window.nsWebViewInterface.getIOSResponse(${resId}`)
+                .then((data) => {
+                    this.onWebViewEvent(eventName, data);
+                })
+                .catch((err) => {
+                    this.writeTrace(`WebViewExt.onUIWebViewEvent(${url}) - getIOSResponse - ${err}`, traceMessageType.error);
+                });
+        } catch (err) {
+            this.writeTrace(`WebViewExt.onUIWebViewEvent(${url}) - ${err}`, traceMessageType.error);
         }
     }
 }

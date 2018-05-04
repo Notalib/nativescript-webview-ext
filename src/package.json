@@ -12,8 +12,8 @@
     },
     "scripts": {
         "tsc": "tsc -skipLibCheck",
-        "apply-patches": "../patches/apply-patches.sh",
-        "build": "npm i && npm run apply-patches && tsc",
+        "build": "npm i && npm run build:webview-interface && tsc",
+        "build:webview-interface": "(cd ../www-src && npm i && npm run build) && cp ../www-src/webview-interface.js www/webview-interface.js",
         "build:typings": "npm run build && (cd ../demo && TNS_TYPESCRIPT_DECLARATIONS_PATH=\"$PWD/../typings\" tns build ios) && cp ../typings/i386/*NotaWebViewExt.d.ts platforms/ios/NotaWebViewExt.d.ts",
         "test.android": "npm i && npm run tsc && npm run tslint && cd ../demo && tns build android && tns test android --justlaunch",
         "test.ios": "npm i && npm run tsc && npm run tslint && cd ../demo && tns build ios && tns test ios --justlaunch",
@@ -23,8 +23,8 @@
         "run.http-server": "cd ../demo/www && npx hs -p 8080",
         "run.demo.android": "cd ../demo && tns run android --syncAllFiles",
         "run.demo.ios": "cd ../demo && tns run ios --syncAllFiles",
-        "demo.ios": "npm i && npm run tsc && npm-run-all --parallel plugin.tscwatch run.demo.ios run.http-server",
-        "demo.android": "npm i && npm run tsc && npm-run-all --parallel plugin.tscwatch run.demo.android run.http-server",
+        "demo.ios": "npm run build -- -skipLibCheck && npm-run-all --parallel plugin.tscwatch run.demo.ios run.http-server",
+        "demo.android": "npm run build -- -skipLibCheck && npm-run-all --parallel plugin.tscwatch run.demo.android run.http-server",
         "demo.reset": "cd ../demo && rimraf platforms hooks node_modules && npm install",
         "plugin.prepare": "npm run tsc && cd ../demo && tns plugin remove nativescript-webview-ext && tns plugin add ../src",
         "clean": "cd ../demo && rimraf hooks node_modules platforms && cd ../src && rimraf node_modules && npm run plugin.link",
@@ -52,11 +52,7 @@
     "license": "Apache-2.0",
     "homepage": "https://github.com/Notalib/nativescript-webview-ext",
     "readmeFilename": "README.md",
-    "peerDependencies": {
-        "nativescript-webview-interface": "^1.4.2"
-    },
     "devDependencies": {
-        "nativescript-webview-interface": "^1.4.2",
         "npm-run-all": "^4.1.2",
         "prompt": "^1.0.0",
         "rimraf": "^2.5.0",

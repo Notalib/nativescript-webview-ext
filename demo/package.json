@@ -3,18 +3,17 @@
     "name": "hugo",
     "id": "dk.nota.webviewdemo",
     "tns-android": {
-      "version": "4.0.0-2018.3.12.1"
+      "version": "4.0.0"
     },
     "tns-ios": {
-      "version": "4.0.0-2018-03-05-01"
+      "version": "4.0.0"
     }
   },
   "dependencies": {
     "@nota/nativescript-webview-ext": "../src",
     "nativescript-theme-core": "^1.0.4",
     "nativescript-unit-test-runner": "^0.3.4",
-    "nativescript-webview-interface": "^1.4.2",
-    "tns-core-modules": "^4.0.0-2018-03-08-03"
+    "tns-core-modules": "4.0.0"
   },
   "devDependencies": {
     "awesome-typescript-loader": "~3.1.3",

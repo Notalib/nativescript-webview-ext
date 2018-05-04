@@ -18,6 +18,7 @@ export function pageLoaded(args: observable.EventData) {
     page.bindingContext = new HelloWorldModel();
 }
 
+let gotMessageData: any = null;
 export function webviewLoaded(args: observable.EventData) {
     webview = args.object as WebViewExt;
 
@@ -28,20 +29,28 @@ export function webviewLoaded(args: observable.EventData) {
         webview.src = 'http://localhost:8080';
     }
 
+    (<any>android.webkit.WebView).setWebContentsDebuggingEnabled(true);
+
     webview.on(WebViewExt.loadFinishedEvent, (args) => {
         console.log('WebViewExt.loadFinishedEvent: ' + (<any>args.object).src);
         webview.loadStyleSheetFile('local-stylesheet.css', '~/assets/local-stylesheet.css', false);
     });
 
-    webview.on('gotMessage', (msg) => {
-        console.log(`webview.gotMessage: ${JSON.stringify(msg)} (${typeof msg})`);
+    webview.on('gotMessage', (msg: any) => {
+        gotMessageData = msg.data;
+        console.log(`webview.gotMessage: ${JSON.stringify(msg.data)} (${typeof msg})`);
     });
 }
 
-function executeJavaScriptTest<T>(js: string): Promise<T> {
+function executeJavaScriptTest<T>(js: string, expected?: T): Promise<T> {
     return webview.executeJavaScript<T>(js).then((res: T) => {
         console.log(`executeJavaScript '${js}' => ${JSON.stringify(res)} (${typeof res})`);
-        return res;
+        const jsonRes = JSON.stringify(res);
+        const expectedJson = JSON.stringify(expected);
+        if (expected !== undefined && jsonRes !== expectedJson) {
+            return Promise.reject(new Error(`Expected: ${expectedJson}. Got: ${jsonRes}`));
+        }
+        return Promise.resolve(res);
     }).catch((err) => {
         console.log(`executeJavaScript '${js}' => ERROR: ${err}`);
         throw err;
@@ -51,14 +60,26 @@ function executeJavaScriptTest<T>(js: string): Promise<T> {
 export function runTests() {
     console.time('tests');
     Promise.all([
-        executeJavaScriptTest('callFromNativeScript()'),
-        executeJavaScriptTest<number>('getNumber()'),
-        executeJavaScriptTest<number>('getNumberFloat()'),
-        executeJavaScriptTest<boolean>('getBoolean()'),
-        executeJavaScriptTest<string>('getString()'),
-        executeJavaScriptTest<Object>('getArray()'),
-        executeJavaScriptTest<Object>('getObject()')
+        executeJavaScriptTest('callFromNativeScript()')
+            .then(() => {
+                const expected = { huba: 'hop' };
+                const expectedJson = JSON.stringify(expected);
+                const gotJson = JSON.stringify(gotMessageData);
+                if (expectedJson === gotJson) {
+                    console.log(`executeJavaScript via message 'callFromNativeScript()' => ${gotJson} (${typeof gotMessageData})`);
+                    return Promise.resolve(gotMessageData);
+                }
+
+                return Promise.reject(new Error(`Expected: ${expectedJson}. Got: ${gotJson}`));
+            }),
+        executeJavaScriptTest('getNumber()', 42),
+        executeJavaScriptTest('getNumberFloat()', 3.14),
+        executeJavaScriptTest('getBoolean()', false),
+        executeJavaScriptTest('getString()', 'string result from webview JS function'),
+        executeJavaScriptTest('getArray()', [1.5, true, "hello"]),
+        executeJavaScriptTest('getObject()', { "name": "object-test", "prop": "test", "values": [42, 3.14] })
     ]).then(() => {
         console.timeEnd('tests');
     });
 }
+
