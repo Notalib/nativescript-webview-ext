@@ -1,4 +1,5 @@
 import { WebViewExt } from '@nota/nativescript-webview-ext';
+import * as _ from 'lodash';
 import * as observable from 'tns-core-modules/data/observable';
 import { isAndroid } from 'tns-core-modules/platform';
 import * as trace from 'tns-core-modules/trace';
@@ -25,11 +26,11 @@ export function webviewLoaded(args: observable.EventData) {
     webview.registerLocalResource('local-stylesheet.css', '~/assets/local-stylesheet.css');
     if (isAndroid) {
         webview.src = 'http://10.0.2.2:8080';
+
+        (<any>android.webkit.WebView).setWebContentsDebuggingEnabled(true);
     } else {
         webview.src = 'http://localhost:8080';
     }
-
-    (<any>android.webkit.WebView).setWebContentsDebuggingEnabled(true);
 
     webview.on(WebViewExt.loadFinishedEvent, (args) => {
         console.log('WebViewExt.loadFinishedEvent: ' + (<any>args.object).src);
@@ -47,7 +48,7 @@ function executeJavaScriptTest<T>(js: string, expected?: T): Promise<T> {
         console.log(`executeJavaScript '${js}' => ${JSON.stringify(res)} (${typeof res})`);
         const jsonRes = JSON.stringify(res);
         const expectedJson = JSON.stringify(expected);
-        if (expected !== undefined && jsonRes !== expectedJson) {
+        if (expected !== undefined && _.isEqual(expected,  res)) {
             return Promise.reject(new Error(`Expected: ${expectedJson}. Got: ${jsonRes}`));
         }
         return Promise.resolve(res);
@@ -65,7 +66,7 @@ export function runTests() {
                 const expected = { huba: 'hop' };
                 const expectedJson = JSON.stringify(expected);
                 const gotJson = JSON.stringify(gotMessageData);
-                if (expectedJson === gotJson) {
+                if ( _.isEqual(expected,  gotMessageData)) {
                     console.log(`executeJavaScript via message 'callFromNativeScript()' => ${gotJson} (${typeof gotMessageData})`);
                     return Promise.resolve(gotMessageData);
                 }
