@@ -13,6 +13,7 @@ interface WebViewClient {
 }
 
 let WebViewClient: any;
+let WebViewBridgeInterface: any;
 
 const extToMimeType = new Map<string, string>([
     ['css', 'text/css'],
@@ -144,10 +145,38 @@ function initializeWebViewClient(): void {
     }
 
     WebViewClient = WebViewExtClientImpl;
+
+    class WebViewBridgeInterfaceImpl extends dk.nota.webviewinterface.WebViewBridgeInterface {
+        constructor(public readonly owner: WeakRef<WebViewExt>) {
+            super();
+            return global.__native(this);
+        }
+
+        emitEventToNativeScript(eventName: string, data: string) {
+            const owner = this.owner.get();
+            if (owner) {
+                owner.onWebViewEvent(eventName, JSON.parse(data));
+            }
+        }
+    }
+
+    WebViewBridgeInterface = WebViewBridgeInterfaceImpl;
 }
 
+declare namespace dk {
+    namespace nota {
+        namespace webviewinterface {
+            class WebViewBridgeInterface extends java.lang.Object {
+                constructor();
+
+                emitEventToNativeScript(eventName: string, data: string): void;
+            }
+        }
+    }
+}
 declare function escape(input: string): string;
 
+let instanceNo = 0;
 export class WebViewExt extends WebViewExtBase {
     public nativeViewProtected: android.webkit.WebView;
 
@@ -161,6 +190,8 @@ export class WebViewExt extends WebViewExtBase {
         return false;
     }
 
+    public readonly instance = ++instanceNo;
+
     public createNativeView() {
         initializeWebViewClient();
 
@@ -172,6 +203,8 @@ export class WebViewExt extends WebViewExtBase {
         const client = new WebViewClient(this);
         nativeView.setWebViewClient(client);
         (<any>nativeView).client = client;
+
+        nativeView.addJavascriptInterface(new WebViewBridgeInterface(new WeakRef(this)), 'androidWebViewBridge');
         return nativeView;
     }
 
@@ -181,8 +214,6 @@ export class WebViewExt extends WebViewExtBase {
     }
 
     public disposeNativeView() {
-        this.disposeWebViewInterface();
-
         const nativeView = this.nativeViewProtected;
         if (nativeView) {
             nativeView.destroy();

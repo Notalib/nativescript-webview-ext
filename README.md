@@ -6,8 +6,8 @@ Extended version of the NativeScript's built'in WebView.
 * Adds a custom-scheme handler for x-local:// to the webview for loading of resources inside the webview.
     * Note: For iOS 11+ WKWebView is used, but for iOS <11 UIWebView is used
 * Adds support for capturing URLs This allows the app to open external links in an external browser and handle tel-links
-* Auto injects `nativescript-webview-interface`-bridge into the webpage.
 * Adds `executeJavaScript(code: string)`-function.
+* Send and recieve events to/from the webview js from/to NativeScript.
 * Adds functions to load `css`- and `javascript`-files in the running webpage.
     * Supports loading into the current page and setting up auto-loading for every loaded page.
 
