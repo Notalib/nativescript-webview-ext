@@ -189,7 +189,7 @@ export abstract class WebViewExtBase extends View implements WebViewExtDefinitio
             this.registerLocalResource(scriptName, filepath);
             scriptName = `${this.interceptScheme}://${scriptName}`;
         }
-        const scriptCode = this.getInjectScriptCode(scriptName);
+        const scriptCode = this.generateLoadJavaScriptFileScriptCode(scriptName);
         this.writeTrace('Loading javascript file: ' + scriptName);
         this.executeJavaScript(scriptCode, false);
     }
@@ -197,7 +197,7 @@ export abstract class WebViewExtBase extends View implements WebViewExtDefinitio
     public loadStyleSheetFile(stylesheetName: string, filepath: string, insertBefore = true) {
         this.registerLocalResource(stylesheetName, filepath);
         const sheetUrl = `${this.interceptScheme}://${stylesheetName}`;
-        const scriptCode = this.getInjectCSSCode(sheetUrl, insertBefore);
+        const scriptCode = this.generaateLoadCSSFileScriptCode(sheetUrl, insertBefore);
         this.writeTrace('Loading stylesheet file: ' + sheetUrl);
         this.executeJavaScript(scriptCode, false);
     }
@@ -214,7 +214,10 @@ export abstract class WebViewExtBase extends View implements WebViewExtDefinitio
 
     public abstract executeJavaScript(scriptCode: string, stringifyResult?: boolean): Promise<any>;
 
-    protected getInjectScriptCode(scriptHref: string) {
+    /**
+     * Generate scriptcode for loading javascript-file.
+     */
+    protected generateLoadJavaScriptFileScriptCode(scriptHref: string) {
         const elId = scriptHref.replace(/[^a-z0-9]/g, '');
         return `(function() {
             if (document.getElementById("${elId}")) {
@@ -233,7 +236,10 @@ export abstract class WebViewExtBase extends View implements WebViewExtDefinitio
         })();`;
     }
 
-    protected getInjectCSSCode(stylesheetHref: string, insertBefore = false) {
+    /**
+     * Generate scriptcode for loading CSS-file.
+     */
+    protected generaateLoadCSSFileScriptCode(stylesheetHref: string, insertBefore = false) {
         const elId = stylesheetHref.replace(/[^a-z0-9]/g, '');
         return `(function() {
             if (document.getElementById("${elId}")) {
@@ -254,10 +260,14 @@ export abstract class WebViewExtBase extends View implements WebViewExtDefinitio
         })();`;
     }
 
+    /**
+     * Convert response from WebView into usable JS-type.
+     */
     protected parseWebviewJavascriptResult(result: any) {
         if (result === undefined) {
-            return undefined;
+            return;
         }
+
         try {
             return JSON.parse(result);
         } catch (err) {
@@ -279,6 +289,10 @@ export abstract class WebViewExtBase extends View implements WebViewExtDefinitio
         this.executeJavaScript(scriptCode, false);
     }
 
+    /**
+     * Called from delegate on webview event.
+     * Triggered by: window.nsWebViewBridge.emit(eventName: string, data: any); inside the webview
+     */
     public onWebViewEvent(eventName: string, data: any) {
         this.notify({
             eventName,

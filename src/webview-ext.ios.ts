@@ -119,11 +119,9 @@ class WKScriptMessageHandlerImpl extends NSObject implements WKScriptMessageHand
 
         try {
             const message = JSON.parse(webViewMessage.body as string);
-            console.log(message);
             owner.onWebViewEvent(message.eventName, message.data);
         } catch (err) {
-            console.log(err);
-            console.log(webViewMessage);
+            owner.writeTrace(`userContentControllerDidReceiveScriptMessage(${userContentController}, ${webViewMessage}) - bad message: ${webViewMessage.body}`, traceMessageType.error);
         }
     }
 }
@@ -311,22 +309,8 @@ export class WebViewExt extends WebViewExtBase {
                     resolve(this.parseWebviewJavascriptResult(data));
                 });
             } else if (this._uiWebView) {
-                console.log(scriptCode);
-                try {
-                    const resStr = this._uiWebView.stringByEvaluatingJavaScriptFromString(scriptCode);
-                    console.dir(JSON.stringify({
-                        resStr,
-                        scriptCode,
-                    }));
-
-                    if (resStr === null) {
-                        throw new Error('Injected script failed');
-                    }
-
-                    resolve(this.parseWebviewJavascriptResult(resStr));
-                } catch (err) {
-                    reject(err);
-                }
+                const resStr = this._uiWebView.stringByEvaluatingJavaScriptFromString(scriptCode);
+                resolve(this.parseWebviewJavascriptResult(resStr));
             }
         });
     }
@@ -461,9 +445,8 @@ export class WebViewExt extends WebViewExtBase {
         try {
             const message = decodeURIComponent(url.replace(/^js2ios:/, ''));
             const { eventName, resId } = JSON.parse(message);
-            this.executeJavaScript(`window.nsWebViewBridge.getUIWebViewResponse(${JSON.stringify(resId)}`)
+            this.executeJavaScript(`window.nsWebViewBridge.getUIWebViewResponse(${JSON.stringify(resId)})`)
                 .then((data) => {
-                    console.dir({data});
                     this.onWebViewEvent(eventName, data);
                 })
                 .catch((err) => {
