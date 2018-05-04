@@ -48,7 +48,7 @@ function executeJavaScriptTest<T>(js: string, expected?: T): Promise<T> {
         console.log(`executeJavaScript '${js}' => ${JSON.stringify(res)} (${typeof res})`);
         const jsonRes = JSON.stringify(res);
         const expectedJson = JSON.stringify(expected);
-        if (expected !== undefined && _.isEqual(expected,  res)) {
+        if (expected !== undefined && !_.isEqual(expected,  res)) {
             return Promise.reject(new Error(`Expected: ${expectedJson}. Got: ${jsonRes}`));
         }
         return Promise.resolve(res);
@@ -66,7 +66,7 @@ export function runTests() {
                 const expected = { huba: 'hop' };
                 const expectedJson = JSON.stringify(expected);
                 const gotJson = JSON.stringify(gotMessageData);
-                if ( _.isEqual(expected,  gotMessageData)) {
+                if (!_.isEqual(expected,  gotMessageData)) {
                     console.log(`executeJavaScript via message 'callFromNativeScript()' => ${gotJson} (${typeof gotMessageData})`);
                     return Promise.resolve(gotMessageData);
                 }

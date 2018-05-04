@@ -291,6 +291,7 @@ export class WebViewExt extends WebViewExtBase {
             scriptCode = `var result = ${scriptCode};
             try { JSON.stringify(result); } catch (err) { result }`;
         }
+        
         // this.writeTrace('Executing Javascript: ' + scriptCode);
         return new Promise((resolve, reject) => {
             let result: any;

@@ -147,7 +147,8 @@ export abstract class WebViewExtBase extends View implements WebViewExtDefinitio
             }
             this.writeTrace('Injecting webview-bridge JS code');
             webViewBridgeJsCodePromise
-                .then((webViewInterfaceJsCode) => this.executeJavaScript(webViewInterfaceJsCode, false));
+                .then((webViewInterfaceJsCode) => this.executeJavaScript(webViewInterfaceJsCode, false))
+                .catch((err) => console.error(err));
 
             for (const { scriptName, filepath } of this.autoLoadScriptFiles) {
                 this.loadJavaScriptFile(scriptName, filepath);

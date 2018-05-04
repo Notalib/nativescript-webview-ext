@@ -28,8 +28,6 @@ function createIFrame(src: string): HTMLIFrameElement {
   return newFrameElm;
 }
 
-
-
 /**
  * With WKWebView it's assumed the there is a WKScriptMessage named nsBridge
  */
@@ -175,11 +173,10 @@ class NSWebViewBridge {
    * Emits event to android/ios
    */
   public emit(eventName: string, data: any) {
-    const strData = JSON.stringify(data);
     if (this.androidWebViewBridge) {
-      this.emitEventToAndroid(eventName, strData);
+      this.emitEventToAndroid(eventName, JSON.stringify(data));
     } else {
-      this.emitEventToIOS(eventName, strData);
+      this.emitEventToIOS(eventName, data);
     }
   }
 }

@@ -5,7 +5,7 @@
       function callFromNativeScript() {
         console.log('got a message from nativescript');
 
-        window.nsWebViewInterface.emit('gotMessage', { huba: "hop" });
+        window.nsWebViewBridge.emit('gotMessage', { huba: "hop" });
       }
 
       function getNumber() {
