@@ -273,7 +273,7 @@ export abstract class WebViewExtBase extends View implements WebViewExtDefinitio
 
     public emitToWebView(eventName: string, data: any) {
         const scriptCode = `
-            window.nsWebViewInterface && nsWebViewInterface.onNativeEvent(${JSON.stringify(eventName)}, ${JSON.stringify(data)});
+            window.nsWebViewBridge && nsWebViewBridge.onNativeEvent(${JSON.stringify(eventName)}, ${JSON.stringify(data)});
         `;
 
         this.executeJavaScript(scriptCode, false);

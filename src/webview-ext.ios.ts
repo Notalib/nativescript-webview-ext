@@ -288,10 +288,17 @@ export class WebViewExt extends WebViewExtBase {
 
     public executeJavaScript<T>(scriptCode: string, stringifyResult = true): Promise<T> {
         if (stringifyResult) {
-            scriptCode = `var result = ${scriptCode};
-            try { JSON.stringify(result); } catch (err) { result }`;
+            scriptCode = `
+            var result = ${scriptCode};
+
+            try {
+                JSON.stringify(result);
+            } catch (err) {
+                result;
+            }
+            `;
         }
-        
+
         // this.writeTrace('Executing Javascript: ' + scriptCode);
         return new Promise((resolve, reject) => {
             let result: any;
@@ -304,8 +311,22 @@ export class WebViewExt extends WebViewExtBase {
                     resolve(this.parseWebviewJavascriptResult(data));
                 });
             } else if (this._uiWebView) {
-                const resStr = this._uiWebView.stringByEvaluatingJavaScriptFromString(scriptCode);
-                resolve(this.parseWebviewJavascriptResult(resStr));
+                console.log(scriptCode);
+                try {
+                    const resStr = this._uiWebView.stringByEvaluatingJavaScriptFromString(scriptCode);
+                    console.dir(JSON.stringify({
+                        resStr,
+                        scriptCode,
+                    }));
+
+                    if (resStr === null) {
+                        throw new Error('Injected script failed');
+                    }
+
+                    resolve(this.parseWebviewJavascriptResult(resStr));
+                } catch (err) {
+                    reject(err);
+                }
             }
         });
     }
@@ -433,10 +454,16 @@ export class WebViewExt extends WebViewExtBase {
     }
 
     public onUIWebViewEvent(url: string) {
+        if (!url.startsWith('js2ios')) {
+            return;
+        }
+
         try {
-            const { eventName, resId } = JSON.parse(url.replace(/^js2ios:/, ''));
-            this.executeJavaScript(`window.nsWebViewInterface.getUIWebViewResponse(${resId}`)
+            const message = decodeURIComponent(url.replace(/^js2ios:/, ''));
+            const { eventName, resId } = JSON.parse(message);
+            this.executeJavaScript(`window.nsWebViewBridge.getUIWebViewResponse(${JSON.stringify(resId)}`)
                 .then((data) => {
+                    console.dir({data});
                     this.onWebViewEvent(eventName, data);
                 })
                 .catch((err) => {

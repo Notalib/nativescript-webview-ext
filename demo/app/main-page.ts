@@ -9,8 +9,8 @@ import { HelloWorldModel } from './main-view-model';
 
 let webview: WebViewExt;
 
-// trace.setCategories('NOTA');
-// trace.enable();
+trace.setCategories('NOTA');
+trace.enable();
 
 // Event handler for Page 'loaded' event attached in main-page.xml
 export function pageLoaded(args: observable.EventData) {
