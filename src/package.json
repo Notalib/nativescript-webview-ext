@@ -6,14 +6,20 @@
     "typings": "webview-ext.d.ts",
     "nativescript": {
         "platforms": {
-            "android": "3.4.1",
-            "ios": "3.4.1"
+            "android": "4.0.0",
+            "ios": "4.0.0"
+        },
+        "plugin": {
+            "nan": "true",
+            "pan": "true",
+            "core4": "true",
+            "category": "Interface"
         }
     },
     "scripts": {
         "tsc": "tsc -skipLibCheck",
         "build": "npm i && npm run build:webview-bridge && tsc",
-        "build:webview-bridge": "(cd ../www-src && npm i && npm run build) && rimraf www && mkdir www && cp ../www-src/ns-webview-bridge.js www/ns-webview-bridge.js",
+        "build:webview-bridge": "(cd $(git rev-parse --show-toplevel)/www-src && npm i && npm run build) && rimraf www && mkdir www && cp $(git rev-parse --show-toplevel)/www-src/ns-webview-bridge.js www/ns-webview-bridge.js",
         "build:typings": "npm run build && (cd ../demo && TNS_TYPESCRIPT_DECLARATIONS_PATH=\"$PWD/../typings\" tns build ios) && cp ../typings/i386/*NotaWebViewExt.d.ts platforms/ios/NotaWebViewExt.d.ts",
         "test.android": "npm i && npm run tsc && npm run tslint && cd ../demo && tns build android && tns test android --justlaunch",
         "test.ios": "npm i && npm run tsc && npm run tslint && cd ../demo && tns build ios && tns test ios --justlaunch",
@@ -43,7 +49,12 @@
     "contributors": [
         {
             "name": "Morten Anton Bach Sjøgren",
+            "url": "http://mabs.dk",
             "email": "mabs@mabs.dk"
+        },
+        {
+            "name": "Daniel Dam Freiling",
+            "email": "dfg@nota.dk"
         }
     ],
     "bugs": {
@@ -56,8 +67,8 @@
         "npm-run-all": "^4.1.2",
         "prompt": "^1.0.0",
         "rimraf": "^2.6.2",
-        "tns-core-modules": "next",
-        "tns-platform-declarations": "next",
+        "tns-core-modules": "~4.0.0",
+        "tns-platform-declarations": "~4.0.0",
         "tslint": "^5.0.0",
         "typescript": "~2.6.0"
     },

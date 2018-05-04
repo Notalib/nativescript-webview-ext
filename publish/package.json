@@ -3,6 +3,7 @@
   "version": "1.0.0",
   "description": "Publish helper",
   "devDependencies": {
+    "json": "^9.0.6",
     "ncp": "^2.0.0",
     "rimraf": "^2.5.0"
   }
