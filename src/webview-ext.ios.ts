@@ -434,12 +434,12 @@ export class WebViewExt extends WebViewExtBase {
     public onUIWebViewEvent(url: string) {
         try {
             const { eventName, resId } = JSON.parse(url.replace(/^js2ios:/, ''));
-            this.executeJavaScript(`window.nsWebViewInterface.getIOSResponse(${resId}`)
+            this.executeJavaScript(`window.nsWebViewInterface.getUIWebViewResponse(${resId}`)
                 .then((data) => {
                     this.onWebViewEvent(eventName, data);
                 })
                 .catch((err) => {
-                    this.writeTrace(`WebViewExt.onUIWebViewEvent(${url}) - getIOSResponse - ${err}`, traceMessageType.error);
+                    this.writeTrace(`WebViewExt.onUIWebViewEvent(${url}) - getUIWebViewResponse - ${err}`, traceMessageType.error);
                 });
         } catch (err) {
             this.writeTrace(`WebViewExt.onUIWebViewEvent(${url}) - ${err}`, traceMessageType.error);

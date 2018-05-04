@@ -200,13 +200,11 @@ export class WebViewExt extends WebViewExtBase {
         settings.setJavaScriptEnabled(true);
         settings.setBuiltInZoomControls(true);
 
-        const webviewBridge = new WebViewBridgeInterface(new WeakRef(this));
-
         const client = new WebViewClient(this);
         nativeView.setWebViewClient(client);
         (<any>nativeView).client = client;
 
-        nativeView.addJavascriptInterface(webviewBridge, 'androidWebViewInterface');
+        nativeView.addJavascriptInterface(new WebViewBridgeInterface(new WeakRef(this)), 'androidWebViewBridge');
         return nativeView;
     }
 

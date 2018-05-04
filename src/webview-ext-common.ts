@@ -2,7 +2,7 @@ import * as fs from "tns-core-modules/file-system";
 import { EventData, Property, traceEnabled, traceMessageType, traceWrite, View, ViewBase } from "tns-core-modules/ui/core/view";
 import { LoadEventData, NavigationType, urlOverrideHandlerFn, WebViewExt as WebViewExtDefinition } from "./";
 
-import { webViewInterfaceJsCodePromise } from "./nativescript-webview-interface-loader";
+import { webViewBridgeJsCodePromise } from "./nativescript-webview-bridge-loader";
 
 export { NavigationType };
 export { File, knownFolders, path } from "tns-core-modules/file-system";
@@ -142,11 +142,11 @@ export abstract class WebViewExtBase extends View implements WebViewExtDefinitio
     protected setupWebViewInterface() {
         this.on(WebViewExtBase.loadFinishedEvent, (evt: LoadEventData) => {
             if (evt && evt.error) {
-                this.writeTrace('Error injecting webview-interface JS code: ' + evt.error);
+                this.writeTrace('Error injecting webview-bridge JS code: ' + evt.error);
                 return;
             }
-            this.writeTrace('Injecting webview-interface JS code');
-            webViewInterfaceJsCodePromise
+            this.writeTrace('Injecting webview-bridge JS code');
+            webViewBridgeJsCodePromise
                 .then((webViewInterfaceJsCode) => this.executeJavaScript(webViewInterfaceJsCode, false));
 
             for (const { scriptName, filepath } of this.autoLoadScriptFiles) {

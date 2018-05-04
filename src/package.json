@@ -12,8 +12,8 @@
     },
     "scripts": {
         "tsc": "tsc -skipLibCheck",
-        "build": "npm i && npm run build:webview-interface && tsc",
-        "build:webview-interface": "(cd ../www-src && npm i && npm run build) && cp ../www-src/webview-interface.js www/webview-interface.js",
+        "build": "npm i && npm run build:webview-bridge && tsc",
+        "build:webview-bridge": "(cd ../www-src && npm i && npm run build) && rimraf www && mkdir www && cp ../www-src/ns-webview-bridge.js www/ns-webview-bridge.js",
         "build:typings": "npm run build && (cd ../demo && TNS_TYPESCRIPT_DECLARATIONS_PATH=\"$PWD/../typings\" tns build ios) && cp ../typings/i386/*NotaWebViewExt.d.ts platforms/ios/NotaWebViewExt.d.ts",
         "test.android": "npm i && npm run tsc && npm run tslint && cd ../demo && tns build android && tns test android --justlaunch",
         "test.ios": "npm i && npm run tsc && npm run tslint && cd ../demo && tns build ios && tns test ios --justlaunch",
@@ -55,7 +55,7 @@
     "devDependencies": {
         "npm-run-all": "^4.1.2",
         "prompt": "^1.0.0",
-        "rimraf": "^2.5.0",
+        "rimraf": "^2.6.2",
         "tns-core-modules": "next",
         "tns-platform-declarations": "next",
         "tslint": "^5.0.0",

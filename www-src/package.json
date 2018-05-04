@@ -3,11 +3,11 @@
   "private": false,
   "version": "0.0.0",
   "description": "",
-  "main": "webview-interface.js",
+  "main": "ns-webview-bridge.js",
   "scripts": {
     "build": "tsc -p tsconfig.json"
   },
-  "license": "Apache-2.0",
+  "license": "MIT",
   "devDependencies": {
     "ts-node": "^6.0.2",
     "typescript": "^2.8.3"
