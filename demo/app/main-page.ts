@@ -5,8 +5,6 @@ import { isAndroid } from 'tns-core-modules/platform';
 import * as trace from 'tns-core-modules/trace';
 import * as pages from 'tns-core-modules/ui/page';
 
-import { HelloWorldModel } from './main-view-model';
-
 let webview: WebViewExt;
 
 trace.setCategories('NOTA');
@@ -14,16 +12,12 @@ trace.enable();
 
 // Event handler for Page 'loaded' event attached in main-page.xml
 export function pageLoaded(args: observable.EventData) {
-    // Get the event sender
-    let page = <pages.Page>args.object;
-    page.bindingContext = new HelloWorldModel();
 }
 
 let gotMessageData: any = null;
 export function webviewLoaded(args: observable.EventData) {
     webview = args.object as WebViewExt;
 
-    webview.registerLocalResource('local-stylesheet.css', '~/assets/local-stylesheet.css');
     if (isAndroid) {
         webview.src = 'http://10.0.2.2:8080';
 

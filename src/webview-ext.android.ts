@@ -8,12 +8,20 @@ import { knownFolders, traceCategories, traceEnabled, traceWrite, WebViewExtBase
 
 export * from "./webview-ext-common";
 
-interface WebViewClient {
-    new (owner: WebViewExt): android.webkit.WebViewClient;
+declare namespace dk {
+    namespace nota {
+        namespace webviewinterface {
+            class WebViewBridgeInterface extends java.lang.Object {
+                constructor();
+
+                emitEventToNativeScript(eventName: string, data: string): void;
+            }
+        }
+    }
 }
 
-let WebViewClient: any;
-let WebViewBridgeInterface: any;
+let WebViewExtClient: new (owner: WeakRef<WebViewExt>) => android.webkit.WebViewClient;
+let WebViewBridgeInterface: new (owner: WeakRef<WebViewExt>) => dk.nota.webviewinterface.WebViewBridgeInterface;
 
 const extToMimeType = new Map<string, string>([
     ['css', 'text/css'],
@@ -26,29 +34,33 @@ const extToMimeType = new Map<string, string>([
 ]);
 
 function initializeWebViewClient(): void {
-    if (WebViewClient) {
+    if (WebViewExtClient) {
         return;
     }
 
     class WebViewExtClientImpl extends android.webkit.WebViewClient {
-
-        constructor(public readonly owner: WebViewExtBase) {
+        constructor(public readonly owner: WeakRef<WebViewExt>) {
             super();
             return global.__native(this);
         }
 
         public shouldOverrideUrlLoading(view: android.webkit.WebView, request: any) {
+            const owner = this.owner.get();
+            if (!owner) {
+                return true;
+            }
+
             let url = request as string;
             if (typeof request === 'object') {
                 url = request.getUrl().toString();
             }
 
-            const scheme = `${this.owner.interceptScheme}://`;
+            const scheme = `${owner.interceptScheme}://`;
             if (url.startsWith(scheme)) {
                 return true;
             }
 
-            let urlOverrideHandlerFn = this.owner.urlOverrideHandler;
+            let urlOverrideHandlerFn = owner.urlOverrideHandler;
             if (urlOverrideHandlerFn && urlOverrideHandlerFn(url) === true) {
                 return true;
             }
@@ -60,6 +72,11 @@ function initializeWebViewClient(): void {
         }
 
         public shouldInterceptRequest(view: android.webkit.WebView, request: any) {
+            const owner = this.owner.get();
+            if (!owner) {
+                return request;
+            }
+
             let url = request as string;
             if (typeof request === 'object') {
                 url = request.getUrl().toString();
@@ -69,12 +86,12 @@ function initializeWebViewClient(): void {
                 return super.shouldInterceptRequest(view, request);
             }
 
-            const scheme = `${this.owner.interceptScheme}://`;
+            const scheme = `${owner.interceptScheme}://`;
             if (!url.startsWith(scheme)) {
                 return super.shouldInterceptRequest(view, request);
             }
 
-            const filepath = this.owner.getRegistretLocalResource(url.replace(scheme, ''));
+            const filepath = owner.getRegistretLocalResource(url.replace(scheme, ''));
             if (!filepath || !fs.File.exists(filepath)) {
                 return super.shouldInterceptRequest(view, request);
             }
@@ -84,31 +101,33 @@ function initializeWebViewClient(): void {
             const javaFile = new java.io.File(tnsFile.path);
             const stream = new java.io.FileInputStream(javaFile);
             const mimeType = extToMimeType.get(tnsFile.extension.substr(1)) || 'application/octet-stream';
-            const encoding = mimeType.startsWith('image/') || mimeType === 'application/octet-stream' ?  'binary' : 'UTF-8';
+            const encoding = mimeType.startsWith('image/') || mimeType === 'application/octet-stream' ? 'binary' : 'UTF-8';
 
             return new android.webkit.WebResourceResponse(mimeType, encoding, stream);
         }
 
         public onPageStarted(view: android.webkit.WebView, url: string, favicon: android.graphics.Bitmap) {
             super.onPageStarted(view, url, favicon);
-            const owner = this.owner;
-            if (owner) {
-                if (traceEnabled()) {
-                    traceWrite("WebViewClientClass.onPageStarted(" + url + ", " + favicon + ")", traceCategories.Debug);
-                }
-                owner._onLoadStarted(url, undefined);
+            const owner = this.owner.get();
+            if (!owner) {
+                return;
             }
+            if (traceEnabled()) {
+                traceWrite("WebViewClientClass.onPageStarted(" + url + ", " + favicon + ")", traceCategories.Debug);
+            }
+            owner._onLoadStarted(url, undefined);
         }
 
         public onPageFinished(view: android.webkit.WebView, url: string) {
             super.onPageFinished(view, url);
-            const owner = this.owner;
-            if (owner) {
-                if (traceEnabled()) {
-                    traceWrite("WebViewClientClass.onPageFinished(" + url + ")", traceCategories.Debug);
-                }
-                owner._onLoadFinished(url, undefined);
+            const owner = this.owner.get();
+            if (!owner) {
+                return;
             }
+            if (traceEnabled()) {
+                traceWrite("WebViewClientClass.onPageFinished(" + url + ")", traceCategories.Debug);
+            }
+            owner._onLoadFinished(url, undefined);
         }
 
         public onReceivedError() {
@@ -121,7 +140,7 @@ function initializeWebViewClient(): void {
 
                 super.onReceivedError(view, errorCode, description, failingUrl);
 
-                const owner = this.owner;
+                const owner = this.owner.get();
                 if (owner) {
                     if (traceEnabled()) {
                         traceWrite("WebViewClientClass.onReceivedError(" + errorCode + ", " + description + ", " + failingUrl + ")", traceCategories.Debug);
@@ -133,7 +152,7 @@ function initializeWebViewClient(): void {
                 let error: any = arguments[2];
 
                 super.onReceivedError(view, request, error);
-                const owner = this.owner;
+                const owner = this.owner.get();
                 if (owner) {
                     if (traceEnabled()) {
                         traceWrite("WebViewClientClass.onReceivedError(" + error.getErrorCode() + ", " + error.getDescription() + ", " + (error.getUrl && error.getUrl()) + ")", traceCategories.Debug);
@@ -144,7 +163,7 @@ function initializeWebViewClient(): void {
         }
     }
 
-    WebViewClient = WebViewExtClientImpl;
+    WebViewExtClient = WebViewExtClientImpl;
 
     class WebViewBridgeInterfaceImpl extends dk.nota.webviewinterface.WebViewBridgeInterface {
         constructor(public readonly owner: WeakRef<WebViewExt>) {
@@ -163,17 +182,6 @@ function initializeWebViewClient(): void {
     WebViewBridgeInterface = WebViewBridgeInterfaceImpl;
 }
 
-declare namespace dk {
-    namespace nota {
-        namespace webviewinterface {
-            class WebViewBridgeInterface extends java.lang.Object {
-                constructor();
-
-                emitEventToNativeScript(eventName: string, data: string): void;
-            }
-        }
-    }
-}
 declare function escape(input: string): string;
 
 let instanceNo = 0;
@@ -200,25 +208,17 @@ export class WebViewExt extends WebViewExtBase {
         settings.setJavaScriptEnabled(true);
         settings.setBuiltInZoomControls(true);
 
-        const client = new WebViewClient(this);
+        const client = new WebViewExtClient(new WeakRef(this));
         nativeView.setWebViewClient(client);
-        (<any>nativeView).client = client;
 
         nativeView.addJavascriptInterface(new WebViewBridgeInterface(new WeakRef(this)), 'androidWebViewBridge');
         return nativeView;
-    }
-
-    public initNativeView(): void {
-        super.initNativeView();
-        (<any>this.nativeViewProtected).client.owner = this;
     }
 
     public disposeNativeView() {
         const nativeView = this.nativeViewProtected;
         if (nativeView) {
             nativeView.destroy();
-
-            (<any>nativeView).client.owner = null;
         }
 
         super.disposeNativeView();

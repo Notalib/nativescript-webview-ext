@@ -191,7 +191,7 @@ export abstract class WebViewExtBase extends View implements WebViewExtDefinitio
         }
         const scriptCode = this.generateLoadJavaScriptFileScriptCode(scriptName);
         this.writeTrace('Loading javascript file: ' + scriptName);
-        this.executeJavaScript(scriptCode, false);
+        return this.executeJavaScript(scriptCode, false).then(() => void 0);
     }
 
     public loadStyleSheetFile(stylesheetName: string, filepath: string, insertBefore = true) {
@@ -199,7 +199,8 @@ export abstract class WebViewExtBase extends View implements WebViewExtDefinitio
         const sheetUrl = `${this.interceptScheme}://${stylesheetName}`;
         const scriptCode = this.generaateLoadCSSFileScriptCode(sheetUrl, insertBefore);
         this.writeTrace('Loading stylesheet file: ' + sheetUrl);
-        this.executeJavaScript(scriptCode, false);
+
+        return this.executeJavaScript(scriptCode, false).then(() => void 0);
     }
 
     public autoLoadJavaScriptFile(scriptName: string, filepath: string) {
