@@ -43,9 +43,23 @@ export abstract class WebViewExtBase extends View implements WebViewExtDefinitio
     protected autoLoadScriptFiles = [] as AutoLoadJavaScriptFile[];
     protected autoLoadStyleSheetFiles = [] as AutoLoadStyleSheetFile[];
 
-    constructor() {
-        super();
-        this.setupWebViewInterface();
+    protected readonly onLoadInjectBridge = (evt: LoadEventData) => {
+        if (evt && evt.error) {
+            this.writeTrace('Error injecting webview-bridge JS code: ' + evt.error);
+            return;
+        }
+        this.writeTrace('Injecting webview-bridge JS code');
+        webViewBridgeJsCodePromise
+            .then((webViewInterfaceJsCode) => this.executeJavaScript(webViewInterfaceJsCode, false))
+            .catch((err) => console.error(err));
+
+        for (const { scriptName, filepath } of this.autoLoadScriptFiles) {
+            this.loadJavaScriptFile(scriptName, filepath);
+        }
+
+        for (const { stylesheetName, filepath, insertBefore } of this.autoLoadStyleSheetFiles) {
+            this.loadStyleSheetFile(stylesheetName, filepath, !!insertBefore);
+        }
     }
 
     public _onLoadFinished(url: string, error?: string) {
@@ -140,26 +154,9 @@ export abstract class WebViewExtBase extends View implements WebViewExtDefinitio
      * Setups of the WebViewInterface and makes sure the bridge is loaded on the webpage.
      */
     protected setupWebViewInterface() {
-        this.on(WebViewExtBase.loadFinishedEvent, (evt: LoadEventData) => {
-            if (evt && evt.error) {
-                this.writeTrace('Error injecting webview-bridge JS code: ' + evt.error);
-                return;
-            }
-            this.writeTrace('Injecting webview-bridge JS code');
-            webViewBridgeJsCodePromise
-                .then((webViewInterfaceJsCode) => this.executeJavaScript(webViewInterfaceJsCode, false))
-                .catch((err) => console.error(err));
-
-            for (const { scriptName, filepath } of this.autoLoadScriptFiles) {
-                this.loadJavaScriptFile(scriptName, filepath);
-            }
-
-            for (const { stylesheetName, filepath, insertBefore } of this.autoLoadStyleSheetFiles) {
-                this.loadStyleSheetFile(stylesheetName, filepath, !!insertBefore);
-            }
-        });
+        this.on(WebViewExtBase.loadFinishedEvent, this.onLoadInjectBridge);
     }
-
+    
     protected resolveLocalResourceFilePath(filepath: string): string | void {
         if (!filepath) {
             console.error('WebViewExt.resolveLocalResourceFilePath() no filepath');

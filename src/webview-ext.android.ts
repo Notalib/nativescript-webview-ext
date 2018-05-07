@@ -20,8 +20,8 @@ declare namespace dk {
     }
 }
 
-let WebViewExtClient: new (owner: WeakRef<WebViewExt>) => android.webkit.WebViewClient;
-let WebViewBridgeInterface: new (owner: WeakRef<WebViewExt>) => dk.nota.webviewinterface.WebViewBridgeInterface;
+let WebViewExtClient: new () => android.webkit.WebViewClient;
+let WebViewBridgeInterface: new () => dk.nota.webviewinterface.WebViewBridgeInterface;
 
 const extToMimeType = new Map<string, string>([
     ['css', 'text/css'],
@@ -39,13 +39,15 @@ function initializeWebViewClient(): void {
     }
 
     class WebViewExtClientImpl extends android.webkit.WebViewClient {
-        constructor(public readonly owner: WeakRef<WebViewExt>) {
+        public owner: WebViewExt;
+
+        constructor() {
             super();
             return global.__native(this);
         }
 
         public shouldOverrideUrlLoading(view: android.webkit.WebView, request: any) {
-            const owner = this.owner.get();
+            const owner = this.owner;
             if (!owner) {
                 return true;
             }
@@ -72,7 +74,7 @@ function initializeWebViewClient(): void {
         }
 
         public shouldInterceptRequest(view: android.webkit.WebView, request: any) {
-            const owner = this.owner.get();
+            const owner = this.owner;
             if (!owner) {
                 return request;
             }
@@ -108,7 +110,7 @@ function initializeWebViewClient(): void {
 
         public onPageStarted(view: android.webkit.WebView, url: string, favicon: android.graphics.Bitmap) {
             super.onPageStarted(view, url, favicon);
-            const owner = this.owner.get();
+            const owner = this.owner;
             if (!owner) {
                 return;
             }
@@ -120,7 +122,7 @@ function initializeWebViewClient(): void {
 
         public onPageFinished(view: android.webkit.WebView, url: string) {
             super.onPageFinished(view, url);
-            const owner = this.owner.get();
+            const owner = this.owner;
             if (!owner) {
                 return;
             }
@@ -140,7 +142,7 @@ function initializeWebViewClient(): void {
 
                 super.onReceivedError(view, errorCode, description, failingUrl);
 
-                const owner = this.owner.get();
+                const owner = this.owner;
                 if (owner) {
                     if (traceEnabled()) {
                         traceWrite("WebViewClientClass.onReceivedError(" + errorCode + ", " + description + ", " + failingUrl + ")", traceCategories.Debug);
@@ -152,7 +154,7 @@ function initializeWebViewClient(): void {
                 let error: any = arguments[2];
 
                 super.onReceivedError(view, request, error);
-                const owner = this.owner.get();
+                const owner = this.owner;
                 if (owner) {
                     if (traceEnabled()) {
                         traceWrite("WebViewClientClass.onReceivedError(" + error.getErrorCode() + ", " + error.getDescription() + ", " + (error.getUrl && error.getUrl()) + ")", traceCategories.Debug);
@@ -166,16 +168,20 @@ function initializeWebViewClient(): void {
     WebViewExtClient = WebViewExtClientImpl;
 
     class WebViewBridgeInterfaceImpl extends dk.nota.webviewinterface.WebViewBridgeInterface {
-        constructor(public readonly owner: WeakRef<WebViewExt>) {
+        public owner: WebViewExt;
+
+        constructor() {
             super();
             return global.__native(this);
         }
 
         emitEventToNativeScript(eventName: string, data: string) {
-            const owner = this.owner.get();
-            if (owner) {
-                owner.onWebViewEvent(eventName, JSON.parse(data));
+            const owner = this.owner;
+            if (!owner) {
+                return;
             }
+
+            owner.onWebViewEvent(eventName, JSON.parse(data));
         }
     }
 
@@ -208,17 +214,29 @@ export class WebViewExt extends WebViewExtBase {
         settings.setJavaScriptEnabled(true);
         settings.setBuiltInZoomControls(true);
 
-        const client = new WebViewExtClient(new WeakRef(this));
+        const client = new WebViewExtClient();
         nativeView.setWebViewClient(client);
+        (nativeView as any).client = client;
 
-        nativeView.addJavascriptInterface(new WebViewBridgeInterface(new WeakRef(this)), 'androidWebViewBridge');
+        const bridgeInterface = new WebViewBridgeInterface();
+        nativeView.addJavascriptInterface(bridgeInterface, 'androidWebViewBridge');
+        (nativeView as any).bridgeInterface = bridgeInterface;
         return nativeView;
+    }
+
+    public initNativeView() {
+        super.initNativeView();
+        (this.nativeViewProtected as any).client.owner = this;
+        (this.nativeViewProtected as any).bridgeInterface.owner = this;
+        this.setupWebViewInterface();
     }
 
     public disposeNativeView() {
         const nativeView = this.nativeViewProtected;
         if (nativeView) {
             nativeView.destroy();
+            (<any>nativeView).client.owner = null;
+            (<any>nativeView).bridgeInterface.owner = null;
         }
 
         super.disposeNativeView();
@@ -303,6 +321,10 @@ export class WebViewExt extends WebViewExtBase {
     }
 
     public executeJavaScript<T>(scriptCode): Promise<T> {
+        if (!this.android) {
+            return Promise.reject(new Error('Native Android not inited, cannot call executeJavaScript'));
+        }
+
         return new Promise<any>((resolve, reject) => {
             if (Number(platform.device.sdkVersion) < 19) {
                 reject(new Error('Android API < 19 not supported'));

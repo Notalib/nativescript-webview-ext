@@ -282,6 +282,8 @@ export class WebViewExt extends WebViewExtBase {
             uiWebView.scrollView.scrollEnabled = false;
             uiWebView.scalesPageToFit = false;
         }
+
+        this.setupWebViewInterface();
     }
 
     public executeJavaScript<T>(scriptCode: string, stringifyResult = true): Promise<T> {
