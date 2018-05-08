@@ -2,11 +2,7 @@
 <html>
   <head>
     <script>
-      function callFromNativeScript() {
-        console.log('got a message from nativescript');
-
-        window.nsWebViewBridge.emit('gotMessage', { huba: "hop" });
-      }
+      'use strict';
 
       function getNumber() {
         return 42;
@@ -33,12 +29,35 @@
       }
 
       function getObject() {
-        return { prop: "test", name: "object-test", values: [ 42, 3.14 ] };
+        return {
+          prop: "test",
+          name: "object-test",
+          values: [
+            42,
+            3.14
+          ]
+        };
       }
 
       function setupEventListener() {
-        window.nsWebViewBridge.on('tns-message', (args) => {
+        window.nsWebViewBridge.on('tns-message', function(args) {
           window.nsWebViewBridge.emit('web-message', args);
+        });
+      }
+
+      function testPromiseResolve() {
+        return new Promise(function(resolve) {
+          setTimeout(function() {
+            resolve(42);
+          }, 100);
+        });
+      }
+
+      function testPromiseReject() {
+        return new Promise(function(resolve, reject) {
+          setTimeout(function() {
+            reject(new Error('The Cake is a Lie'));
+          }, 100);
         });
       }
     </script>

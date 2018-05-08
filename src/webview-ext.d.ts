@@ -154,8 +154,11 @@ export class WebViewExt extends View {
      * The code should be wrapped inside an anonymous-function.
      * Larger scripts should be injected with loadJavaScriptFile.
      * NOTE: It's not possible to capture syntax errors on UIWebView.
+     * NOTE: stringifyResult only applies on iOS.
      */
     executeJavaScript<T>(scriptCode: string, stringifyResult?: boolean): Promise<T>;
+
+    executePromise<T>(scriptCode: string, timeout?: number): Promise<T>
 
     /**
      * Emit event into the webview.

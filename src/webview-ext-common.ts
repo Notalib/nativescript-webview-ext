@@ -210,7 +210,67 @@ export abstract class WebViewExtBase extends View implements WebViewExtDefinitio
         this.autoLoadStyleSheetFiles.push({ stylesheetName, filepath, insertBefore });
     }
 
-    public abstract executeJavaScript(scriptCode: string, stringifyResult?: boolean): Promise<any>;
+    public abstract executeJavaScript<T>(scriptCode: string, stringifyResult?: boolean): Promise<T>;
+
+    public executePromise<T>(scriptCode: string, timeout: number = 500): Promise<T> {
+        const reqId = `${Math.round(Math.random() * 1000)}`;
+        const eventName = `tmp-promise-event-${reqId}`;
+
+        const promiseScriptCode =  `
+            try {
+                Promise.resolve(${scriptCode})
+                .then(function(data) {
+                    window.nsWebViewBridge.emit(${JSON.stringify(eventName)}, {
+                        data: data
+                    });
+                })
+                .catch(function(err) {
+                    if (err && err.message) {
+                        window.nsWebViewBridge.emit(${JSON.stringify(eventName)}, {
+                            err: {
+                                message: err.message,
+                                stack: err.stack,
+                            }
+                        });
+                    } else {
+                        window.nsWebViewBridge.emit(${JSON.stringify(eventName)}, {
+                            err: err
+                        });
+                    }
+                })
+            } catch (err) {
+                window.nsWebViewBridge.emit(${JSON.stringify(eventName)}, {
+                    err: {
+                        message: err.message,
+                        stack: err.stack,
+                    }
+                });
+            }
+        `;
+
+        return new Promise<T>((resolve, reject) => {
+            let timer: any;
+            const tmpPromiseEvent = (args: any) => {
+                this.off(eventName);
+                const {data, err} = args.data || {} as any;
+                if (err) {
+                    reject(err);
+                    return;
+                }
+                resolve(data);
+
+                clearTimeout(timer);
+            };
+            this.on(eventName, tmpPromiseEvent);
+
+            this.executeJavaScript(promiseScriptCode, false);
+
+            timer = setTimeout(() => {
+                reject(new Error(`Timed out after: ${timeout}`));
+                this.off(eventName);
+            }, timeout);
+        });
+    }
 
     /**
      * Generate scriptcode for loading javascript-file.

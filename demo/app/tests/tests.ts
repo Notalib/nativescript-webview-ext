@@ -246,6 +246,26 @@ describe("WebViewExt", function () {
                 .then((result) => expect(result).toEqual({ prop: "test", name: "object-test", values: [42, 3.14] }))
                 .then(done);
         });
+
+        it('testPromiseResolve()', (done) => {
+            webview.executePromise(`testPromiseResolve()`)
+                .then((result) => expect(result).toEqual(42))
+                .then(done);
+        });
+    
+        it('testPromiseReject()', (done) => {
+            webview.executePromise(`testPromiseReject()`)
+                .catch((err) => {
+                    expect(err).toBeDefined();
+                    expect(err.message).toBeDefined();
+                    expect(err.message).toEqual('The Cake is a Lie');
+                    done();
+                    return Promise.reject(err);
+                })
+                .then(() => {
+                    throw new Error(`Shouldn't resolve`);
+                });
+        });
     });
 
     afterEach(() => {

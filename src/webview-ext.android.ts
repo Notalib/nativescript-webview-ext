@@ -8,19 +8,27 @@ import { knownFolders, traceCategories, traceEnabled, traceWrite, WebViewExtBase
 
 export * from "./webview-ext-common";
 
-declare namespace dk {
+export declare namespace dk {
     namespace nota {
         namespace webviewinterface {
             class WebViewBridgeInterface extends java.lang.Object {
-                constructor();
+                public owner?: WebViewExt;
 
                 emitEventToNativeScript(eventName: string, data: string): void;
             }
         }
     }
 }
+export interface AndroidWebViewClient extends android.webkit.WebViewClient {
+    owner?: WebViewExt;
+}
 
-let WebViewExtClient: new () => android.webkit.WebViewClient;
+export interface AndroidWebView extends android.webkit.WebView {
+    client?: AndroidWebViewClient;
+    bridgeInterface?: dk.nota.webviewinterface.WebViewBridgeInterface;
+}
+
+let WebViewExtClient: new () => AndroidWebViewClient;
 let WebViewBridgeInterface: new () => dk.nota.webviewinterface.WebViewBridgeInterface;
 
 const extToMimeType = new Map<string, string>([
@@ -133,35 +141,38 @@ function initializeWebViewClient(): void {
         }
 
         public onReceivedError() {
-            let view: android.webkit.WebView = arguments[0];
-
             if (arguments.length === 4) {
-                let errorCode: number = arguments[1];
-                let description: string = arguments[2];
-                let failingUrl: string = arguments[3];
-
-                super.onReceivedError(view, errorCode, description, failingUrl);
-
-                const owner = this.owner;
-                if (owner) {
-                    if (traceEnabled()) {
-                        traceWrite("WebViewClientClass.onReceivedError(" + errorCode + ", " + description + ", " + failingUrl + ")", traceCategories.Debug);
-                    }
-                    owner._onLoadFinished(failingUrl, description + "(" + errorCode + ")");
-                }
+                const [view, errorCode, description, failingUrl] = Array.from(arguments) as [android.webkit.WebView, number, string, string];
+                this.onReceivedErrorBeforeAPI23(view, errorCode, description, failingUrl);
             } else {
-                let request: any = arguments[1];
-                let error: any = arguments[2];
-
-                super.onReceivedError(view, request, error);
-                const owner = this.owner;
-                if (owner) {
-                    if (traceEnabled()) {
-                        traceWrite("WebViewClientClass.onReceivedError(" + error.getErrorCode() + ", " + error.getDescription() + ", " + (error.getUrl && error.getUrl()) + ")", traceCategories.Debug);
-                    }
-                    owner._onLoadFinished(error.getUrl && error.getUrl(), error.getDescription() + "(" + error.getErrorCode() + ")");
-                }
+                const [view, request, error] = Array.from(arguments) as [android.webkit.WebView, any, any];
+                this.onReceivedErrorAPI23(view, request, error);
             }
+        }
+
+        private onReceivedErrorAPI23(view: android.webkit.WebView, request: any, error: any) {
+            super.onReceivedError(view, request, error);
+            const owner = this.owner;
+            if (owner) {
+                if (traceEnabled()) {
+                    traceWrite("WebViewClientClass.onReceivedError(" + error.getErrorCode() + ", " + error.getDescription() + ", " + (error.getUrl && error.getUrl()) + ")", traceCategories.Debug);
+                }
+                owner._onLoadFinished(error.getUrl && error.getUrl(), error.getDescription() + "(" + error.getErrorCode() + ")");
+            }
+
+        }
+
+        private onReceivedErrorBeforeAPI23(view: android.webkit.WebView, errorCode: number, description: string, failingUrl: string) {
+            super.onReceivedError(view, errorCode, description, failingUrl);
+
+            const owner = this.owner;
+            if (owner) {
+                if (traceEnabled()) {
+                    traceWrite("WebViewClientClass.onReceivedError(" + errorCode + ", " + description + ", " + failingUrl + ")", traceCategories.Debug);
+                }
+                owner._onLoadFinished(failingUrl, description + "(" + errorCode + ")");
+            }
+
         }
     }
 
@@ -192,7 +203,7 @@ declare function escape(input: string): string;
 
 let instanceNo = 0;
 export class WebViewExt extends WebViewExtBase {
-    public nativeViewProtected: android.webkit.WebView;
+    public nativeViewProtected: AndroidWebView;
 
     protected readonly localResourceMap = new Map<string, string>();
 
@@ -226,8 +237,8 @@ export class WebViewExt extends WebViewExtBase {
 
     public initNativeView() {
         super.initNativeView();
-        (this.nativeViewProtected as any).client.owner = this;
-        (this.nativeViewProtected as any).bridgeInterface.owner = this;
+        this.nativeViewProtected.client.owner = this;
+        this.nativeViewProtected.bridgeInterface.owner = this;
         this.setupWebViewInterface();
     }
 

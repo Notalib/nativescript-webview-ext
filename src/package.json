@@ -25,7 +25,7 @@
         "test.ios": "npm i && npm run tsc && npm run tslint && cd ../demo && tns build ios && tns test ios --justlaunch",
         "tslint": "cd .. && tslint \"**/*.ts\" --config tslint.json --exclude \"**/node_modules/**\" --exclude \"**/*.d.ts\" --exclude \"**/platforms/**\"",
         "plugin.link": "npm link && cd ../demo && npm link nativescript-webview-ext && cd ../src",
-        "plugin.tscwatch": "npm run tsc -- -w",
+        "plugin.tscwatch": "npm run build:webview-bridge && npm run tsc -- -w",
         "run.http-server": "cd ../demo/www && npx hs -p 8080",
         "run.demo.android": "cd ../demo && tns run android --syncAllFiles",
         "run.demo.ios": "cd ../demo && tns run ios --syncAllFiles",
@@ -40,7 +40,8 @@
         "NativeScript",
         "JavaScript",
         "Android",
-        "iOS"
+        "iOS",
+        "WebView"
     ],
     "author": {
         "name": "Nota",
