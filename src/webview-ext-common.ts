@@ -120,7 +120,7 @@ export abstract class WebViewExtBase extends View implements WebViewExtDefinitio
         // Add file:/// prefix for local files.
         // They should be loaded with _loadUrl() method as it handles query params.
         if (src.startsWith("~/")) {
-            src = `file:///${fs.knownFolders.currentApp().path}/` + src.substr(2);
+            src = `file://${fs.knownFolders.currentApp().path}/${src.substr(2)}`;
         } else if (src.startsWith("/")) {
             src = "file://" + src;
         }
@@ -156,7 +156,7 @@ export abstract class WebViewExtBase extends View implements WebViewExtDefinitio
     protected setupWebViewInterface() {
         this.on(WebViewExtBase.loadFinishedEvent, this.onLoadInjectBridge);
     }
-    
+
     protected resolveLocalResourceFilePath(filepath: string): string | void {
         if (!filepath) {
             console.error('WebViewExt.resolveLocalResourceFilePath() no filepath');

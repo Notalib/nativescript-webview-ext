@@ -28,7 +28,7 @@ export function webviewLoaded(args: observable.EventData) {
 
     webview.on(WebViewExt.loadFinishedEvent, (args) => {
         console.log('WebViewExt.loadFinishedEvent: ' + (<any>args.object).src);
-        webview.loadStyleSheetFile('local-stylesheet.css', '~/assets/local-stylesheet.css', false);
+        webview.loadStyleSheetFile('local-stylesheet.css', '~/assets/test-data/css/local-stylesheet.css', false);
     });
 
     webview.on('gotMessage', (msg: any) => {

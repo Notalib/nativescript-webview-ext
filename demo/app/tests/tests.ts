@@ -1,4 +1,5 @@
 import { WebViewExt } from '@nota/nativescript-webview-ext';
+import * as fs from 'tns-core-modules/file-system';
 import { isAndroid } from 'tns-core-modules/platform';
 import * as trace from 'tns-core-modules/trace';
 import * as frame from 'tns-core-modules/ui/frame';
@@ -9,11 +10,45 @@ import * as URL from 'url';
 trace.setCategories('NOTA');
 trace.enable();
 
+function resolveSrc(src: string) {
+    if (src.startsWith('~/')) {
+        src = `file://${fs.knownFolders.currentApp().path}/${src.substr(2)}`;
+    } else if (src.startsWith("/")) {
+        src = "file://" + src;
+    }
+
+    return src;
+}
+
+function timeoutPromise(delay = 100) {
+    return new Promise((resolve) => setTimeout(resolve, delay));
+}
+
 describe("WebViewExt", function () {
     let webview: WebViewExt;
-    let src: string;
 
-    beforeEach((cb) => {
+    function loadWebSite(src: string) {
+        return new Promise((resolve, reject) => {
+            const load = (args) => {
+                webview.off(WebViewExt.loadFinishedEvent, load);
+
+                if (args.error) {
+                    reject(new Error(args.error));
+                    return;
+                }
+
+                const loadedSrc = URL.parse(args.url, true).href;
+                const expectedSrc = URL.parse(resolveSrc(src), true).href;
+                expect(loadedSrc).toEqual(expectedSrc);
+                resolve();
+            };
+
+            webview.on(WebViewExt.loadFinishedEvent, load);
+            webview.src = src;
+        });
+    }
+
+    beforeEach(() => {
         const page = frame.topmost().currentPage;
 
         const grid = new GridLayout();
@@ -27,44 +62,25 @@ describe("WebViewExt", function () {
         webview.row = 0;
         webview.col = 0;
         grid.addChild(webview);
-
-        if (isAndroid) {
-            src = 'http://10.0.2.2:8080';
-        } else {
-            src = 'http://localhost:8080';
-        }
-
-        const load = (args) => {
-            webview.registerLocalResource('local-stylesheet.css', '~/assets/local-stylesheet.css');
-
-            webview.off(WebViewExt.loadFinishedEvent, load);
-
-            console.log(args.error);
-            console.log(args.url);
-            if (args.error) {
-                throw new Error(args.error);
-            }
-
-            if (URL.parse(args.url, true).href === URL.parse(src, true).href) {
-                cb();
-            } else {
-                throw new Error(`${args.url} === ${src}`);
-            }
-        };
-
-        webview.on(WebViewExt.loadFinishedEvent, load);
-        webview.src = src;
     });
 
-    it("src", () => {
-        expect(URL.parse(webview.src, true).href).toBe(URL.parse(src, true).href);
+    it("src", (cb) => {
+        const src = '~/assets/test-data/html/empty.html';
+        loadWebSite(src)
+            .then(() => {
+                expect(URL.parse(webview.src, true).href).toBe(URL.parse(src, true).href);
+                cb();
+            });
     });
 
     it("stylesheet-loaded", (done) => {
-        webview.loadStyleSheetFile('local-stylesheet.css', '~/assets/local-stylesheet.css', false);
+        const src = '~/assets/test-data/html/css-predefined-link-tags.html';
 
-        setTimeout(() => {
-            webview.executeJavaScript(`
+        webview.registerLocalResource('local-stylesheet.css', '~/assets/test-data/css/local-stylesheet.css');
+
+        loadWebSite(src)
+            .then(() => timeoutPromise())
+            .then(() => webview.executeJavaScript(`
                 (function() {
                     var style = window.getComputedStyle(document.getElementsByClassName("red")[0]);
                     var result = {};
@@ -79,19 +95,66 @@ describe("WebViewExt", function () {
 
                     return result;
                 })();
-            `, false)
-                .then((style: any) => {
-                    expect(style).toBeDefined();
-                    expect(style.color).toBeDefined();
-                    expect(style.color).toBe('rgb(0, 128, 0)');
+                `, false)
+            )
+            .then((style: any) => {
+                expect(style).toBeDefined();
+                expect(style.color).toBeDefined();
+                expect(style.color).toBe('rgb(0, 128, 0)');
 
-                    done();
-                })
-                .catch((err) => {
-                    console.error(err);
-                    throw new Error(err);
+                done();
+            });
+    });
+
+    it('JavaScript interface', (done) => {
+        const src = '~/assets/test-data/html/javascript-calls.html';
+
+        loadWebSite(src)
+            .then(() => timeoutPromise())
+            .then(() => webview.executeJavaScript(`setupEventListener()`))
+            .then(() => {
+                return new Promise((resolve) => {
+                    const expected = {
+                        huba: 'hop',
+                    };
+
+                    webview.on('web-message', (args: any) => {
+                        const data = args.data;
+                        expect(expected).toEqual(data);
+                        webview.off('web-message');
+                        resolve();
+                    });
+
+                    webview.emitToWebView('tns-message', expected);
                 });
-        }, 100);
+            })
+            .then(() => webview.executeJavaScript(`getNumber()`))
+            .then((result) => expect(result).toEqual(42))
+            .then(() => webview.executeJavaScript(`getNumberFloat()`))
+            .then((result) => expect(result).toEqual(3.14))
+            .then(() => webview.executeJavaScript(`getTruth()`))
+            .then((result) => expect(result).toEqual(true))
+            .then(() => webview.executeJavaScript(`getFalse()`))
+            .then((result) => expect(result).toEqual(false))
+            .then(() => webview.executeJavaScript(`getString()`))
+            .then((result) => expect(result).toEqual('string result from webview JS function'))
+            .then(() => webview.executeJavaScript(`getArray()`))
+            .then((result) => expect(result).toEqual([1.5, true, "hello"]))
+            .then(() => webview.executeJavaScript(`getObject()`))
+            .then((result) => expect(result).toEqual({ prop: "test", name: "object-test", values: [ 42, 3.14 ] }))
+            .then(() => done());
+    });
+
+    it(('load page via x-local'), (done) => {
+        const src = 'x-local://empty.html';
+        const filepath = '~/assets/test-data/html/empty.html';
+        webview.registerLocalResource('empty.html', filepath);
+
+        loadWebSite(src)
+            .then(() => {
+                expect(webview.src).toBe(src);
+                done();
+            });
     });
 
     afterEach(() => {

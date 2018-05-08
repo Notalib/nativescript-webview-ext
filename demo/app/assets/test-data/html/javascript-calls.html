@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <script>
+      function callFromNativeScript() {
+        console.log('got a message from nativescript');
+
+        window.nsWebViewBridge.emit('gotMessage', { huba: "hop" });
+      }
+
+      function getNumber() {
+        return 42;
+      }
+
+      function getNumberFloat() {
+        return 3.14;
+      }
+
+      function getFalse() {
+        return false;
+      }
+
+      function getTruth() {
+        return true;
+      }
+
+      function getString() {
+        return 'string result from webview JS function';
+      }
+
+      function getArray() {
+        return [1.5, true, "hello"];
+      }
+
+      function getObject() {
+        return { prop: "test", name: "object-test", values: [ 42, 3.14 ] };
+      }
+
+      function setupEventListener() {
+        window.nsWebViewBridge.on('tns-message', (args) => {
+          window.nsWebViewBridge.emit('web-message', args);
+        });
+      }
+    </script>
+  </head>
+</html>
