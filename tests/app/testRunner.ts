@@ -208,7 +208,7 @@ export function runAll(testSelector?: string) {
         }
     }
 
-    console.log("TESTS: " + singleModuleName ? singleModuleName : "" + " " + singleTestName ? singleTestName : "");
+    console.log(`TESTS: ${singleModuleName || ''} ${singleTestName || ''}`);
 
     const totalSuccess = 0;
     const totalFailed: Array<TKUnit.TestFailure> = [];

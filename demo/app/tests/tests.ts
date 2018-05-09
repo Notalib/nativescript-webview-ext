@@ -43,6 +43,10 @@ describe("WebViewExt", function () {
             const load = (args) => {
                 webview.off(WebViewExt.loadFinishedEvent, load);
 
+                for (const key of Object.keys(args)) {
+                    console.log(`${key} => ${args[key]}`);
+                }
+
                 if (args.error) {
                     reject(new Error(args.error));
                     return;
@@ -78,11 +82,13 @@ describe("WebViewExt", function () {
     describe('load files', () => {
         it("local file via ~/", (done) => {
             const src = emptyHTMLFile;
+
             loadWebSite(src)
                 .then(() => {
                     expect(URL.parse(webview.src, true).href).toBe(URL.parse(src, true).href);
                     done();
-                });
+                })
+                .catch((err) => console.log(err));
         });
 
         it(('local file via x-local'), (done) => {
@@ -93,7 +99,8 @@ describe("WebViewExt", function () {
                 .then(() => {
                     expect(webview.src).toBe(src);
                     done();
-                });
+                })
+                .catch((err) => console.log(err));
         });
     });
 
@@ -131,7 +138,8 @@ describe("WebViewExt", function () {
                         expect(style.color).toBe(expectedRedColor);
 
                         done();
-                    });
+                    })
+                    .catch((err) => console.log(err));
             });
 
             it('Inject via x-local once', (done) => {
@@ -146,7 +154,8 @@ describe("WebViewExt", function () {
                         expect(style.color).toBe(expectedRedColor);
 
                         done();
-                    });
+                    })
+                    .catch((err) => console.log(err));
             });
         });
 
@@ -157,7 +166,8 @@ describe("WebViewExt", function () {
                     .then(() => timeoutPromise())
                     .then(() => webview.executeJavaScript(`getNumber()`))
                     .then((result) => expect(result).toEqual(42))
-                    .then(done);
+                    .then(done)
+                    .catch((err) => console.log(err));
             });
 
             it('auto load', (done) => {
@@ -171,7 +181,8 @@ describe("WebViewExt", function () {
                     .then(() => timeoutPromise())
                     .then(() => webview.executeJavaScript(`getNumber()`))
                     .then((result) => expect(result).toEqual(42))
-                    .then(done);
+                    .then(done)
+                    .catch((err) => console.log(err));
             });
         });
     });
@@ -181,7 +192,8 @@ describe("WebViewExt", function () {
         beforeEach((done) => {
             loadWebSite(src)
                 .then(() => timeoutPromise())
-                .then(done);
+                .then(done)
+                .catch((err) => console.log(err));
         });
 
         it('events', (done) => {
@@ -202,55 +214,64 @@ describe("WebViewExt", function () {
                         webview.emitToWebView('tns-message', expected);
                     });
                 })
-                .then(done);
+                .then(done)
+                .catch((err) => console.log(err));
         });
 
         it('getNumber() - The answer to the ultimate question of life, the universe and everything', (done) => {
             webview.executeJavaScript(`getNumber()`)
                 .then((result) => expect(result).toEqual(42))
-                .then(done);
+                .then(done)
+                .catch((err) => console.log(err));
         });
 
         it('Get pi', (done) => {
             webview.executeJavaScript(`getNumberFloat()`)
                 .then((result) => expect(result).toEqual(3.14))
-                .then(done);
+                .then(done)
+                .catch((err) => console.log(err));
         });
 
         it('Get boolean - true', (done) => {
             webview.executeJavaScript(`getTruth()`)
                 .then((result) => expect(result).toEqual(true))
-                .then(done);
+                .then(done)
+                .catch((err) => console.log(err));
         });
 
         it('Get boolean - false', (done) => {
             webview.executeJavaScript(`getFalse()`)
                 .then((result) => expect(result).toEqual(false))
-                .then(done);
+                .then(done)
+                .catch((err) => console.log(err));
         });
 
         it('getString()', (done) => {
             webview.executeJavaScript(`getString()`)
                 .then((result) => expect(result).toEqual(('string result from webview JS function')))
-                .then(done);
+                .then(done)
+                .catch((err) => console.log(err));
         });
 
         it('getArray()', (done) => {
             webview.executeJavaScript(`getArray()`)
                 .then((result) => expect(result).toEqual([1.5, true, "hello"]))
-                .then(done);
+                .then(done)
+                .catch((err) => console.log(err));
         });
 
         it('getObject()', (done) => {
             webview.executeJavaScript(`getObject()`)
                 .then((result) => expect(result).toEqual({ prop: "test", name: "object-test", values: [42, 3.14] }))
-                .then(done);
+                .then(done)
+                .catch((err) => console.log(err));
         });
 
         it('testPromiseResolve()', (done) => {
             webview.executePromise(`testPromiseResolve()`)
                 .then((result) => expect(result).toEqual(42))
-                .then(done);
+                .then(done)
+                .catch((err) => console.log(err));
         });
     
         it('testPromiseReject()', (done) => {

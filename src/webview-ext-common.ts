@@ -48,10 +48,6 @@ export abstract class WebViewExtBase extends View implements WebViewExtDefinitio
             this.writeTrace('Error injecting webview-bridge JS code: ' + evt.error);
             return;
         }
-        this.writeTrace('Injecting webview-bridge JS code');
-        webViewBridgeJsCodePromise
-            .then((webViewInterfaceJsCode) => this.executeJavaScript(webViewInterfaceJsCode, false))
-            .catch((err) => console.error(err));
 
         for (const { scriptName, filepath } of this.autoLoadScriptFiles) {
             this.loadJavaScriptFile(scriptName, filepath);
@@ -71,7 +67,17 @@ export abstract class WebViewExtBase extends View implements WebViewExtDefinitio
             error,
         };
 
-        this.notify(args);
+        if (!url) {
+            this.notify(args);
+        } else {
+            this.writeTrace('Injecting webview-bridge JS code');
+
+            webViewBridgeJsCodePromise
+                .then((webViewInterfaceJsCode) => this.executeJavaScript(webViewInterfaceJsCode, false))
+                .then(() => {
+                    this.notify(args);
+                });
+        }
     }
 
     public _onLoadStarted(url: string, navigationType: NavigationType) {
@@ -111,11 +117,22 @@ export abstract class WebViewExtBase extends View implements WebViewExtDefinitio
     [srcProperty.getDefault](): string {
         return "";
     }
+
     [srcProperty.setNative](src: string) {
         if (!src) {
             return;
         }
         this.stopLoading();
+
+        if (src.startsWith(this.interceptScheme)) {
+            const fileparh = this.getRegistretLocalResource(src);
+            if (fileparh) {
+                src = `file://${fileparh}`;
+            } else {
+                this._onLoadFinished(src, 'unknown x-local-resource');
+                return;
+            }
+        }
 
         // Add file:/// prefix for local files.
         // They should be loaded with _loadUrl() method as it handles query params.
@@ -134,8 +151,7 @@ export abstract class WebViewExtBase extends View implements WebViewExtDefinitio
 
         if (lcSrc.startsWith("http://") ||
             lcSrc.startsWith("https://") ||
-            lcSrc.startsWith("file:///") ||
-            lcSrc.startsWith(this.interceptScheme)
+            lcSrc.startsWith("file:///")
         ) {
             this._loadUrl(src);
         } else {
@@ -357,6 +373,16 @@ export abstract class WebViewExtBase extends View implements WebViewExtDefinitio
             object: this,
             data,
         });
+    }
+
+    public abstract getTitle(): Promise<string>;
+
+    protected fixLocalResourceName(resourceName: string) {
+        if (resourceName.startsWith(this.interceptScheme)) {
+            return resourceName.substr(this.interceptScheme.length + 3);
+        }
+
+        return resourceName;
     }
 }
 

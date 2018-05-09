@@ -272,7 +272,7 @@ export class WebViewExt extends WebViewExtBase {
         nativeView.loadDataWithBaseURL(baseUrl, src, "text/html", "utf-8", null);
     }
 
-    get canGoBack(): boolean {
+    public get canGoBack(): boolean {
         return this.nativeViewProtected.canGoBack();
     }
 
@@ -312,23 +312,27 @@ export class WebViewExt extends WebViewExtBase {
         }
     }
 
-    public registerLocalResource(name: string, path: string) {
+    public registerLocalResource(resourceName: string, path: string) {
+        resourceName = this.fixLocalResourceName(resourceName);
+
         const filepath = this.resolveLocalResourceFilePath(path);
         if (!filepath) {
             return;
         }
 
-        this.localResourceMap.set(name, filepath);
+        this.localResourceMap.set(resourceName, filepath);
     }
 
-    public unregisterLocalResource(name: string) {
-        this.localResourceMap.delete(name);
+    public unregisterLocalResource(resourceName: string) {
+        resourceName = this.fixLocalResourceName(resourceName);
+
+        this.localResourceMap.delete(resourceName);
     }
 
-    public getRegistretLocalResource(name: string) {
-        const res = this.localResourceMap.get(name);
-        console.log(`getRegistretLocalResource("${name}") -> ${res}`);
-        return res;
+    public getRegistretLocalResource(resourceName: string) {
+        resourceName = this.fixLocalResourceName(resourceName);
+
+        return this.localResourceMap.get(resourceName);
     }
 
     public executeJavaScript<T>(scriptCode): Promise<T> {
@@ -348,5 +352,9 @@ export class WebViewExt extends WebViewExtBase {
                 },
             }));
         });
+    }
+
+    public getTitle() {
+        return Promise.resolve(this.nativeViewProtected.getTitle());
     }
 }

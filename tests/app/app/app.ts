@@ -1,4 +1,6 @@
-﻿let start;
+﻿import 'nativescript-tslib';
+
+let start;
 if (typeof NSDate !== "undefined") {
     start = NSDate.date();
 }

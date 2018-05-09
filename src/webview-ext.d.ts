@@ -158,12 +158,18 @@ export class WebViewExt extends View {
      */
     executeJavaScript<T>(scriptCode: string, stringifyResult?: boolean): Promise<T>;
 
+    /**
+     * Execute a promise inside the webview and wait for it to resolve.
+     * The scriptCode must return a promise.
+     */
     executePromise<T>(scriptCode: string, timeout?: number): Promise<T>
 
     /**
      * Emit event into the webview.
      */
     emitToWebView(eventName: string, data: any): void;
+
+    getTitle(): Promise<string>;
 }
 
 /**

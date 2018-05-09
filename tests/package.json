@@ -14,6 +14,7 @@
   },
   "dependencies": {
     "@nota/nativescript-webview-ext": "file:../src",
+    "nativescript-tslib": "^1.8.1-beta.4",
     "tns-core-modules": "~4.0.0"
   },
   "devDependencies": {

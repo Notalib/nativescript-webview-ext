@@ -364,7 +364,7 @@ export class WebViewExt extends WebViewExtBase {
         }
     }
 
-    get canGoBack(): boolean {
+    public get canGoBack(): boolean {
         if (this._wkWebView) {
             return this._wkWebView.canGoBack;
         } else if (this._uiWebView) {
@@ -374,7 +374,7 @@ export class WebViewExt extends WebViewExtBase {
         }
     }
 
-    get canGoForward(): boolean {
+    public get canGoForward(): boolean {
         if (this._wkWebView) {
             return this._wkWebView.canGoForward;
         } else if (this._uiWebView) {
@@ -408,32 +408,38 @@ export class WebViewExt extends WebViewExtBase {
         }
     }
 
-    registerLocalResource(name: string, path: string) {
+    public registerLocalResource(resourceName: string, path: string) {
+        resourceName = this.fixLocalResourceName(resourceName);
+
         const filepath = this.resolveLocalResourceFilePath(path);
         if (!filepath) {
             return;
         }
 
         if (this._wkWebView) {
-            this._wkCustomUrlSchemeHandler.registerLocalResourceForKeyFilepath(name, filepath);
+            this._wkCustomUrlSchemeHandler.registerLocalResourceForKeyFilepath(resourceName, filepath);
         } else if (this._uiWebView) {
-            CustomNSURLProtocol.registerLocalResourceForKeyFilepath(name, filepath);
+            CustomNSURLProtocol.registerLocalResourceForKeyFilepath(resourceName, filepath);
         }
     }
 
-    unregisterLocalResource(name: string) {
+    public unregisterLocalResource(resourceName: string) {
+        resourceName = this.fixLocalResourceName(resourceName);
+
         if (this._wkWebView) {
-            this._wkCustomUrlSchemeHandler.unregisterLocalResourceForKey(name);
+            this._wkCustomUrlSchemeHandler.unregisterLocalResourceForKey(resourceName);
         } else if (this._uiWebView) {
-            CustomNSURLProtocol.unregisterLocalResourceForKey(name);
+            CustomNSURLProtocol.unregisterLocalResourceForKey(resourceName);
         }
     }
 
-    getRegistretLocalResource(name: string) {
+    public getRegistretLocalResource(resourceName: string) {
+        resourceName = this.fixLocalResourceName(resourceName);
+
         if (this._wkWebView) {
-            return this._wkCustomUrlSchemeHandler.getRegisteredLocalResourceForKey(name);
+            return this._wkCustomUrlSchemeHandler.getRegisteredLocalResourceForKey(resourceName);
         } else if (this._uiWebView) {
-            return CustomNSURLProtocol.getRegisteredLocalResourceForKey(name);
+            return CustomNSURLProtocol.getRegisteredLocalResourceForKey(resourceName);
         } else {
             throw new Error('Not implemented for UIWebView');
         }
@@ -457,5 +463,9 @@ export class WebViewExt extends WebViewExtBase {
         } catch (err) {
             this.writeTrace(`WebViewExt.onUIWebViewEvent(${url}) - ${err}`, traceMessageType.error);
         }
+    }
+
+    public getTitle() {
+        return this.executeJavaScript<string>('document.title');
     }
 }

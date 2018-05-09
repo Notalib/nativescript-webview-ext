@@ -1,9 +1,14 @@
+import * as trace from 'tns-core-modules/trace';
+
 import * as TKUnit from "../../TKUnit";
 import * as testModule from "../../ui-test";
 
 // >> webview-require
 import * as webViewModule from "@nota/nativescript-webview-ext";
 // << webview-require
+
+trace.setCategories('NOTA');
+trace.enable();
 
 // >> declare-webview-xml
 //  <Page>
@@ -155,6 +160,43 @@ export class WebViewTest extends testModule.UITest<webViewModule.WebViewExt> {
         });
         webView.src = '<!DOCTYPE html><html><head><title>MyTitle</title><meta charset="utf-8" /></head><body><span style="color:red">TestÖ</span></body></html>';
         // << webview-string
+    }
+
+    public testLoadSingleXLocalFile(done) {
+        let webView = this.testView;
+
+        const emptyHTMLFile = '~/ui/web-view/assets/html/empty.html';
+        const src = 'x-local://empty.html';
+        webView.registerLocalResource('empty.html', emptyHTMLFile);
+
+        // >> webview-x-localfile
+        webView.on(webViewModule.WebViewExt.loadFinishedEvent, async function (args: webViewModule.LoadEventData) {
+            // >> (hide)
+            let actual;
+            let expectedTitle = 'Blank';
+
+            actual = await webView.executeJavaScript('document.title');
+
+            try {
+                TKUnit.assertNull(args.error, args.error);
+                TKUnit.assertEqual(actual, expectedTitle, `File ${src} not loaded properly.`);
+                done(null);
+            }
+            catch (e) {
+                done(e);
+            }
+            // << (hide)
+
+            let message;
+            if (!args.error) {
+                message = "WebView finished loading " + args.url;
+            }
+            else {
+                message = "Error loading " + args.url + ": " + args.error;
+            }
+        });
+        webView.src = src;
+        // << webview-x-localfile
     }
 
     public testLoadUpperCaseSrc(done) {
