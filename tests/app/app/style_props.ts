@@ -1,6 +1,6 @@
 ﻿import * as buttonModule from "tns-core-modules/ui/button";
-import * as pages from "tns-core-modules/ui/page";
 import * as stackLayoutDef from "tns-core-modules/ui/layouts/stack-layout";
+import * as pages from "tns-core-modules/ui/page";
 
 // import {isAndroid} from "platform";
 // import * as style from "ui/styling/style";
@@ -51,16 +51,16 @@ import * as stackLayoutDef from "tns-core-modules/ui/layouts/stack-layout";
 //     }
 // }
 
-//export class MyStyle extends styles.Style {
+// export class MyStyle extends styles.Style {
 //    get fontFamily(): string {
 //        return this._getValue(fontFamilyProperty);
 //    }
 //    set fontFamily(value: string) {
 //        this._setValue(fontFamilyProperty, value, observable.ValueSource.Local);
 //    }
-//}
+// }
 
-//Object.defineProperty(styles.Style.prototype, "fontFamily", {
+// Object.defineProperty(styles.Style.prototype, "fontFamily", {
 //    get: function () {
 //        return this._getValue(fontFamilyProperty);
 //    },
@@ -69,33 +69,33 @@ import * as stackLayoutDef from "tns-core-modules/ui/layouts/stack-layout";
 //    },
 //    enumerable: true,
 //    configurable: true
-//});
+// });
 
 export class MyButton extends buttonModule.Button {
-    
+
 }
 
 // MyTextViewStyler.registerHandlers();
 
 export function createPage() {
-    var stackLayout = new stackLayoutDef.StackLayout();
+    let stackLayout = new stackLayoutDef.StackLayout();
 
-    var btn = new MyButton();
+    let btn = new MyButton();
     btn.text = "Alabala";
     btn.id = "btn";
 
-    var btn1 = new MyButton();
+    let btn1 = new MyButton();
     btn1.text = "Alabala";
     btn1.id = "btn1";
-    
-    var btn2 = new buttonModule.Button();
+
+    let btn2 = new buttonModule.Button();
     btn2.text = "Alabala";
-    
+
     stackLayout.addChild(btn);
     stackLayout.addChild(btn1);
     stackLayout.addChild(btn2);
-    
-    var page = new pages.Page();
+
+    let page = new pages.Page();
     page.css = "#btn {font-family: Courier New} #btn1 {font-family: Times New Roman} #btn2 {color: yellow}";
     page.content = stackLayout;
     return page;

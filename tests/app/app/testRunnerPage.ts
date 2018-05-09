@@ -1,21 +1,21 @@
-import * as tests from "../testRunner";
-import * as pages from "tns-core-modules/ui/page";
+import * as trace from "tns-core-modules/trace";
 import * as bm from "tns-core-modules/ui/button";
 import * as listViewDef from "tns-core-modules/ui/list-view";
-import * as trace from "tns-core-modules/trace";
+import * as pages from "tns-core-modules/ui/page";
+import * as tests from "../testRunner";
 trace.enable();
 trace.addCategories(trace.categories.Test + "," + trace.categories.Error);
 
 export function createPage() {
-    var data: string[] = [""];
-    for (var testModule in tests.allTests) {
+    let data: string[] = [""];
+    for (let testModule in tests.allTests) {
         data.push(testModule);
     }
 
-    var listView = new listViewDef.ListView();
+    let listView = new listViewDef.ListView();
 
     listView.on(listViewDef.ListView.itemLoadingEvent, (args: listViewDef.ItemEventData) => {
-        var btn = <bm.Button> args.view;
+        let btn = <bm.Button> args.view;
         if (btn) {
             btn.off(bm.Button.tapEvent);
         }
@@ -30,7 +30,7 @@ export function createPage() {
                 tests.runAll();
             });
         } else {
-            var testModule = data[args.index];
+            let testModule = data[args.index];
             btn.text = testModule;
             btn.on(bm.Button.tapEvent, function () {
                 tests.runAll(testModule);
@@ -40,8 +40,8 @@ export function createPage() {
 
     listView.items = data;
 
-    var page = new pages.Page();
+    let page = new pages.Page();
     page.content = listView;
     return page;
 }
-//export var Page = page;
+// export var Page = page;

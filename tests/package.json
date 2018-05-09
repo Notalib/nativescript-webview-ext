@@ -7,6 +7,9 @@
     "id": "dk.nota.WebViewUnitTest",
     "tns-android": {
       "version": "4.0.1"
+    },
+    "tns-ios": {
+      "version": "4.0.1"
     }
   },
   "dependencies": {

@@ -1,4 +1,4 @@
-﻿var start;
+﻿let start;
 if (typeof NSDate !== "undefined") {
     start = NSDate.date();
 }
@@ -29,7 +29,7 @@ application.ios.delegate = MyDelegate;
 if (application.ios) {
     // Observe application notifications.
     application.ios.addNotificationObserver(UIApplicationDidFinishLaunchingNotification, (notification: NSNotification) => {
-        console.log("UIApplicationDidFinishLaunchingNotification: " + notification)
+        console.log("UIApplicationDidFinishLaunchingNotification: " + notification);
     });
 }
 
@@ -131,7 +131,7 @@ if (application.android) {
     });
 }
 
-var time;
+let time;
 if (typeof NSDate !== "undefined") {
     time = NSDate.date().timeIntervalSinceDate(start) * 1000;
 }
