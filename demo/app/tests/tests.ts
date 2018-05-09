@@ -25,7 +25,8 @@ function timeoutPromise(delay = 100) {
 }
 
 describe("WebViewExt", function () {
-    let webview: WebViewExt;
+    let webView: WebViewExt;
+
     const emptyHTMLFile = '~/assets/test-data/html/empty.html';
     const javascriptCallsFile = '~/assets/test-data/html/javascript-calls.html';
     const javascriptCallsXLocalFile = '~/assets/test-data/html/javascript-calls-x-local.html';
@@ -41,7 +42,7 @@ describe("WebViewExt", function () {
     function loadWebSite(src: string) {
         return new Promise((resolve, reject) => {
             const load = (args) => {
-                webview.off(WebViewExt.loadFinishedEvent, load);
+                webView.off(WebViewExt.loadFinishedEvent, load);
 
                 for (const key of Object.keys(args)) {
                     console.log(`${key} => ${args[key]}`);
@@ -58,8 +59,8 @@ describe("WebViewExt", function () {
                 resolve();
             };
 
-            webview.on(WebViewExt.loadFinishedEvent, load);
-            webview.src = src;
+            webView.on(WebViewExt.loadFinishedEvent, load);
+            webView.src = src;
         });
     }
 
@@ -73,10 +74,10 @@ describe("WebViewExt", function () {
         grid.addRow(new ItemSpec(0, 'star'));
         grid.addColumn(new ItemSpec(0, 'star'));
 
-        webview = new WebViewExt();
-        webview.row = 0;
-        webview.col = 0;
-        grid.addChild(webview);
+        webView = new WebViewExt();
+        webView.row = 0;
+        webView.col = 0;
+        grid.addChild(webView);
     });
 
     describe('load files', () => {
@@ -85,7 +86,7 @@ describe("WebViewExt", function () {
 
             loadWebSite(src)
                 .then(() => {
-                    expect(URL.parse(webview.src, true).href).toBe(URL.parse(src, true).href);
+                    expect(URL.parse(webView.src, true).href).toBe(URL.parse(src, true).href);
                     done();
                 })
                 .catch((err) => console.log(err));
@@ -93,11 +94,11 @@ describe("WebViewExt", function () {
 
         it(('local file via x-local'), (done) => {
             const src = 'x-local://empty.html';
-            webview.registerLocalResource('empty.html', emptyHTMLFile);
+            webView.registerLocalResource('empty.html', emptyHTMLFile);
 
             loadWebSite(src)
                 .then(() => {
-                    expect(webview.src).toBe(src);
+                    expect(webView.src).toBe(src);
                     done();
                 })
                 .catch((err) => console.log(err));
@@ -127,11 +128,11 @@ describe("WebViewExt", function () {
 
             it('Loaded predefined stylesheet', (done) => {
                 const src = cssPreDefinedlinkFile;
-                webview.registerLocalResource(localStyleSheetCssNAME, localStyleSheetCssFile);
+                webView.registerLocalResource(localStyleSheetCssNAME, localStyleSheetCssFile);
 
                 loadWebSite(src)
                     .then(() => timeoutPromise())
-                    .then(() => webview.executeJavaScript(testForRedScript, false))
+                    .then(() => webView.executeJavaScript(testForRedScript, false))
                     .then((style: any) => {
                         expect(style).toBeDefined();
                         expect(style.color).toBeDefined();
@@ -145,9 +146,9 @@ describe("WebViewExt", function () {
             it('Inject via x-local once', (done) => {
                 const src = cssNotPredefinedFile;
                 loadWebSite(src)
-                    .then(() => webview.loadStyleSheetFile(localStyleSheetCssNAME, localStyleSheetCssFile))
+                    .then(() => webView.loadStyleSheetFile(localStyleSheetCssNAME, localStyleSheetCssFile))
                     .then(() => timeoutPromise())
-                    .then(() => webview.executeJavaScript(testForRedScript, false))
+                    .then(() => webView.executeJavaScript(testForRedScript, false))
                     .then((style: any) => {
                         expect(style).toBeDefined();
                         expect(style.color).toBeDefined();
@@ -162,24 +163,24 @@ describe("WebViewExt", function () {
         describe('JavaScript', () => {
             it('once', (done) => {
                 loadWebSite(javascriptCallsXLocalFile)
-                    .then(() => webview.loadJavaScriptFile(localJavaScriptName, localJavaScriptFile))
+                    .then(() => webView.loadJavaScriptFile(localJavaScriptName, localJavaScriptFile))
                     .then(() => timeoutPromise())
-                    .then(() => webview.executeJavaScript(`getNumber()`))
+                    .then(() => webView.executeJavaScript(`getNumber()`))
                     .then((result) => expect(result).toEqual(42))
                     .then(done)
                     .catch((err) => console.log(err));
             });
 
             it('auto load', (done) => {
-                webview.autoLoadJavaScriptFile(localJavaScriptName, localJavaScriptFile);
+                webView.autoLoadJavaScriptFile(localJavaScriptName, localJavaScriptFile);
 
                 loadWebSite(javascriptCallsXLocalFile)
                     .then(() => timeoutPromise())
-                    .then(() => webview.executeJavaScript(`getNumber()`))
+                    .then(() => webView.executeJavaScript(`getNumber()`))
                     .then((result) => expect(result).toEqual(42))
                     .then(() => loadWebSite(emptyHTMLFile))
                     .then(() => timeoutPromise())
-                    .then(() => webview.executeJavaScript(`getNumber()`))
+                    .then(() => webView.executeJavaScript(`getNumber()`))
                     .then((result) => expect(result).toEqual(42))
                     .then(done)
                     .catch((err) => console.log(err));
@@ -197,21 +198,21 @@ describe("WebViewExt", function () {
         });
 
         it('events', (done) => {
-            webview.executeJavaScript(`setupEventListener()`)
+            webView.executeJavaScript(`setupEventListener()`)
                 .then(() => {
                     return new Promise((resolve) => {
                         const expected = {
                             huba: 'hop',
                         };
 
-                        webview.on('web-message', (args: any) => {
+                        webView.on('web-message', (args: any) => {
                             const data = args.data;
                             expect(expected).toEqual(data);
-                            webview.off('web-message');
+                            webView.off('web-message');
                             resolve();
                         });
 
-                        webview.emitToWebView('tns-message', expected);
+                        webView.emitToWebView('tns-message', expected);
                     });
                 })
                 .then(done)
@@ -219,63 +220,63 @@ describe("WebViewExt", function () {
         });
 
         it('getNumber() - The answer to the ultimate question of life, the universe and everything', (done) => {
-            webview.executeJavaScript(`getNumber()`)
+            webView.executeJavaScript(`getNumber()`)
                 .then((result) => expect(result).toEqual(42))
                 .then(done)
                 .catch((err) => console.log(err));
         });
 
         it('Get pi', (done) => {
-            webview.executeJavaScript(`getNumberFloat()`)
+            webView.executeJavaScript(`getNumberFloat()`)
                 .then((result) => expect(result).toEqual(3.14))
                 .then(done)
                 .catch((err) => console.log(err));
         });
 
         it('Get boolean - true', (done) => {
-            webview.executeJavaScript(`getTruth()`)
+            webView.executeJavaScript(`getTruth()`)
                 .then((result) => expect(result).toEqual(true))
                 .then(done)
                 .catch((err) => console.log(err));
         });
 
         it('Get boolean - false', (done) => {
-            webview.executeJavaScript(`getFalse()`)
+            webView.executeJavaScript(`getFalse()`)
                 .then((result) => expect(result).toEqual(false))
                 .then(done)
                 .catch((err) => console.log(err));
         });
 
         it('getString()', (done) => {
-            webview.executeJavaScript(`getString()`)
+            webView.executeJavaScript(`getString()`)
                 .then((result) => expect(result).toEqual(('string result from webview JS function')))
                 .then(done)
                 .catch((err) => console.log(err));
         });
 
         it('getArray()', (done) => {
-            webview.executeJavaScript(`getArray()`)
+            webView.executeJavaScript(`getArray()`)
                 .then((result) => expect(result).toEqual([1.5, true, "hello"]))
                 .then(done)
                 .catch((err) => console.log(err));
         });
 
         it('getObject()', (done) => {
-            webview.executeJavaScript(`getObject()`)
+            webView.executeJavaScript(`getObject()`)
                 .then((result) => expect(result).toEqual({ prop: "test", name: "object-test", values: [42, 3.14] }))
                 .then(done)
                 .catch((err) => console.log(err));
         });
 
         it('testPromiseResolve()', (done) => {
-            webview.executePromise(`testPromiseResolve()`)
+            webView.executePromise(`testPromiseResolve()`)
                 .then((result) => expect(result).toEqual(42))
                 .then(done)
                 .catch((err) => console.log(err));
         });
-    
+
         it('testPromiseReject()', (done) => {
-            webview.executePromise(`testPromiseReject()`)
+            webView.executePromise(`testPromiseReject()`)
                 .catch((err) => {
                     expect(err).toBeDefined();
                     expect(err.message).toBeDefined();
@@ -290,11 +291,11 @@ describe("WebViewExt", function () {
     });
 
     afterEach(() => {
-        const parent = webview && webview.parent as GridLayout;
+        const parent = webView && webView.parent as GridLayout;
         if (parent) {
-            parent.removeChild(webview);
+            parent.removeChild(webView);
         }
 
-        webview = null;
+        webView = null;
     });
 });

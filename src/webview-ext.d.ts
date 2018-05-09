@@ -160,7 +160,7 @@ export class WebViewExt extends View {
 
     /**
      * Execute a promise inside the webview and wait for it to resolve.
-     * The scriptCode must return a promise.
+     * Note: The scriptCode must return a promise.
      */
     executePromise<T>(scriptCode: string, timeout?: number): Promise<T>
 
