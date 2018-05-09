@@ -2,7 +2,7 @@ import * as TKUnit from "../../TKUnit";
 import * as testModule from "../../ui-test";
 
 // >> webview-require
-import * as webViewModule from "tns-core-modules/ui/web-view";
+import * as webViewModule from "@nota/nativescript-webview-ext";
 // << webview-require
 
 // >> declare-webview-xml
@@ -11,11 +11,11 @@ import * as webViewModule from "tns-core-modules/ui/web-view";
 //  </Page>
 // << declare-webview-xml
 
-export class WebViewTest extends testModule.UITest<webViewModule.WebView> {
+export class WebViewTest extends testModule.UITest<webViewModule.WebViewExt> {
 
-    public create(): webViewModule.WebView {
+    public create(): webViewModule.WebViewExt {
         // >> declare-webview
-        let webView = new webViewModule.WebView();
+        let webView = new webViewModule.WebViewExt();
         // << declare-webview
         return webView;
     }
@@ -24,7 +24,7 @@ export class WebViewTest extends testModule.UITest<webViewModule.WebView> {
         let webView = this.testView;
 
         // >> webview-url
-        webView.on(webViewModule.WebView.loadFinishedEvent, function (args: webViewModule.LoadEventData) {
+        webView.on(webViewModule.WebViewExt.loadFinishedEvent, function (args: webViewModule.LoadEventData) {
             let message;
             if (!args.error) {
                 message = "WebView finished loading " + args.url;
@@ -53,7 +53,7 @@ export class WebViewTest extends testModule.UITest<webViewModule.WebView> {
         let webView = this.testView;
 
         // >> webview-localfile
-        webView.on(webViewModule.WebView.loadFinishedEvent, function (args: webViewModule.LoadEventData) {
+        webView.on(webViewModule.WebViewExt.loadFinishedEvent, function (args: webViewModule.LoadEventData) {
             // >> (hide)
             let actual;
             let expectedTitle = 'MyTitle';
@@ -89,7 +89,7 @@ export class WebViewTest extends testModule.UITest<webViewModule.WebView> {
     public testLoadLocalFileWithSpaceInPath(done) {
         let webView = this.testView;
 
-        webView.on(webViewModule.WebView.loadFinishedEvent, function (args: webViewModule.LoadEventData) {
+        webView.on(webViewModule.WebViewExt.loadFinishedEvent, function (args: webViewModule.LoadEventData) {
             let actual;
             let expectedTitle = 'MyTitle';
 
@@ -123,7 +123,7 @@ export class WebViewTest extends testModule.UITest<webViewModule.WebView> {
         let webView = this.testView;
 
         // >> webview-string
-        webView.on(webViewModule.WebView.loadFinishedEvent, function (args: webViewModule.LoadEventData) {
+        webView.on(webViewModule.WebViewExt.loadFinishedEvent, function (args: webViewModule.LoadEventData) {
             // >> (hide)
 
             let actual;
@@ -161,7 +161,7 @@ export class WebViewTest extends testModule.UITest<webViewModule.WebView> {
         let webView = this.testView;
         let targetSrc = "HTTPS://github.com/";
 
-        webView.on(webViewModule.WebView.loadFinishedEvent, function (args: webViewModule.LoadEventData) {
+        webView.on(webViewModule.WebViewExt.loadFinishedEvent, function (args: webViewModule.LoadEventData) {
             try {
                 TKUnit.assertNull(args.error, args.error);
                 TKUnit.assertEqual(args.url, targetSrc.toLowerCase(), "args.url");

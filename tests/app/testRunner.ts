@@ -136,19 +136,19 @@ function generateTestFile(allTests: TestInfo[]) {
 }
 
 function showReportPage(finalMessage: string) {
-    const stack = new StackLayout();
-    const btn = new Button();
-    btn.text = "Rerun tests";
-    btn.on("tap", () => runAll(testsSelector));
-    stack.addChild(btn);
-
-    const messageContainer = new TextView();
-    messageContainer.editable = messageContainer.autocorrect = false;
-    messageContainer.text = finalMessage;
-    stack.addChild(messageContainer);
-
     topmost().navigate({
         create: () => {
+            const stack = new StackLayout();
+            const btn = new Button();
+            btn.text = "Rerun tests";
+            btn.on("tap", () => runAll(testsSelector));
+            stack.addChild(btn);
+
+            const messageContainer = new TextView();
+            messageContainer.editable = messageContainer.autocorrect = false;
+            messageContainer.text = finalMessage;
+            stack.addChild(messageContainer);
+
             const page = new Page();
             page.content = stack;
             messageContainer.focus();
