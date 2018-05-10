@@ -335,7 +335,7 @@ export class WebViewTest extends testModule.UITest<webViewModule.WebViewExt> {
                 TKUnit.assertEqual(actualTitle, expectedTitle, `File "${javascriptCallsXLocalFile}" not loaded properly.`);
 
                 await webView.loadJavaScriptFile(localJavaScriptName, localJavaScriptFile);
-                await timeoutPromise(500);
+                await timeoutPromise();
 
                 TKUnit.assertEqual(await webView.executeJavaScript(`getNumber()`), 42);
                 done(null);
@@ -354,6 +354,204 @@ export class WebViewTest extends testModule.UITest<webViewModule.WebViewExt> {
             }
         });
         webView.src = javascriptCallsXLocalFile;
+        // << webview-x-local-inject-once
+    }
+
+    public testInjectJavaScriptAutoLoad(done) {
+        let webView = this.testView;
+
+        webView.autoLoadJavaScriptFile(localJavaScriptName, localJavaScriptFile);
+
+        const sources = [javascriptCallsXLocalFile, emptyHTMLFile];
+        let src = sources.pop();
+
+        // >> webview-x-local-inject-once
+        webView.on(webViewModule.WebViewExt.loadFinishedEvent, async function (args: webViewModule.LoadEventData) {
+            // >> (hide)
+
+            try {
+                TKUnit.assertNull(args.error, args.error);
+
+                await timeoutPromise();
+                TKUnit.assertEqual(await webView.executeJavaScript(`getNumber()`), 42, `Failed to get number 42 from ${src}`);
+
+                src = sources.pop();
+                if (src) {
+                    webView.src = src;
+                } else {
+                    done(null);
+                }
+            }
+            catch (e) {
+                done(e);
+            }
+            // << (hide)
+
+            let message;
+            if (!args.error) {
+                message = "WebView finished loading " + args.url;
+            }
+            else {
+                message = "Error loading " + args.url + ": " + args.error;
+            }
+        });
+
+        webView.src = src;
+        // << webview-x-local-inject-once
+    }
+
+    public testWebViewBridgeEvents(done) {
+        let webView = this.testView;
+
+        const expected = {
+            huba: 'hop',
+        };
+
+        webView.on('web-message', (args: any) => {
+            try {
+                const data = args.data;
+                TKUnit.assertDeepEqual(data, expected);
+                done(null);
+            } catch (err) {
+                done(err);
+            }
+
+            webView.off('web-message');
+        });
+
+        // >> webview-x-local-inject-once
+        webView.on(webViewModule.WebViewExt.loadFinishedEvent, async function (args: webViewModule.LoadEventData) {
+            // >> (hide)
+
+            try {
+                TKUnit.assertNull(args.error, args.error);
+
+                await webView.executeJavaScript(`setupEventListener()`);
+                await timeoutPromise();
+                webView.emitToWebView('tns-message', expected);
+            }
+            catch (e) {
+                done(e);
+            }
+            // << (hide)
+
+            let message;
+            if (!args.error) {
+                message = "WebView finished loading " + args.url;
+            }
+            else {
+                message = "Error loading " + args.url + ": " + args.error;
+            }
+        });
+
+        webView.src = javascriptCallsFile;
+        // << webview-x-local-inject-once
+    }
+
+    public testWebViewJavaScriptGetNumber(done) {
+        this.runWebViewJavaScriptInterfaceTest(done, 'getNumber()', 42, 'The answer to the ultimate question of life, the universe and everything');
+    }
+
+    public testWebViewJavaScriptGetNumberFloat(done) {
+        this.runWebViewJavaScriptInterfaceTest(done, 'getNumberFloat()', 3.14, 'Get pi');
+    }
+
+    public testWebViewJavaScriptGetBoeleanTrue(done) {
+        this.runWebViewJavaScriptInterfaceTest(done, 'getTruth()', true, 'Get boolean - true');
+    }
+
+    public testWebViewJavaScriptGetBoeleanFalse(done) {
+        this.runWebViewJavaScriptInterfaceTest(done, 'getFalse()', false, 'Get boolean - false');
+    }
+
+    public testWebViewJavaScriptGetString(done) {
+        this.runWebViewJavaScriptInterfaceTest(done, 'getString()', 'string result from webview JS function', 'string result from webview JS function');
+    }
+
+    public testWebViewJavaScriptGetArray(done) {
+        this.runWebViewJavaScriptInterfaceTest(done, 'getArray()', [1.5, true, "hello"], 'getArray()');
+    }
+
+    public testWebViewJavaScriptGetObject(done) {
+        this.runWebViewJavaScriptInterfaceTest(done, 'getObject()', { prop: "test", name: "object-test", values: [42, 3.14] }, 'getObject()');
+    }
+
+    private runWebViewJavaScriptInterfaceTest(done, scriptCode: string, expected: any, msg: string) {
+        let webView = this.testView;
+
+        // >> webview-x-local-inject-once
+        webView.on(webViewModule.WebViewExt.loadFinishedEvent, async function (args: webViewModule.LoadEventData) {
+            // >> (hide)
+
+            try {
+                TKUnit.assertNull(args.error, args.error);
+
+                TKUnit.assertDeepEqual(await webView.executeJavaScript(scriptCode), expected, msg);
+                done(null);
+            }
+            catch (e) {
+                done(e);
+            }
+            // << (hide)
+
+            let message;
+            if (!args.error) {
+                message = "WebView finished loading " + args.url;
+            }
+            else {
+                message = "Error loading " + args.url + ": " + args.error;
+            }
+        });
+
+        webView.src = javascriptCallsFile;
+        // << webview-x-local-inject-once
+    }
+
+    public testWebViewJavaScriptPromiseInterface(done) {
+        let webView = this.testView;
+
+        // >> webview-x-local-inject-once
+        webView.on(webViewModule.WebViewExt.loadFinishedEvent, async function (args: webViewModule.LoadEventData) {
+            // >> (hide)
+
+            try {
+                TKUnit.assertNull(args.error, args.error);
+
+                TKUnit.assertDeepEqual(await webView.executePromise(`testPromiseResolve()`), 42, 'Resolve promise');
+            }
+            catch (e) {
+                done(e);
+                return;
+            }
+
+            let rejectErr: Error = null;
+            try {
+                await webView.executePromise(`testPromiseReject()`);
+            } catch (err) {
+                rejectErr = err;
+            }
+
+            try {
+                TKUnit.assertNotNull(rejectErr);
+
+                TKUnit.assertEqual(rejectErr.message, 'The Cake is a Lie');
+                done(null);
+            } catch (err) {
+                done(err);
+            }
+
+            // << (hide)
+
+            let message;
+            if (!args.error) {
+                message = "WebView finished loading " + args.url;
+            }
+            else {
+                message = "Error loading " + args.url + ": " + args.error;
+            }
+        });
+
+        webView.src = javascriptCallsFile;
         // << webview-x-local-inject-once
     }
 
