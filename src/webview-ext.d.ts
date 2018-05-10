@@ -1,4 +1,4 @@
-﻿import { LoadEventData, WebViewEventData, WebViewExtBase } from "./webview-ext-common";
+﻿import { LoadEventData, WebViewEventData, WebViewExtBase, LoadFinishedEventData, LoadStartedEventData } from "./webview-ext-common";
 
 export * from './webview-ext-common';
 
@@ -17,10 +17,10 @@ export class WebViewExt extends WebViewExtBase {
     /**
      * Raised when a loadFinished event occurs.
      */
-    public on(event: "loadFinished", callback: (args: LoadEventData) => void, thisArg?: any);
+    public on(event: "loadFinished", callback: (args: LoadFinishedEventData) => void, thisArg?: any);
 
     /**
      * Raised when a loadStarted event occurs.
      */
-    public on(event: "loadStarted", callback: (args: LoadEventData) => void, thisArg?: any);
+    public on(event: "loadStarted", callback: (args: LoadStartedEventData) => void, thisArg?: any);
 }

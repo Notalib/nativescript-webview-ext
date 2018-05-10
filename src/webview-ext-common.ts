@@ -40,6 +40,14 @@ export interface LoadEventData extends EventData {
     error: string;
 }
 
+export interface LoadStartedEventData extends LoadEventData {
+    eventName: 'loadStarted';
+}
+
+export interface LoadFinishedEventData extends LoadEventData {
+    eventName: 'loadFinished';
+}
+
 /**
  * Event data containing information for the loading events of a WebView.
  */
@@ -78,12 +86,12 @@ export class WebViewExtBase extends View {
     /**
      * String value used when hooking to loadStarted event.
      */
-    public static loadStartedEvent = "loadStarted";
+    public static readonly loadStartedEvent: 'loadStarted' = "loadStarted";
 
     /**
      * String value used when hooking to loadFinished event.
      */
-    public static loadFinishedEvent = "loadFinished";
+    public static readonly loadFinishedEvent: 'loadFinished' = "loadFinished";
 
     /**
      * iOS <11 uses a UIWebview
@@ -119,7 +127,7 @@ export class WebViewExtBase extends View {
     }
 
     public _onLoadFinished(url: string, error?: string) {
-        let args = <LoadEventData>{
+        let args = <LoadFinishedEventData>{
             eventName: WebViewExtBase.loadFinishedEvent,
             object: this,
             url,
@@ -141,7 +149,7 @@ export class WebViewExtBase extends View {
     }
 
     public _onLoadStarted(url: string, navigationType: NavigationType) {
-        let args = <LoadEventData>{
+        let args = <LoadStartedEventData>{
             eventName: WebViewExtBase.loadStartedEvent,
             object: this,
             url: url,

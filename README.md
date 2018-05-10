@@ -52,6 +52,8 @@ The custom `NSURLProtocol` used with UIWebView is shared with all instances of t
 
 ## API
 
+### NativeScript View
+
 | Property | Value | Description |
 | --- | --- | --- |
 | isUIWebView | true if `iOS <11` | Is the native webview an UIWebView? |
@@ -67,6 +69,14 @@ The custom `NSURLProtocol` used with UIWebView is shared with all instances of t
 | executeJavaScript(scriptCode: string) | Execute JavaScript in the webpage. |
 | executePromise(scriptCode: string) | Run a promise inside the webview. Note: scriptCode much return a single promise. |
 | getTitle() | Returns a promise with the current document title |
+
+### WebView
+
+| Function | Description |
+| --- | --- |
+| window.nsWebViewBridge.on(eventName: string, cb: (data: any) => void) | Registers handlers for events from the native layer. | 
+| window.nsWebViewBridge.off(eventName: string, cb?: (data: any) => void) | Deregister handlers for events from the native layer. | 
+| window.nsWebViewBridge.emit(eventName: string, data: any) | Emits event to NativeScript layer. Will be emitted on the WebViewExt as any other event, data will be a part of the WebViewEventData-object | 
 
 ## License
 

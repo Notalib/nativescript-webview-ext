@@ -14,8 +14,6 @@ declare const androidWebViewBridge: {
   emitEvent(eventName: string, data: string): void;
 };
 
-
-
 /**
  * Creates temporary iFrame element to load custom url, for sending handshake message
  * to iOS which is necessary to initiate data transfer from webView to iOS
