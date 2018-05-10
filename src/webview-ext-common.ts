@@ -1,10 +1,9 @@
 import * as fs from "tns-core-modules/file-system";
 import { EventData, Property, traceEnabled, traceMessageType, traceWrite, View, ViewBase } from "tns-core-modules/ui/core/view";
-import { LoadEventData, NavigationType, urlOverrideHandlerFn, WebViewExt as WebViewExtDefinition } from "./";
+import { WebViewExt as WebViewExtDefinition } from "./";
 
 import { webViewBridgeJsCodePromise } from "./nativescript-webview-bridge-loader";
 
-export { NavigationType };
 export { File, knownFolders, path } from "tns-core-modules/file-system";
 export * from "tns-core-modules/ui//core/view";
 
@@ -21,23 +20,84 @@ export interface AutoLoadStyleSheetFile {
     insertBefore?: boolean;
 }
 
-export abstract class WebViewExtBase extends View implements WebViewExtDefinition {
+/**
+ * Event data containing information for the loading events of a WebView.
+ */
+export interface LoadEventData extends EventData {
+    /**
+     * Gets the url of the web-view.
+     */
+    url: string;
+
+    /**
+     * Gets the navigation type of the web-view.
+     */
+    navigationType: NavigationType;
+
+    /**
+     * Gets the error (if any).
+     */
+    error: string;
+}
+
+/**
+ * Event data containing information for the loading events of a WebView.
+ */
+export interface WebViewEventData extends EventData {
+    data?: any;
+}
+
+/**
+ * Represents navigation type
+ */
+export type NavigationType = "linkClicked" | "formSubmitted" | "backForward" | "reload" | "formResubmitted" | "other" | void;
+
+/**
+ * Callback function for override URL loading.
+ * @param url - url to be loaded in the WebView
+ * @return boolean - true to prevent url from being loaded.
+ */
+export type urlOverrideHandlerFn = (url: String) => boolean;
+
+export class WebViewExtBase extends View {
+    /**
+     * Gets the native [android widget](http://developer.android.com/reference/android/webkit/WebView.html) that represents the user interface for this component. Valid only when running on Android OS.
+     */
     public android: any /* android.webkit.WebView */;
+
+    /**
+     * Gets the native [WKWebView](https://developer.apple.com/documentation/webkit/wkwebview/) that represents the user interface for this component. Valid only when running on iOS 11+.
+     * Gets the native [UIWebView]https://developer.apple.com/documentation/uikit/uiwebview that represents the user interface for this component. Valid only when running on iOS <11
+     */
     public ios: any /* WKWebView | UIWebView */;
 
     public get interceptScheme() {
         return 'x-local';
     }
 
+    /**
+     * String value used when hooking to loadStarted event.
+     */
     public static loadStartedEvent = "loadStarted";
+
+    /**
+     * String value used when hooking to loadFinished event.
+     */
     public static loadFinishedEvent = "loadFinished";
 
-    /** is this.ios a UIWebView? */
+    /**
+     * iOS <11 uses a UIWebview
+     */
     public isUIWebView: boolean;
 
-    /** is this.ios a WKWebView? */
+    /**
+     * iOS 11+ uses an WKWebView
+     */
     public isWKWebView: boolean;
 
+    /**
+     * Gets or sets the url, local file path or HTML string.
+     */
     public src: string;
 
     protected autoLoadScriptFiles = [] as AutoLoadJavaScriptFile[];
@@ -92,26 +152,59 @@ export abstract class WebViewExtBase extends View implements WebViewExtDefinitio
         this.notify(args);
     }
 
-    public abstract _loadUrl(src: string): void;
+    public _loadUrl(src: string): void {
+        throw new Error("Method not implemented.");
+    }
 
-    public abstract _loadData(src: string): void;
+    public _loadData(src: string): void {
+        throw new Error("Method not implemented.");
+    }
 
-    public abstract stopLoading(): void;
+    /**
+     * Stops loading the current content (if any).
+     */
+    public stopLoading() {
+        throw new Error("Method not implemented.");
+    }
 
+    /**
+     * Gets a value indicating whether the WebView can navigate back.
+     */
     public get canGoBack(): boolean {
         throw new Error("This member is abstract.");
     }
 
+    /**
+     * Gets a value indicating whether the WebView can navigate forward.
+     */
     public get canGoForward(): boolean {
         throw new Error("This member is abstract.");
     }
 
-    public abstract goBack(): void;
+    /**
+     * Navigates back.
+     */
+    public goBack() {
+        throw new Error("Method not implemented.");
+    }
 
-    public abstract goForward(): void;
+    /**
+     * Navigates forward.
+     */
+    public goForward() {
+        throw new Error("Method not implemented.");
+    }
 
-    public abstract reload(): void;
+    /**
+     * Reloads the current url.
+     */
+    public reload() {
+        throw new Error("Method not implemented.");
+    }
 
+    /**
+     * Set callback function to overriding URL loading in the WebView. If the function returns true, the URL will not be loaded by the WebView.
+     */
     public urlOverrideHandler: urlOverrideHandlerFn;
 
     [srcProperty.getDefault](): string {
@@ -191,12 +284,28 @@ export abstract class WebViewExtBase extends View implements WebViewExtDefinitio
         return filepath;
     }
 
-    public abstract registerLocalResource(name: string, filepath: string);
+    /**
+     * Register a local resource.
+     * This resource can be loaded via "x-local://{name}" inside the webview
+     */
+    public registerLocalResource(name: string, filepath: string) {
+        throw new Error("Method not implemented.");
+    }
 
-    public abstract unregisterLocalResource(name: string);
+    /**
+     * Unregister a local resource.
+     */
+    public unregisterLocalResource(name: string) {
+        throw new Error("Method not implemented.");
+    }
 
-    public abstract getRegistretLocalResource(name: string);
+    public getRegistretLocalResource(name: string) {
+        throw new Error("Method not implemented.");
+    }
 
+    /**
+     * Load a JavaScript file on the current page in the webview.
+     */
     public loadJavaScriptFile(scriptName: string, filepath?: string) {
         if (filepath) {
             this.registerLocalResource(scriptName, filepath);
@@ -207,6 +316,9 @@ export abstract class WebViewExtBase extends View implements WebViewExtDefinitio
         return this.executeJavaScript(scriptCode, false).then(() => void 0);
     }
 
+    /**
+     * Load a stylesheet file on the current page in the webview.
+     */
     public loadStyleSheetFile(stylesheetName: string, filepath: string, insertBefore = true) {
         this.registerLocalResource(stylesheetName, filepath);
         const sheetUrl = `${this.interceptScheme}://${stylesheetName}`;
@@ -216,18 +328,37 @@ export abstract class WebViewExtBase extends View implements WebViewExtDefinitio
         return this.executeJavaScript(scriptCode, false).then(() => void 0);
     }
 
+    /**
+     * Auto-load a JavaScript-file after the page have been loaded.
+     */
     public autoLoadJavaScriptFile(scriptName: string, filepath: string) {
         this.loadJavaScriptFile(scriptName, filepath);
         this.autoLoadScriptFiles.push({ scriptName, filepath });
     }
 
+    /**
+     * Auto-load a stylesheet-file after the page have been loaded.
+     */
     public autoLoadStyleSheetFile(stylesheetName: string, filepath: string, insertBefore?: boolean) {
         this.loadStyleSheetFile(stylesheetName, filepath, insertBefore);
         this.autoLoadStyleSheetFiles.push({ stylesheetName, filepath, insertBefore });
     }
 
-    public abstract executeJavaScript<T>(scriptCode: string, stringifyResult?: boolean): Promise<T>;
+    /**
+     * Execute JavaScript inside the webview.
+     * The code should be wrapped inside an anonymous-function.
+     * Larger scripts should be injected with loadJavaScriptFile.
+     * NOTE: It's not possible to capture syntax errors on UIWebView.
+     * NOTE: stringifyResult only applies on iOS.
+     */
+    public executeJavaScript<T>(scriptCode: string, stringifyResult?: boolean): Promise<T> {
+        throw new Error("Method not implemented.");
+    }
 
+    /**
+     * Execute a promise inside the webview and wait for it to resolve.
+     * Note: The scriptCode must return a promise.
+     */
     public executePromise<T>(scriptCode: string, timeout: number = 500): Promise<T> {
         const reqId = `${Math.round(Math.random() * 1000)}`;
         const eventName = `tmp-promise-event-${reqId}`;
@@ -355,6 +486,9 @@ export abstract class WebViewExtBase extends View implements WebViewExtDefinitio
         }
     }
 
+    /**
+     * Emit event into the webview.
+     */
     public emitToWebView(eventName: string, data: any) {
         const scriptCode = `
             window.nsWebViewBridge && nsWebViewBridge.onNativeEvent(${JSON.stringify(eventName)}, ${JSON.stringify(data)});
@@ -375,7 +509,13 @@ export abstract class WebViewExtBase extends View implements WebViewExtDefinitio
         });
     }
 
-    public abstract getTitle(): Promise<string>;
+    public getTitle(): Promise<string>  {
+        throw new Error("Method not implemented.");
+    }
+
+    public onUIWebViewEvent(url: string) {
+        throw new Error('WebViewExt.onUIWebViewEvent() only available on iOS');
+    }
 
     protected fixLocalResourceName(resourceName: string) {
         if (resourceName.startsWith(this.interceptScheme)) {
