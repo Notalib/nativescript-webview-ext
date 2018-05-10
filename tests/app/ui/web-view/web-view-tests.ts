@@ -400,6 +400,11 @@ export class WebViewTest extends testModule.UITest<webViewModule.WebViewExt> {
         // << webview-x-local-inject-once
     }
 
+    // Testing JavaScript Bridge
+
+    /**
+     * Tests event callback by triggering an event in the webview that emits an event to the nativescript layer.
+     */
     public testWebViewBridgeEvents(done) {
         let webView = this.testView;
 
@@ -448,35 +453,59 @@ export class WebViewTest extends testModule.UITest<webViewModule.WebViewExt> {
         // << webview-x-local-inject-once
     }
 
+    /**
+     * Test calling a function that returns an integer
+     */
     public testWebViewJavaScriptGetNumber(done) {
         this.runWebViewJavaScriptInterfaceTest(done, 'getNumber()', 42, 'The answer to the ultimate question of life, the universe and everything');
     }
 
+    /**
+     * Test calling a function that returns a floating number
+     */
     public testWebViewJavaScriptGetNumberFloat(done) {
         this.runWebViewJavaScriptInterfaceTest(done, 'getNumberFloat()', 3.14, 'Get pi');
     }
 
+    /**
+     * Test calling a function that returns a boolean - true
+     */
     public testWebViewJavaScriptGetBoeleanTrue(done) {
         this.runWebViewJavaScriptInterfaceTest(done, 'getTruth()', true, 'Get boolean - true');
     }
 
+    /**
+     * Test calling a function that returns a boolean - false
+     */
     public testWebViewJavaScriptGetBoeleanFalse(done) {
         this.runWebViewJavaScriptInterfaceTest(done, 'getFalse()', false, 'Get boolean - false');
     }
 
+    /**
+     * Test calling a function that returns a string
+     */
     public testWebViewJavaScriptGetString(done) {
         this.runWebViewJavaScriptInterfaceTest(done, 'getString()', 'string result from webview JS function', 'string result from webview JS function');
     }
 
+    /**
+     * Test calling a function that returns an array
+     */
     public testWebViewJavaScriptGetArray(done) {
         this.runWebViewJavaScriptInterfaceTest(done, 'getArray()', [1.5, true, "hello"], 'getArray()');
     }
 
+    /**
+     * Test calling a function that returns an object
+     */
     public testWebViewJavaScriptGetObject(done) {
         this.runWebViewJavaScriptInterfaceTest(done, 'getObject()', { prop: "test", name: "object-test", values: [42, 3.14] }, 'getObject()');
     }
 
-    private runWebViewJavaScriptInterfaceTest(done, scriptCode: string, expected: any, msg: string) {
+    /**
+     * Helper function for calling a javascript function in the webview and getting the value.
+     */
+    private runWebViewJavaScriptInterfaceTest<T>(done, scriptCode: string, expected: T, msg: string) {
         let webView = this.testView;
 
         // >> webview-x-local-inject-once
@@ -507,6 +536,9 @@ export class WebViewTest extends testModule.UITest<webViewModule.WebViewExt> {
         // << webview-x-local-inject-once
     }
 
+    /**
+     * Test calls in the WebView that resolves or rejects a promise.
+     */
     public testWebViewJavaScriptPromiseInterface(done) {
         let webView = this.testView;
 
