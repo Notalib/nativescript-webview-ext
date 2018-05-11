@@ -1,6 +1,7 @@
 # @nota/nativescript-webview-ext
 
-Extended version of the NativeScript's built'in WebView.
+Extended WebView for NativeScript which adds "x-local"-custom-scheme for loading local-files, handle events between WebView and NativeScript, JavaScript execution, injecting CSS and JS-files.
+Supports Android 19+ and iOS9+.
 
 ## Features
 * Adds a custom-scheme handler for x-local:// to the webview for loading of resources inside the webview.
