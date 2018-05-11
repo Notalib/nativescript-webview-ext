@@ -310,7 +310,7 @@ export class WebViewTest extends testModule.UITest<webViewModule.WebViewExt> {
         // >> webview-x-local-inject-once
         webview.on(webViewModule.WebViewExt.loadFinishedEvent, async (args: webViewModule.LoadEventData) =>  {
             // >> (hide)
-            const expectedTitle = '';
+            const expectedTitle = 'Blank';
 
             try {
                 const actualTitle = await webview.getTitle();

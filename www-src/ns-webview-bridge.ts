@@ -119,7 +119,7 @@ class NSWebViewBridge {
    * Calls native android function to emit event and payload to android
    */
   private emitEventToAndroid(eventName: any, data: any) {
-    const androidWebViewBridge = this.androidWebViewBridge
+    const androidWebViewBridge = this.androidWebViewBridge;
     if (!androidWebViewBridge) {
       console.error(`Tried to emit to android without the androidWebViewBridge`);
       return;

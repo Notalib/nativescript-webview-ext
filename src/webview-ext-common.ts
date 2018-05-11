@@ -517,14 +517,24 @@ export class WebViewExtBase extends View {
         });
     }
 
+    /**
+     * Get document.title
+     * NOTE: if empty on android returns filename
+     */
     public getTitle(): Promise<string>  {
         throw new Error("Method not implemented.");
     }
 
+    /**
+     * Handles UIWebView events. Called from the delegate
+     */
     public onUIWebViewEvent(url: string) {
         throw new Error('WebViewExt.onUIWebViewEvent() only available on iOS');
     }
 
+    /**
+     * Helper function, strips 'x-local://' from a resource name
+     */
     protected fixLocalResourceName(resourceName: string) {
         if (resourceName.startsWith(this.interceptScheme)) {
             return resourceName.substr(this.interceptScheme.length + 3);
@@ -535,9 +545,23 @@ export class WebViewExtBase extends View {
 }
 
 export interface WebViewExtBase {
-    on(eventNames: string, callback: (data: EventData) => void, thisArg?: any);
-    on(event: "loadFinished", callback: (args: LoadEventData) => void, thisArg?: any);
-    on(event: "loadStarted", callback: (args: LoadEventData) => void, thisArg?: any);
+    /**
+     * A basic method signature to hook an event listener (shortcut alias to the addEventListener method).
+     * @param eventNames - String corresponding to events (e.g. "propertyChange"). Optionally could be used more events separated by `,` (e.g. "propertyChange", "change").
+     * @param callback - Callback function which will be executed when event is raised.
+     * @param thisArg - An optional parameter which will be used as `this` context for callback execution.
+     */
+    on(eventNames: string, callback: (data: WebViewEventData) => void, thisArg?: any);
+
+    /**
+     * Raised when a loadFinished event occurs.
+     */
+    on(event: "loadFinished", callback: (args: LoadFinishedEventData) => void, thisArg?: any);
+
+    /**
+     * Raised when a loadStarted event occurs.
+     */
+    on(event: "loadStarted", callback: (args: LoadStartedEventData) => void, thisArg?: any);
 }
 
 srcProperty.register(WebViewExtBase);

@@ -83,7 +83,7 @@ function initializeWebViewClient(): void {
         public shouldInterceptRequest(view: android.webkit.WebView, request: any) {
             const owner = this.owner;
             if (!owner) {
-                return request;
+                return super.shouldInterceptRequest(view, request);
             }
 
             let url = request as string;
@@ -95,12 +95,11 @@ function initializeWebViewClient(): void {
                 return super.shouldInterceptRequest(view, request);
             }
 
-            const scheme = `${owner.interceptScheme}://`;
-            if (!url.startsWith(scheme)) {
+            if (!url.startsWith(owner.interceptScheme)) {
                 return super.shouldInterceptRequest(view, request);
             }
 
-            const filepath = owner.getRegistretLocalResource(url.replace(scheme, ''));
+            const filepath = owner.getRegistretLocalResource(url);
             if (!filepath || !fs.File.exists(filepath)) {
                 return super.shouldInterceptRequest(view, request);
             }
@@ -245,8 +244,8 @@ export class WebViewExt extends WebViewExtBase {
         const nativeView = this.nativeViewProtected;
         if (nativeView) {
             nativeView.destroy();
-            (<any>nativeView).client.owner = null;
-            (<any>nativeView).bridgeInterface.owner = null;
+            nativeView.client.owner = null;
+            nativeView.bridgeInterface.owner = null;
         }
 
         super.disposeNativeView();
