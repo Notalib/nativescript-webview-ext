@@ -65,7 +65,7 @@ The custom `NSURLProtocol` used with UIWebView is shared with all instances of t
 | unregisterLocalResource(name: string): void; | Removes the mapping from "x-local://{name}" => "{path}" |
 | unregisterLocalResource(name: string): void; | Removes the mapping from "x-local://{name}" => "{path}" |
 | loadJavaScriptFile(scriptName: string, filepath: string) | Inject a javascript-file into the webview. Should be called after the `loadFinishedEvent` |
-| loadStyleSheetFile(stylesheetName: string, insertBefore: boolean, filepath: string) | Loads a CSS-file into document.head. If before is true, it will be added to the top of document.head otherwise as the last element |
+| loadStyleSheetFile(stylesheetName: string, filepath: string, insertBefore: boolean) | Loads a CSS-file into document.head. If before is true, it will be added to the top of document.head otherwise as the last element |
 | executeJavaScript(scriptCode: string) | Execute JavaScript in the webpage. |
 | executePromise(scriptCode: string) | Run a promise inside the webview. Note: scriptCode much return a single promise. |
 | getTitle() | Returns a promise with the current document title |
