@@ -62,9 +62,9 @@ The custom `NSURLProtocol` used with UIWebView is shared with all instances of t
 
 | Function | Description |
 | --- | --- |
-| registerLocalResource(name: string, path: string): void; | map the "x-local://{name}" => "{path}" |
-| unregisterLocalResource(name: string): void; | Removes the mapping from "x-local://{name}" => "{path}" |
-| unregisterLocalResource(name: string): void; | Removes the mapping from "x-local://{name}" => "{path}" |
+| registerLocalResource(resourceName: string, path: string): void; | Map the "x-local://{resourceName}" => "{path}". |
+| unregisterLocalResource(resourceName: string): void; | Removes the mapping from "x-local://{resourceName}" => "{path}" |
+| getRegistretLocalResource(resourceName: string): void; | Get the mapping from "x-local://{resourceName}" => "{path}" |
 | loadJavaScriptFile(scriptName: string, filepath: string) | Inject a javascript-file into the webview. Should be called after the `loadFinishedEvent` |
 | loadStyleSheetFile(stylesheetName: string, filepath: string, insertBefore: boolean) | Loads a CSS-file into document.head. If before is true, it will be added to the top of document.head otherwise as the last element |
 | executeJavaScript(scriptCode: string) | Execute JavaScript in the webpage. |
@@ -78,6 +78,20 @@ The custom `NSURLProtocol` used with UIWebView is shared with all instances of t
 | window.nsWebViewBridge.on(eventName: string, cb: (data: any) => void) | Registers handlers for events from the native layer. | 
 | window.nsWebViewBridge.off(eventName: string, cb?: (data: any) => void) | Deregister handlers for events from the native layer. | 
 | window.nsWebViewBridge.emit(eventName: string, data: any) | Emits event to NativeScript layer. Will be emitted on the WebViewExt as any other event, data will be a part of the WebViewEventData-object | 
+
+### HTML
+
+These examples assumes that `locale-stylesheet.css` and `locale-javascript.js` have been mapped via `webview.registerLocalResource(name: string, path: string)`.
+
+Loading CSS-file via the `x-local`-scheme:
+```html
+    <link rel="stylesheet" href="x-local://locale-stylesheet.css" />
+```
+
+Loading JavaScript-file via the `x-local`-scheme:
+```html
+    <script src="x-local://locale-javascript.js"></script>
+```
 
 ## License
 
