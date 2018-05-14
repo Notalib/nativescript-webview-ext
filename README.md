@@ -67,17 +67,43 @@ The custom `NSURLProtocol` used with UIWebView is shared with all instances of t
 | getRegistretLocalResource(resourceName: string): void; | Get the mapping from "x-local://{resourceName}" => "{path}" |
 | loadJavaScriptFile(scriptName: string, filepath: string) | Inject a javascript-file into the webview. Should be called after the `loadFinishedEvent` |
 | loadStyleSheetFile(stylesheetName: string, filepath: string, insertBefore: boolean) | Loads a CSS-file into document.head. If before is true, it will be added to the top of document.head otherwise as the last element |
-| executeJavaScript(scriptCode: string) | Execute JavaScript in the webpage. |
-| executePromise(scriptCode: string) | Run a promise inside the webview. Note: scriptCode much return a single promise. |
-| getTitle() | Returns a promise with the current document title |
+| loadJavaScriptFiles(files: {resourceName: string, filepath: string}[]) | Inject multiple javascript-files into the webview. Should be called after the `loadFinishedEvent` |
+| loadStyleSheetFiles(files: {resourceName: string, filepath: string, insertBefore: boolean}[]) | Loads multiple CSS-files into the document.head. If before is true, it will be added to the top of document.head otherwise as the last element |
+| autoLoadJavaScriptFile | Register a JavaScript-file to be injected on `loadFinishedEvent`. If a page is already loaded, the script will be injected into the current page. |
+| autoLoadStyleSheetFile | Register a CSS-file to be injected on `loadFinishedEvent`. If a page is already loaded, the CSS-file will be injected into the current page. |
+| executeJavaScript(scriptCode: string) | Execute JavaScript in the webpage. *Note:* scriptCode should be ES5 compatible, or it might not work on iOS < 11. |
+| executePromise(scriptCode: string, timeout: number = 500) | Run a promise inside the webview. *Note:* Executing scriptCode must return a promise. |
+| getTitle() | Returns a promise with the current document title. |
+
+#### Examples
+
+**Executing javascript**:
+```typescript
+const scriptCode = `document.title`;
+
+webview.executeJavaScript(scriptCode).then((title) => {
+    console.log(`document title is: ${title}`);
+});
+```
+
+**Executing a promise:**
+```typescript
+const scriptCode = `new Promise(function(resolve) {
+    resolve(document.title);
+});`;
+
+webview.executePromise(scriptCode).then((title) => {
+    console.log(`document title is: ${title}`);
+});
+```
 
 ### WebView
 
 | Function | Description |
 | --- | --- |
-| window.nsWebViewBridge.on(eventName: string, cb: (data: any) => void) | Registers handlers for events from the native layer. | 
-| window.nsWebViewBridge.off(eventName: string, cb?: (data: any) => void) | Deregister handlers for events from the native layer. | 
-| window.nsWebViewBridge.emit(eventName: string, data: any) | Emits event to NativeScript layer. Will be emitted on the WebViewExt as any other event, data will be a part of the WebViewEventData-object | 
+| window.nsWebViewBridge.on(eventName: string, cb: (data: any) => void) | Registers handlers for events from the native layer. |
+| window.nsWebViewBridge.off(eventName: string, cb?: (data: any) => void) | Deregister handlers for events from the native layer. |
+| window.nsWebViewBridge.emit(eventName: string, data: any) | Emits event to NativeScript layer. Will be emitted on the WebViewExt as any other event, data will be a part of the WebViewEventData-object |
 
 ### HTML
 

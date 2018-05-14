@@ -9,13 +9,13 @@ export * from "tns-core-modules/ui//core/view";
 
 export const srcProperty = new Property<WebViewExtBase, string>({ name: "src" });
 
-export interface AutoLoadJavaScriptFile {
-    scriptName: string;
+export interface LoadJavaScriptResource {
+    resourceName: string;
     filepath: string;
 }
 
-export interface AutoLoadStyleSheetFile {
-    stylesheetName: string;
+export interface LoadStyleSheetResource {
+    resourceName: string;
     filepath: string;
     insertBefore?: boolean;
 }
@@ -108,23 +108,8 @@ export class WebViewExtBase extends View {
      */
     public src: string;
 
-    protected autoLoadScriptFiles = [] as AutoLoadJavaScriptFile[];
-    protected autoLoadStyleSheetFiles = [] as AutoLoadStyleSheetFile[];
-
-    protected readonly onLoadInjectBridge = (evt: LoadEventData) => {
-        if (evt && evt.error) {
-            this.writeTrace('Error injecting webview-bridge JS code: ' + evt.error);
-            return;
-        }
-
-        for (const { scriptName, filepath } of this.autoLoadScriptFiles) {
-            this.loadJavaScriptFile(scriptName, filepath);
-        }
-
-        for (const { stylesheetName, filepath, insertBefore } of this.autoLoadStyleSheetFiles) {
-            this.loadStyleSheetFile(stylesheetName, filepath, !!insertBefore);
-        }
-    }
+    protected autoLoadScriptFiles = [] as LoadJavaScriptResource[];
+    protected autoLoadStyleSheetFiles = [] as LoadStyleSheetResource[];
 
     public _onLoadFinished(url: string, error?: string) {
         let args = <LoadFinishedEventData>{
@@ -138,10 +123,12 @@ export class WebViewExtBase extends View {
         if (!url) {
             this.notify(args);
         } else {
-            this.writeTrace('Injecting webview-bridge JS code');
+            this.writeTrace(`WebViewExt._onLoadFinished("${url}", ${error || void 0}) - > Injecting webview-bridge JS code`);
 
             webViewBridgeJsCodePromise
                 .then((webViewInterfaceJsCode) => this.executeJavaScript(webViewInterfaceJsCode, false))
+                .then(() => this.loadJavaScriptFiles(this.autoLoadScriptFiles))
+                .then(() => this.loadStyleSheetFiles(this.autoLoadStyleSheetFiles))
                 .then(() => {
                     this.notify(args);
                 });
@@ -267,13 +254,6 @@ export class WebViewExtBase extends View {
         throw new Error("Property url of WebView is deprecated. Use src instead");
     }
 
-    /**
-     * Setups of the WebViewInterface and makes sure the bridge is loaded on the webpage.
-     */
-    protected setupWebViewInterface() {
-        this.on(WebViewExtBase.loadFinishedEvent, this.onLoadInjectBridge);
-    }
-
     protected resolveLocalResourceFilePath(filepath: string): string | void {
         if (!filepath) {
             console.error('WebViewExt.resolveLocalResourceFilePath() no filepath');
@@ -315,41 +295,107 @@ export class WebViewExtBase extends View {
      * Load a JavaScript file on the current page in the webview.
      */
     public loadJavaScriptFile(scriptName: string, filepath?: string) {
-        if (filepath) {
-            this.registerLocalResource(scriptName, filepath);
-            scriptName = `${this.interceptScheme}://${scriptName}`;
+        return this.loadJavaScriptFiles([{
+            resourceName: scriptName,
+            filepath,
+        }]);
+    }
+
+    /**
+     * Load multiple JavaScript-files on the current page in the webview.
+     */
+    public loadJavaScriptFiles(files: LoadStyleSheetResource[]) {
+        if (!files || !files.length) {
+            return Promise.resolve();
         }
-        const scriptCode = this.generateLoadJavaScriptFileScriptCode(scriptName);
-        this.writeTrace('Loading javascript file: ' + scriptName);
-        return this.executeJavaScript(scriptCode, false).then(() => void 0);
+
+        const scriptCodes = [] as string[];
+
+        for (let { resourceName, filepath } of files) {
+            resourceName = this.fixLocalResourceName(resourceName);
+            if (filepath) {
+                this.registerLocalResource(resourceName, filepath);
+            }
+            const scriptUrl = `${this.interceptScheme}://${resourceName}`;
+            const scriptCode = this.generateLoadJavaScriptFileScriptCode(scriptUrl);
+            scriptCodes.push(scriptCode);
+            this.writeTrace(`WebViewExt.loadJavaScriptFiles() - > Loading javascript file: "${resourceName}"`);
+        }
+
+        if (scriptCodes.length !== files.length) {
+            this.writeTrace(`WebViewExt.loadJavaScriptFiles() - > Num of generated scriptCodes ${scriptCodes.length} differ from num files ${files.length}`, traceMessageType.error);
+        }
+
+        if (!scriptCodes.length) {
+            this.writeTrace('WebViewExt.loadJavaScriptFiles() - > No files');
+            return Promise.resolve();
+        }
+
+        if (!scriptCodes.length) {
+            return Promise.resolve();
+        }
+
+        return this.executeJavaScript(scriptCodes.join(';'), false).then(() => void 0);
     }
 
     /**
      * Load a stylesheet file on the current page in the webview.
      */
     public loadStyleSheetFile(stylesheetName: string, filepath: string, insertBefore = true) {
-        this.registerLocalResource(stylesheetName, filepath);
-        const sheetUrl = `${this.interceptScheme}://${stylesheetName}`;
-        const scriptCode = this.generaateLoadCSSFileScriptCode(sheetUrl, insertBefore);
-        this.writeTrace('Loading stylesheet file: ' + sheetUrl);
+        return this.loadStyleSheetFiles([{
+            resourceName: stylesheetName,
+            filepath,
+            insertBefore,
+        }]);
+    }
 
-        return this.executeJavaScript(scriptCode, false).then(() => void 0);
+    /**
+     * Load multiple stylesheet-files on the current page in the webview
+     */
+    public loadStyleSheetFiles(files: LoadStyleSheetResource[]) {
+        if (!files || !files.length) {
+            return Promise.resolve();
+        }
+
+        const scriptCodes = [] as string[];
+
+        for (let { resourceName, filepath, insertBefore } of files) {
+            resourceName = this.fixLocalResourceName(resourceName);
+            if (filepath) {
+                this.registerLocalResource(resourceName, filepath);
+            }
+            const sheetUrl = `${this.interceptScheme}://${resourceName}`;
+            const scriptCode = this.generaateLoadCSSFileScriptCode(sheetUrl, insertBefore);
+            scriptCodes.push(scriptCode);
+            this.writeTrace('WebViewExt.loadStyleSheetFiles() - > Loading stylesheet file: ' + sheetUrl);
+        }
+
+        if (scriptCodes.length !== files.length) {
+            this.writeTrace(`WebViewExt.loadStyleSheetFiles() - > Num of generated scriptCodes ${scriptCodes.length} differ from num files ${files.length}`, traceMessageType.error);
+        }
+
+        if (!scriptCodes.length) {
+            this.writeTrace('WebViewExt.loadStyleSheetFiles() - > No files');
+            return Promise.resolve();
+        }
+
+        return this.executeJavaScript(scriptCodes.join(';'), false).then(() => void 0);
     }
 
     /**
      * Auto-load a JavaScript-file after the page have been loaded.
      */
-    public autoLoadJavaScriptFile(scriptName: string, filepath: string) {
-        this.loadJavaScriptFile(scriptName, filepath);
-        this.autoLoadScriptFiles.push({ scriptName, filepath });
+    public autoLoadJavaScriptFile(resourceName: string, filepath: string) {
+        this.loadJavaScriptFile(resourceName, filepath);
+        this.autoLoadScriptFiles.push({ resourceName, filepath });
     }
 
     /**
      * Auto-load a stylesheet-file after the page have been loaded.
      */
-    public autoLoadStyleSheetFile(stylesheetName: string, filepath: string, insertBefore?: boolean) {
-        this.loadStyleSheetFile(stylesheetName, filepath, insertBefore);
-        this.autoLoadStyleSheetFiles.push({ stylesheetName, filepath, insertBefore });
+    public autoLoadStyleSheetFile(resourceName: string, filepath: string, insertBefore?: boolean) {
+        this.loadStyleSheetFile(resourceName, filepath, insertBefore);
+        this.autoLoadStyleSheetFiles.push({ resourceName, filepath, insertBefore });
     }
 
     /**
@@ -371,28 +417,28 @@ export class WebViewExtBase extends View {
         const reqId = `${Math.round(Math.random() * 1000)}`;
         const eventName = `tmp-promise-event-${reqId}`;
 
-        const promiseScriptCode =  `
+        const promiseScriptCode = `
             try {
                 Promise.resolve(${scriptCode})
-                .then(function(data) {
-                    window.nsWebViewBridge.emit(${JSON.stringify(eventName)}, {
-                        data: data
+                    .then(function(data) {
+                        window.nsWebViewBridge.emit(${JSON.stringify(eventName)}, {
+                            data: data
+                        });
+                    })
+                    .catch(function(err) {
+                        if (err && err.message) {
+                            window.nsWebViewBridge.emit(${JSON.stringify(eventName)}, {
+                                err: {
+                                    message: err.message,
+                                    stack: err.stack,
+                                }
+                            });
+                        } else {
+                            window.nsWebViewBridge.emit(${JSON.stringify(eventName)}, {
+                                err: err
+                            });
+                        }
                     });
-                })
-                .catch(function(err) {
-                    if (err && err.message) {
-                        window.nsWebViewBridge.emit(${JSON.stringify(eventName)}, {
-                            err: {
-                                message: err.message,
-                                stack: err.stack,
-                            }
-                        });
-                    } else {
-                        window.nsWebViewBridge.emit(${JSON.stringify(eventName)}, {
-                            err: err
-                        });
-                    }
-                })
             } catch (err) {
                 window.nsWebViewBridge.emit(${JSON.stringify(eventName)}, {
                     err: {
@@ -407,7 +453,7 @@ export class WebViewExtBase extends View {
             let timer: any;
             const tmpPromiseEvent = (args: any) => {
                 this.off(eventName);
-                const {data, err} = args.data || {} as any;
+                const { data, err } = args.data || {} as any;
                 if (err) {
                     reject(err);
                     return;
@@ -441,9 +487,9 @@ export class WebViewExtBase extends View {
             var script = document.createElement("script");
             script.setAttribute("id", "${elId}");
             script.src = "${scriptHref}";
-            script.onError = function(error) {
-                console.log("Failed to load ${scriptHref} - error: " + error);
-            };
+            script.addEventListener("error", function(error) {
+                console.error("Failed to load ${scriptHref} - error: " + error);
+            });
 
             document.body.appendChild(script);
         })();`;
@@ -453,7 +499,7 @@ export class WebViewExtBase extends View {
      * Generate scriptcode for loading CSS-file.
      */
     protected generaateLoadCSSFileScriptCode(stylesheetHref: string, insertBefore = false) {
-        const elId = stylesheetHref.replace(/[^a-z0-9]/g, '');
+        const elId = stylesheetHref.replace(`${this.interceptScheme}://`, '').replace(/[^a-z0-9]/g, '');
         return `(function() {
             if (document.getElementById("${elId}")) {
                 console.log("${elId} already exists");
@@ -479,6 +525,10 @@ export class WebViewExtBase extends View {
     protected parseWebviewJavascriptResult(result: any) {
         if (result === undefined) {
             return;
+        }
+
+        if (typeof result !== 'string') {
+            return result;
         }
 
         try {
@@ -519,9 +569,9 @@ export class WebViewExtBase extends View {
 
     /**
      * Get document.title
-     * NOTE: if empty on android returns filename
+     * NOTE: On Android, if empty returns filename
      */
-    public getTitle(): Promise<string>  {
+    public getTitle(): Promise<string> {
         throw new Error("Method not implemented.");
     }
 

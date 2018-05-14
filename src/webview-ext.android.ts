@@ -3,7 +3,7 @@
 import * as fs from 'tns-core-modules/file-system';
 import * as platform from "tns-core-modules/platform";
 
-import { knownFolders, traceCategories, traceEnabled, traceWrite, WebViewExtBase } from "./webview-ext-common";
+import { knownFolders, traceCategories, traceEnabled, traceMessageType, traceWrite, WebViewExtBase } from "./webview-ext-common";
 
 export * from "./webview-ext-common";
 
@@ -237,7 +237,6 @@ export class WebViewExt extends WebViewExtBase {
         super.initNativeView();
         this.nativeViewProtected.client.owner = this;
         this.nativeViewProtected.bridgeInterface.owner = this;
-        this.setupWebViewInterface();
     }
 
     public disposeNativeView() {
@@ -257,6 +256,7 @@ export class WebViewExt extends WebViewExtBase {
             return;
         }
 
+        this.writeTrace(`WebViewExt<android>._loadUrl(${src})`);
         nativeView.loadUrl(src);
     }
 
@@ -267,11 +267,16 @@ export class WebViewExt extends WebViewExtBase {
         }
 
         const baseUrl = `file:///${knownFolders.currentApp().path}/`;
+        this.writeTrace(`WebViewExt<android>._loadData(${src}) -> baseUrl: ${baseUrl}`);
         nativeView.loadDataWithBaseURL(baseUrl, src, "text/html", "utf-8", null);
     }
 
     public get canGoBack(): boolean {
-        return this.nativeViewProtected.canGoBack();
+        const nativeView = this.nativeViewProtected;
+        if (nativeView) {
+            return nativeView.canGoBack();
+        }
+        return false;
     }
 
     public stopLoading() {
@@ -315,13 +320,17 @@ export class WebViewExt extends WebViewExtBase {
 
         const filepath = this.resolveLocalResourceFilePath(path);
         if (!filepath) {
+            this.writeTrace(`WebViewExt<android>.registerLocalResource(${resourceName}, ${path}) -> file doesn't exist`, traceMessageType.error);
             return;
         }
+
+        this.writeTrace(`WebViewExt<android>.registerLocalResource(${resourceName}, ${path}) -> file: ${filepath}`);
 
         this.localResourceMap.set(resourceName, filepath);
     }
 
     public unregisterLocalResource(resourceName: string) {
+        this.writeTrace(`WebViewExt<android>.unregisterLocalResource(${resourceName})`);
         resourceName = this.fixLocalResourceName(resourceName);
 
         this.localResourceMap.delete(resourceName);
@@ -330,19 +339,26 @@ export class WebViewExt extends WebViewExtBase {
     public getRegistretLocalResource(resourceName: string) {
         resourceName = this.fixLocalResourceName(resourceName);
 
-        return this.localResourceMap.get(resourceName);
+        const result = this.localResourceMap.get(resourceName);
+
+        this.writeTrace(`WebViewExt<android>.getRegistretLocalResource(${resourceName}) -> ${result}`);
+
+        return result;
     }
 
     public executeJavaScript<T>(scriptCode): Promise<T> {
-        if (!this.android) {
-            return Promise.reject(new Error('Native Android not inited, cannot call executeJavaScript'));
-        }
-
         return new Promise<any>((resolve, reject) => {
             if (Number(platform.device.sdkVersion) < 19) {
+                this.writeTrace(`WebViewExt<android>.executeJavaScript() -> SDK:${platform.device.sdkVersion} not supported`, traceMessageType.error);
                 reject(new Error('Android API < 19 not supported'));
                 return;
             }
+            if (!this.android) {
+                this.writeTrace(`WebViewExt<android>.executeJavaScript() -> no nativeview?`, traceMessageType.error);
+                reject(new Error('Native Android not inited, cannot call executeJavaScript'));
+                return;
+            }
+
             const that = this;
             this.android.evaluateJavascript(scriptCode, new android.webkit.ValueCallback({
                 onReceiveValue(result) {

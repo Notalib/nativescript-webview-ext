@@ -11,4 +11,3 @@ if (global.TNS_WEBPACK) {
 }
 
 export { webViewBridgeJsCodePromise };
-  

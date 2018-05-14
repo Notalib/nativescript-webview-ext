@@ -82,8 +82,6 @@ export class WebViewExt extends WebViewExtBase {
             uiWebView.scrollView.scrollEnabled = false;
             uiWebView.scalesPageToFit = false;
         }
-
-        this.setupWebViewInterface();
     }
 
     public executeJavaScript<T>(scriptCode: string, stringifyResult = true): Promise<T> {
@@ -145,22 +143,32 @@ export class WebViewExt extends WebViewExtBase {
     }
 
     public _loadUrl(src: string) {
+        const nsURL = NSURL.URLWithString(src);
         if (this._wkWebView) {
             if (src.startsWith('file:///')) {
-                this._wkWebView.loadFileURLAllowingReadAccessToURL(NSURL.URLWithString(src), NSURL.URLWithString(src));
+                const nsReadAccessUrl = NSURL.URLWithString(src);
+                this.writeTrace(`WebViewExt<ios>._loadUrl(${src}) -> this._wkWebView.loadFileURLAllowingReadAccessToURL(${nsURL}, ${nsReadAccessUrl})`);
+                this._wkWebView.loadFileURLAllowingReadAccessToURL(nsURL, nsReadAccessUrl);
             } else {
-                this._wkWebView.loadRequest(NSURLRequest.requestWithURL(NSURL.URLWithString(src)));
+                const nsRequestWithUrl = NSURLRequest.requestWithURL(nsURL);
+                this.writeTrace(`WebViewExt<ios>._loadUrl(${src}) -> this._wkWebView.loadRequest(${nsRequestWithUrl})`);
+                this._wkWebView.loadRequest(nsRequestWithUrl);
             }
         } else if (this._uiWebView) {
-            this._uiWebView.loadRequest(NSURLRequest.requestWithURL(NSURL.URLWithString(src)));
+            const nsRequestWithUrl = NSURLRequest.requestWithURL(nsURL);
+            this.writeTrace(`WebViewExt<ios>._loadUrl(${src}) -> this._uiWebView.loadRequest(${nsRequestWithUrl})`);
+            this._uiWebView.loadRequest(nsRequestWithUrl);
         }
     }
 
     public _loadData(content: string) {
+        const nsURL = NSURL.alloc().initWithString(`file:///${knownFolders.currentApp().path}/`);
         if (this._wkWebView) {
-            this._wkWebView.loadHTMLStringBaseURL(content, NSURL.alloc().initWithString(`file:///${knownFolders.currentApp().path}/`));
+            this.writeTrace(`WebViewExt<ios>._loadUrl(content) -> this._wkWebView.loadHTMLStringBaseURL(${nsURL})`);
+            this._wkWebView.loadHTMLStringBaseURL(content, nsURL);
         } else if (this._uiWebView) {
-            this._uiWebView.loadHTMLStringBaseURL(content, NSURL.alloc().initWithString(`file:///${knownFolders.currentApp().path}/`));
+            this.writeTrace(`WebViewExt<ios>._loadUrl(content) -> this._uiWebView.loadHTMLStringBaseURL(${nsURL})`);
+            this._uiWebView.loadHTMLStringBaseURL(content, nsURL);
         }
     }
 
@@ -213,8 +221,11 @@ export class WebViewExt extends WebViewExtBase {
 
         const filepath = this.resolveLocalResourceFilePath(path);
         if (!filepath) {
+            this.writeTrace(`WebViewExt<ios>.registerLocalResource(${resourceName}, ${path}) -> file doesn't exist`, traceMessageType.error);
             return;
         }
+
+        this.writeTrace(`WebViewExt<ios>.registerLocalResource(${resourceName}, ${path}) -> file: ${filepath}`);
 
         if (this._wkWebView) {
             this._wkCustomUrlSchemeHandler.registerLocalResourceForKeyFilepath(resourceName, filepath);
@@ -224,6 +235,8 @@ export class WebViewExt extends WebViewExtBase {
     }
 
     public unregisterLocalResource(resourceName: string) {
+        this.writeTrace(`WebViewExt<ios>.unregisterLocalResource(${resourceName})`);
+
         resourceName = this.fixLocalResourceName(resourceName);
 
         if (this._wkWebView) {
@@ -236,13 +249,17 @@ export class WebViewExt extends WebViewExtBase {
     public getRegistretLocalResource(resourceName: string) {
         resourceName = this.fixLocalResourceName(resourceName);
 
+        let result: string;
         if (this._wkWebView) {
-            return this._wkCustomUrlSchemeHandler.getRegisteredLocalResourceForKey(resourceName);
+            result = this._wkCustomUrlSchemeHandler.getRegisteredLocalResourceForKey(resourceName);
         } else if (this._uiWebView) {
-            return CustomNSURLProtocol.getRegisteredLocalResourceForKey(resourceName);
+            result = CustomNSURLProtocol.getRegisteredLocalResourceForKey(resourceName);
         } else {
             throw new Error('Not implemented for UIWebView');
         }
+
+        this.writeTrace(`WebViewExt<android>.getRegistretLocalResource(${resourceName}) -> ${result}`);
+        return result;
     }
 
     public onUIWebViewEvent(url: string) {
