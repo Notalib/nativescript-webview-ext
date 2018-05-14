@@ -120,7 +120,7 @@ export class WebViewExtBase extends View {
             error,
         };
 
-        if (!url) {
+        if (error) {
             this.notify(args);
         } else {
             this.writeTrace(`WebViewExt._onLoadFinished("${url}", ${error || void 0}) - > Injecting webview-bridge JS code`);
@@ -131,6 +131,11 @@ export class WebViewExtBase extends View {
                 .then(() => this.loadStyleSheetFiles(this.autoLoadStyleSheetFiles))
                 .then(() => {
                     this.notify(args);
+                }).catch((error) => {
+                    this.notify({
+                        ...args,
+                        error,
+                    });
                 });
         }
     }
@@ -386,16 +391,30 @@ export class WebViewExtBase extends View {
      * Auto-load a JavaScript-file after the page have been loaded.
      */
     public autoLoadJavaScriptFile(resourceName: string, filepath: string) {
-        this.loadJavaScriptFile(resourceName, filepath);
+        if (this.src) {
+            this.loadJavaScriptFile(resourceName, filepath).catch(() => void 0);
+        }
+
         this.autoLoadScriptFiles.push({ resourceName, filepath });
+    }
+
+    public removeAutoLoadJavaScriptFile(resourceName: string) {
+        this.autoLoadScriptFiles = this.autoLoadScriptFiles.filter((data) => data.resourceName !== resourceName);
     }
 
     /**
      * Auto-load a stylesheet-file after the page have been loaded.
      */
     public autoLoadStyleSheetFile(resourceName: string, filepath: string, insertBefore?: boolean) {
-        this.loadStyleSheetFile(resourceName, filepath, insertBefore);
+        if (this.src) {
+            this.loadStyleSheetFile(resourceName, filepath, insertBefore).catch(() => void 0);
+        }
+
         this.autoLoadStyleSheetFiles.push({ resourceName, filepath, insertBefore });
+    }
+
+    public removeAutoLoadStyleSheetFile(resourceName: string) {
+        this.autoLoadStyleSheetFiles = this.autoLoadStyleSheetFiles.filter((data) => data.resourceName !== resourceName);
     }
 
     /**
