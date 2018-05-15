@@ -217,6 +217,40 @@ export class WebViewTest extends testModule.UITest<webViewModule.WebViewExt> {
         // << webview-string
     }
 
+    public async testLoadHTMLStringPromise(done) {
+        const webview = this.testView;
+
+        // >> webview-string-promise
+        const html = '<!DOCTYPE html><html><head><title>MyTitle</title><meta charset="utf-8" /></head><body><span style="color:red">TestÖ</span></body></html>';
+        try {
+            const args = await webview.loadUrl(html);
+            // >> (hide)
+            const actualTitle = await webview.getTitle();
+            const expectedTitle = 'MyTitle';
+
+            try {
+                TKUnit.assertNull(args.error, args.error);
+                TKUnit.assertEqual(actualTitle, expectedTitle, "HTML string not loaded properly. Actual: ");
+                done(null);
+            }
+            catch (e) {
+                done(e);
+            }
+            // << (hide)
+
+            let message;
+            if (!args.error) {
+                message = "WebView finished loading " + args.url;
+            }
+            else {
+                message = "Error loading " + args.url + ": " + args.error;
+            }
+        } catch (err) {
+            done(err);
+        }
+        // << webview-string-promise
+    }
+
     public testLoadSingleXLocalFile(done) {
         const webview = this.testView;
 
@@ -250,6 +284,42 @@ export class WebViewTest extends testModule.UITest<webViewModule.WebViewExt> {
         });
         webview.src = emptyHTMLXLocalSource;
         // << webview-x-localfile
+    }
+
+    public async testLoadSingleXLocalFilePromise(done) {
+        const webview = this.testView;
+
+        const emptyHTMLXLocalSource = 'x-local://empty.html';
+
+        try {
+            webview.registerLocalResource('empty.html', emptyHTMLFile);
+
+            const args = await webview.loadUrl(emptyHTMLXLocalSource);
+            // >> (hide)
+            const expectedTitle = 'Blank';
+            const actualTitle = await webview.getTitle();
+
+            try {
+                TKUnit.assertNull(args.error, args.error);
+                TKUnit.assertEqual(actualTitle, expectedTitle, `File "${emptyHTMLXLocalSource}" not loaded properly.`);
+                done(null);
+            }
+            catch (e) {
+                done(e);
+            }
+            // << (hide)
+
+            let message;
+            if (!args.error) {
+                message = "WebView finished loading " + args.url;
+            }
+            else {
+                message = "Error loading " + args.url + ": " + args.error;
+            }
+        } catch (err) {
+            done(err);
+        }
+        // << webview-x-localfile-promise
     }
 
     public testInjectFilesPredefinedStyleSheetLink(done) {
