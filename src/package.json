@@ -45,7 +45,8 @@
     ],
     "author": {
         "name": "Nota",
-        "email": "app@nota.dk"
+        "email": "app@nota.dk",
+        "url": "https://nota.dk"
     },
     "contributors": [
         {
@@ -58,6 +59,10 @@
             "email": "dfg@nota.dk"
         }
     ],
+    "repository": {
+        "type": "git",
+        "url": "https://github.com/Notalib/nativescript-webview-ext.git"
+    },
     "bugs": {
         "url": "https://github.com/Notalib/nativescript-webview-ext/issues"
     },
