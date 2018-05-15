@@ -62,8 +62,7 @@
         "url": "https://github.com/Notalib/nativescript-webview-ext/issues"
     },
     "license": "Apache-2.0",
-    "homepage": "https://github.com/Notalib/nativescript-webview-ext",
-    "readmeFilename": "README.md",
+    "homepage": "https://github.com/Notalib/nativescript-webview-ext#readme",
     "devDependencies": {
         "npm-run-all": "^4.1.2",
         "prompt": "^1.0.0",
