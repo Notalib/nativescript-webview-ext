@@ -57,8 +57,10 @@ The custom `NSURLProtocol` used with UIWebView is shared with all instances of t
 
 | Property | Value | Description |
 | --- | --- | --- |
-| isUIWebView | true if `iOS <11` | Is the native webview an UIWebView? |
-| isWkWebView | true if `iOS >=11` | Is the native webview an WKWebView? |
+| isUIWebView | true / false | Is the native webview an UIWebView? True if `iOS <11` |
+| isWkWebView | true / false | Is the native webview an WKWebView? True if `iOS >=11` |
+| src | | Load src |
+| autoInjectJSBridge | true / false | Should the window.nsWebViewBridge be injected on `loadFinishedEvent`? Defaults to true |
 
 | Function | Description |
 | --- | --- |

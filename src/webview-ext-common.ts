@@ -8,6 +8,7 @@ export { File, knownFolders, path } from "tns-core-modules/file-system";
 export * from "tns-core-modules/ui//core/view";
 
 export const srcProperty = new Property<WebViewExtBase, string>({ name: "src" });
+export const autoInjectJSBridgeProperty = new Property<WebViewExtBase, boolean>({ name: "autoInjectJSBridge", defaultValue: true });
 
 export interface LoadJavaScriptResource {
     resourceName: string;
@@ -108,10 +109,32 @@ export class WebViewExtBase extends View {
      */
     public src: string;
 
-    protected autoLoadScriptFiles = [] as LoadJavaScriptResource[];
-    protected autoLoadStyleSheetFiles = [] as LoadStyleSheetResource[];
+    /**
+     * Auto Inject WebView JavaScript Bridge on load finished? Defaults to true.
+     */
+    public autoInjectJSBridge = true;
+
+    /**
+     * List of js-files to be auto injected on load finished
+     */
+    protected autoInjectScriptFiles = [] as LoadJavaScriptResource[];
+
+    /**
+     * List of css-files to be auto injected on load finished
+     */
+    protected autoInjectStyleSheetFiles = [] as LoadStyleSheetResource[];
+
+    protected _tmpStopLoading = false;
 
     public _onLoadFinished(url: string, error?: string): Promise<LoadFinishedEventData> {
+        try {
+            this._tmpStopLoading = true;
+            this.src = url;
+            this._tmpStopLoading = false;
+        } finally {
+            this._tmpStopLoading = false;
+        }
+
         const args = <LoadFinishedEventData>{
             eventName: WebViewExtBase.loadFinishedEvent,
             object: this,
@@ -126,10 +149,11 @@ export class WebViewExtBase extends View {
         } else {
             this.writeTrace(`WebViewExt._onLoadFinished("${url}", ${error || void 0}) - > Injecting webview-bridge JS code`);
 
-            return webViewBridgeJsCodePromise
-                .then((webViewInterfaceJsCode) => this.executeJavaScript(webViewInterfaceJsCode, false))
-                .then(() => this.loadJavaScriptFiles(this.autoLoadScriptFiles))
-                .then(() => this.loadStyleSheetFiles(this.autoLoadStyleSheetFiles))
+            if (!this.autoInjectJSBridge) {
+                return Promise.resolve(args);
+            }
+
+            return this.injectWebViewBridge()
                 .catch((error) => {
                     return {...args, error};
                 })
@@ -212,18 +236,57 @@ export class WebViewExtBase extends View {
     }
 
     [srcProperty.setNative](src: string) {
-        if (!src) {
+        if (!src || this._tmpStopLoading) {
             return;
         }
+        const originSrc = src;
 
-        this.loadUrl(src);
-    }
+        this.stopLoading();
 
-    public get url(): string {
-        throw new Error("Property url of WebView is deprecated. Use src instead");
-    }
-    public set url(value: string) {
-        throw new Error("Property url of WebView is deprecated. Use src instead");
+        if (src.startsWith(this.interceptScheme)) {
+            this.writeTrace(`WebViewExt.src = ${originSrc} resolve x-local file`);
+            const fileparh = this.getRegistretLocalResource(src);
+            if (fileparh) {
+                src = `file://${fileparh}`;
+                this.writeTrace(`WebViewExt.src = ${originSrc} x-local resolved to ${src}`);
+            } else {
+                this.writeTrace(`WebViewExt.src = ${originSrc} x-local couldn't resolve to file`, traceMessageType.error);
+                this._onLoadFinished(src, 'unknown x-local-resource');
+                return;
+            }
+        }
+
+        // Add file:/// prefix for local files.
+        // They should be loaded with _loadUrl() method as it handles query params.
+        if (src.startsWith("~/")) {
+            src = `file://${fs.knownFolders.currentApp().path}/${src.substr(2)}`;
+            this.writeTrace(`WebViewExt.src = ${originSrc} startsWith ~/ resolved to ${src}`);
+        } else if (src.startsWith("/")) {
+            src = "file://" + src;
+            this.writeTrace(`WebViewExt.src = ${originSrc} startsWith "/" resolved to ${src}`);
+        }
+
+        const lcSrc = src.toLowerCase();
+
+        // loading local files from paths with spaces may fail
+        if (lcSrc.startsWith("file:///")) {
+            src = encodeURI(src);
+            if (lcSrc !== src) {
+                this.writeTrace(`WebViewExt.src = ${originSrc} escaped to ${src}`);
+            }
+        }
+
+        if (lcSrc.startsWith("http://") ||
+            lcSrc.startsWith("https://") ||
+            lcSrc.startsWith("file:///")
+        ) {
+            this._loadUrl(src);
+
+            this.writeTrace(`WebViewExt.src = ${originSrc} - LoadUrl(${src})}`);
+        } else {
+            this._loadData(src);
+            this.writeTrace(`WebViewExt.src = ${originSrc} - LoadData(${src})}`);
+        }
     }
 
     protected resolveLocalResourceFilePath(filepath: string): string | void {
@@ -263,33 +326,13 @@ export class WebViewExtBase extends View {
         throw new Error("Method not implemented.");
     }
 
+    /**
+     * Load URL - Wait for promise
+     *
+     * @param {stirng} src
+     * @returns {Promise<LoadFinishedEventData>}
+     */
     public loadUrl(src: string): Promise<LoadFinishedEventData> {
-        this.stopLoading();
-
-        if (src.startsWith(this.interceptScheme)) {
-            const fileparh = this.getRegistretLocalResource(src);
-            if (fileparh) {
-                src = `file://${fileparh}`;
-            } else {
-                return this._onLoadFinished(src, 'unknown x-local-resource');
-            }
-        }
-
-        // Add file:/// prefix for local files.
-        // They should be loaded with _loadUrl() method as it handles query params.
-        if (src.startsWith("~/")) {
-            src = `file://${fs.knownFolders.currentApp().path}/${src.substr(2)}`;
-        } else if (src.startsWith("/")) {
-            src = "file://" + src;
-        }
-
-        const lcSrc = src.toLowerCase();
-
-        // loading local files from paths with spaces may fail
-        if (lcSrc.startsWith("file:///")) {
-            src = encodeURI(src);
-        }
-
         return new Promise<LoadFinishedEventData>((resolve, reject) => {
             const loadFinishedEvent = (args: LoadFinishedEventData) => {
                 this.off(WebViewExtBase.loadFinishedEvent, loadFinishedEvent);
@@ -302,14 +345,7 @@ export class WebViewExtBase extends View {
 
             this.on(WebViewExtBase.loadFinishedEvent, loadFinishedEvent);
 
-            if (lcSrc.startsWith("http://") ||
-                lcSrc.startsWith("https://") ||
-                lcSrc.startsWith("file:///")
-            ) {
-                this._loadUrl(src);
-            } else {
-                this._loadData(src);
-            }
+            this.src = src;
         });
     }
 
@@ -412,11 +448,11 @@ export class WebViewExtBase extends View {
             this.loadJavaScriptFile(resourceName, filepath).catch(() => void 0);
         }
 
-        this.autoLoadScriptFiles.push({ resourceName, filepath });
+        this.autoInjectScriptFiles.push({ resourceName, filepath });
     }
 
     public removeAutoLoadJavaScriptFile(resourceName: string) {
-        this.autoLoadScriptFiles = this.autoLoadScriptFiles.filter((data) => data.resourceName !== resourceName);
+        this.autoInjectScriptFiles = this.autoInjectScriptFiles.filter((data) => data.resourceName !== resourceName);
     }
 
     /**
@@ -427,11 +463,11 @@ export class WebViewExtBase extends View {
             this.loadStyleSheetFile(resourceName, filepath, insertBefore).catch(() => void 0);
         }
 
-        this.autoLoadStyleSheetFiles.push({ resourceName, filepath, insertBefore });
+        this.autoInjectStyleSheetFiles.push({ resourceName, filepath, insertBefore });
     }
 
     public removeAutoLoadStyleSheetFile(resourceName: string) {
-        this.autoLoadStyleSheetFiles = this.autoLoadStyleSheetFiles.filter((data) => data.resourceName !== resourceName);
+        this.autoInjectStyleSheetFiles = this.autoInjectStyleSheetFiles.filter((data) => data.resourceName !== resourceName);
     }
 
     /**
@@ -556,6 +592,16 @@ export class WebViewExtBase extends View {
     }
 
     /**
+     * Inject WebView JavaScript Bridge.
+     */
+    public injectWebViewBridge() {
+        return webViewBridgeJsCodePromise
+            .then((webViewInterfaceJsCode) => this.executeJavaScript(webViewInterfaceJsCode, false))
+            .then(() => this.loadJavaScriptFiles(this.autoInjectScriptFiles))
+            .then(() => this.loadStyleSheetFiles(this.autoInjectStyleSheetFiles));
+    }
+
+    /**
      * Convert response from WebView into usable JS-type.
      */
     protected parseWebviewJavascriptResult(result: any) {
@@ -651,3 +697,4 @@ export interface WebViewExtBase {
 }
 
 srcProperty.register(WebViewExtBase);
+autoInjectJSBridgeProperty.register(WebViewExtBase);
