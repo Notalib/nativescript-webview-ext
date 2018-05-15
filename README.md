@@ -78,28 +78,6 @@ The custom `NSURLProtocol` used with UIWebView is shared with all instances of t
 | executePromise(scriptCode: string, timeout: number = 500) | Run a promise inside the webview. *Note:* Executing scriptCode must return a promise. |
 | getTitle() | Returns a promise with the current document title. |
 
-#### Examples
-
-**Executing javascript**:
-```typescript
-const scriptCode = `document.title`;
-
-webview.executeJavaScript(scriptCode).then((title) => {
-    console.log(`document title is: ${title}`);
-});
-```
-
-**Executing a promise:**
-```typescript
-const scriptCode = `new Promise(function(resolve) {
-    resolve(document.title);
-});`;
-
-webview.executePromise(scriptCode).then((title) => {
-    console.log(`document title is: ${title}`);
-});
-```
-
 ### WebView
 
 | Function | Description |
@@ -107,20 +85,6 @@ webview.executePromise(scriptCode).then((title) => {
 | window.nsWebViewBridge.on(eventName: string, cb: (data: any) => void) | Registers handlers for events from the native layer. |
 | window.nsWebViewBridge.off(eventName: string, cb?: (data: any) => void) | Deregister handlers for events from the native layer. |
 | window.nsWebViewBridge.emit(eventName: string, data: any) | Emits event to NativeScript layer. Will be emitted on the WebViewExt as any other event, data will be a part of the WebViewEventData-object |
-
-### HTML
-
-These examples assumes that `locale-stylesheet.css` and `locale-javascript.js` have been mapped via `webview.registerLocalResource(name: string, path: string)`.
-
-Loading CSS-file via the `x-local`-scheme:
-```html
-    <link rel="stylesheet" href="x-local://locale-stylesheet.css" />
-```
-
-Loading JavaScript-file via the `x-local`-scheme:
-```html
-    <script src="x-local://locale-javascript.js"></script>
-```
 
 ## License
 
