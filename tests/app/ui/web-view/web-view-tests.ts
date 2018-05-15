@@ -94,6 +94,38 @@ export class WebViewTest extends testModule.UITest<webViewModule.WebViewExt> {
         // << webview-url
     }
 
+    public async testLoadExistingUrlWithPromise(done) {
+        const webView = this.testView;
+
+        const src = "https://github.com/";
+        try {
+            const args = await webView.loadUrl(src);
+
+            let message;
+            if (!args.error) {
+                message = "WebView finished loading " + args.url;
+            }
+            else {
+                message = "Error loading " + args.url + ": " + args.error;
+            }
+
+            // >> (hide)
+            try {
+                TKUnit.assertNull(args.error, args.error);
+                TKUnit.assertEqual(args.url, src, "args.url");
+                done(null);
+            }
+            catch (e) {
+                done(e);
+            }
+
+            // << (hide)
+        } catch (err) {
+            done(err);
+        }
+        // << webview-url-promise
+    }
+
     public testLoadLocalFile(done) {
         const webView = this.testView;
 

@@ -62,6 +62,7 @@ The custom `NSURLProtocol` used with UIWebView is shared with all instances of t
 
 | Function | Description |
 | --- | --- |
+| loadUrl(src: string): Promise<LoadFinishedEventData> | Open a URL and returns a promise once it has finished loading. |
 | registerLocalResource(resourceName: string, path: string): void; | Map the "x-local://{resourceName}" => "{path}". |
 | unregisterLocalResource(resourceName: string): void; | Removes the mapping from "x-local://{resourceName}" => "{path}" |
 | getRegistretLocalResource(resourceName: string): void; | Get the mapping from "x-local://{resourceName}" => "{path}" |

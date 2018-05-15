@@ -111,8 +111,8 @@ export class WebViewExtBase extends View {
     protected autoLoadScriptFiles = [] as LoadJavaScriptResource[];
     protected autoLoadStyleSheetFiles = [] as LoadStyleSheetResource[];
 
-    public _onLoadFinished(url: string, error?: string) {
-        let args = <LoadFinishedEventData>{
+    public _onLoadFinished(url: string, error?: string): Promise<LoadFinishedEventData> {
+        const args = <LoadFinishedEventData>{
             eventName: WebViewExtBase.loadFinishedEvent,
             object: this,
             url,
@@ -122,20 +122,20 @@ export class WebViewExtBase extends View {
 
         if (error) {
             this.notify(args);
+            return Promise.reject(args);
         } else {
             this.writeTrace(`WebViewExt._onLoadFinished("${url}", ${error || void 0}) - > Injecting webview-bridge JS code`);
 
-            webViewBridgeJsCodePromise
+            return webViewBridgeJsCodePromise
                 .then((webViewInterfaceJsCode) => this.executeJavaScript(webViewInterfaceJsCode, false))
                 .then(() => this.loadJavaScriptFiles(this.autoLoadScriptFiles))
                 .then(() => this.loadStyleSheetFiles(this.autoLoadStyleSheetFiles))
+                .catch((error) => {
+                    return {...args, error};
+                })
                 .then(() => {
                     this.notify(args);
-                }).catch((error) => {
-                    this.notify({
-                        ...args,
-                        error,
-                    });
+                    return args;
                 });
         }
     }
@@ -215,41 +215,8 @@ export class WebViewExtBase extends View {
         if (!src) {
             return;
         }
-        this.stopLoading();
 
-        if (src.startsWith(this.interceptScheme)) {
-            const fileparh = this.getRegistretLocalResource(src);
-            if (fileparh) {
-                src = `file://${fileparh}`;
-            } else {
-                this._onLoadFinished(src, 'unknown x-local-resource');
-                return;
-            }
-        }
-
-        // Add file:/// prefix for local files.
-        // They should be loaded with _loadUrl() method as it handles query params.
-        if (src.startsWith("~/")) {
-            src = `file://${fs.knownFolders.currentApp().path}/${src.substr(2)}`;
-        } else if (src.startsWith("/")) {
-            src = "file://" + src;
-        }
-
-        const lcSrc = src.toLowerCase();
-
-        // loading local files from paths with spaces may fail
-        if (lcSrc.startsWith("file:///")) {
-            src = encodeURI(src);
-        }
-
-        if (lcSrc.startsWith("http://") ||
-            lcSrc.startsWith("https://") ||
-            lcSrc.startsWith("file:///")
-        ) {
-            this._loadUrl(src);
-        } else {
-            this._loadData(src);
-        }
+        this.loadUrl(src);
     }
 
     public get url(): string {
@@ -294,6 +261,56 @@ export class WebViewExtBase extends View {
 
     public getRegistretLocalResource(name: string) {
         throw new Error("Method not implemented.");
+    }
+
+    public loadUrl(src: string): Promise<LoadFinishedEventData> {
+        this.stopLoading();
+
+        if (src.startsWith(this.interceptScheme)) {
+            const fileparh = this.getRegistretLocalResource(src);
+            if (fileparh) {
+                src = `file://${fileparh}`;
+            } else {
+                return this._onLoadFinished(src, 'unknown x-local-resource');
+            }
+        }
+
+        // Add file:/// prefix for local files.
+        // They should be loaded with _loadUrl() method as it handles query params.
+        if (src.startsWith("~/")) {
+            src = `file://${fs.knownFolders.currentApp().path}/${src.substr(2)}`;
+        } else if (src.startsWith("/")) {
+            src = "file://" + src;
+        }
+
+        const lcSrc = src.toLowerCase();
+
+        // loading local files from paths with spaces may fail
+        if (lcSrc.startsWith("file:///")) {
+            src = encodeURI(src);
+        }
+
+        return new Promise<LoadFinishedEventData>((resolve, reject) => {
+            const loadFinishedEvent = (args: LoadFinishedEventData) => {
+                this.off(WebViewExtBase.loadFinishedEvent, loadFinishedEvent);
+                if (args.error) {
+                    reject(args);
+                } else {
+                    resolve(args);
+                }
+            };
+
+            this.on(WebViewExtBase.loadFinishedEvent, loadFinishedEvent);
+
+            if (lcSrc.startsWith("http://") ||
+                lcSrc.startsWith("https://") ||
+                lcSrc.startsWith("file:///")
+            ) {
+                this._loadUrl(src);
+            } else {
+                this._loadData(src);
+            }
+        });
     }
 
     /**
