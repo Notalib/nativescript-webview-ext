@@ -41,6 +41,12 @@ pack() {
     npm run build
     cd $WORKDIR
 
+
+    if [[ ! -f "$TO_SOURCE_DIR/www/ns-webview-bridge.js" ]]; then
+        echo "$TO_SOURCE_DIR/www/ns-webview-bridge.js is missing";
+        exit 127
+    fi
+
     echo 'Creating package...'
     # create package dir
     mkdir "$PACK_DIR"

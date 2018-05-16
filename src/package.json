@@ -19,7 +19,7 @@
     "scripts": {
         "tsc": "tsc -skipLibCheck",
         "build": "npm i && npm run build:webview-bridge && tsc",
-        "build:webview-bridge": "cd $(git rev-parse --show-toplevel)/www-src && npm i && npm run build -- --outDir ../src/www/",
+        "build:webview-bridge": "export WWW_OUTDIR=$PWD/www; cd $(git rev-parse --show-toplevel)/www-src && npm i && npm run build -- --outDir ${WWW_OUTDIR}",
         "build:webview-bridge:watch": "npm run build:webview-bridge -- -w",
         "build:typings": "npm run build && (cd ../demo && TNS_TYPESCRIPT_DECLARATIONS_PATH=\"$PWD/../typings\" tns build ios) && cp ../typings/i386/*NotaWebViewExt.d.ts platforms/ios/NotaWebViewExt.d.ts",
         "tslint": "cd .. && tslint \"**/*.ts\" --config tslint.json --exclude \"**/node_modules/**\" --exclude \"**/*.d.ts\" --exclude \"**/platforms/**\"",
