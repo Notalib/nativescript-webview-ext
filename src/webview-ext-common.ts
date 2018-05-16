@@ -21,6 +21,11 @@ export interface LoadStyleSheetResource {
     insertBefore?: boolean;
 }
 
+export interface InjectExecuteJavaScript {
+    scriptCode: string;
+    name: string;
+}
+
 /**
  * Event data containing information for the loading events of a WebView.
  */
@@ -123,6 +128,8 @@ export class WebViewExtBase extends View {
      * List of css-files to be auto injected on load finished
      */
     protected autoInjectStyleSheetFiles = [] as LoadStyleSheetResource[];
+
+    protected autoInjectJavaScriptBlocks = [] as InjectExecuteJavaScript[];
 
     protected _tmpStopLoading = false;
 
@@ -367,33 +374,33 @@ export class WebViewExtBase extends View {
             return Promise.resolve();
         }
 
-        const scriptCodes = [] as string[];
+        const promiseScriptCodes = [];
 
         for (let { resourceName, filepath } of files) {
             resourceName = this.fixLocalResourceName(resourceName);
             if (filepath) {
                 this.registerLocalResource(resourceName, filepath);
             }
-            const scriptUrl = `${this.interceptScheme}://${resourceName}`;
-            const scriptCode = this.generateLoadJavaScriptFileScriptCode(scriptUrl);
-            scriptCodes.push(scriptCode);
+            const href = `${this.interceptScheme}://${resourceName}`;
+            const scriptCode = this.generateLoadJavaScriptFileScriptCode(href);
+            promiseScriptCodes.push(scriptCode);
             this.writeTrace(`WebViewExt.loadJavaScriptFiles() - > Loading javascript file: "${resourceName}"`);
         }
 
-        if (scriptCodes.length !== files.length) {
-            this.writeTrace(`WebViewExt.loadJavaScriptFiles() - > Num of generated scriptCodes ${scriptCodes.length} differ from num files ${files.length}`, traceMessageType.error);
+        if (promiseScriptCodes.length !== files.length) {
+            this.writeTrace(`WebViewExt.loadJavaScriptFiles() - > Num of generated scriptCodes ${promiseScriptCodes.length} differ from num files ${files.length}`, traceMessageType.error);
         }
 
-        if (!scriptCodes.length) {
+        if (!promiseScriptCodes.length) {
             this.writeTrace('WebViewExt.loadJavaScriptFiles() - > No files');
             return Promise.resolve();
         }
 
-        if (!scriptCodes.length) {
+        if (!promiseScriptCodes.length) {
             return Promise.resolve();
         }
 
-        return this.executeJavaScript(scriptCodes.join(';'), false).then(() => void 0);
+        return this.executePromises(promiseScriptCodes).then(() => void 0);
     }
 
     /**
@@ -415,29 +422,31 @@ export class WebViewExtBase extends View {
             return Promise.resolve();
         }
 
-        const scriptCodes = [] as string[];
+        const promiseScriptCodes = [] as string[];
 
         for (let { resourceName, filepath, insertBefore } of files) {
             resourceName = this.fixLocalResourceName(resourceName);
             if (filepath) {
                 this.registerLocalResource(resourceName, filepath);
             }
-            const sheetUrl = `${this.interceptScheme}://${resourceName}`;
-            const scriptCode = this.generaateLoadCSSFileScriptCode(sheetUrl, insertBefore);
-            scriptCodes.push(scriptCode);
-            this.writeTrace('WebViewExt.loadStyleSheetFiles() - > Loading stylesheet file: ' + sheetUrl);
+            const href = `${this.interceptScheme}://${resourceName}`;
+            const scriptCode = this.generaateLoadCSSFileScriptCode(href, insertBefore);
+
+            promiseScriptCodes.push(scriptCode);
+
+            this.writeTrace('WebViewExt.loadStyleSheetFiles() - > Loading stylesheet file: ' + href);
         }
 
-        if (scriptCodes.length !== files.length) {
-            this.writeTrace(`WebViewExt.loadStyleSheetFiles() - > Num of generated scriptCodes ${scriptCodes.length} differ from num files ${files.length}`, traceMessageType.error);
+        if (promiseScriptCodes.length !== files.length) {
+            this.writeTrace(`WebViewExt.loadStyleSheetFiles() - > Num of generated scriptCodes ${promiseScriptCodes.length} differ from num files ${files.length}`, traceMessageType.error);
         }
 
-        if (!scriptCodes.length) {
+        if (!promiseScriptCodes.length) {
             this.writeTrace('WebViewExt.loadStyleSheetFiles() - > No files');
             return Promise.resolve();
         }
 
-        return this.executeJavaScript(scriptCodes.join(';'), false).then(() => void 0);
+        return this.executePromises(promiseScriptCodes).then(() => void 0);
     }
 
     /**
@@ -470,6 +479,19 @@ export class WebViewExtBase extends View {
         this.autoInjectStyleSheetFiles = this.autoInjectStyleSheetFiles.filter((data) => data.resourceName !== resourceName);
     }
 
+    public autoExecuteJavaScript(scriptCode: string, name: string) {
+        if (this.src) {
+            this.executePromise(scriptCode).catch(() => void 0);
+        }
+
+        const fixedCodeBlock = `(function() { return ${scriptCode.trim()} })()`;
+        this.autoInjectJavaScriptBlocks.push({ scriptCode, name });
+    }
+
+    public removeAutoExecuteJavaScript(name: string) {
+        this.autoInjectJavaScriptBlocks = this.autoInjectJavaScriptBlocks.filter((data) => data.name !== name);
+    }
+
     /**
      * Execute JavaScript inside the webview.
      * The code should be wrapped inside an anonymous-function.
@@ -486,38 +508,37 @@ export class WebViewExtBase extends View {
      * Note: The scriptCode must return a promise.
      */
     public executePromise<T>(scriptCode: string, timeout: number = 500): Promise<T> {
+        return this.executePromises<T>([scriptCode], timeout).then((results) => results && results[0]);
+    }
+
+    public executePromises<T>(scriptCodes: string[], timeout: number = 500): Promise<T | void> {
+        if (scriptCodes.length === 0) {
+            return Promise.resolve();
+        }
         const reqId = `${Math.round(Math.random() * 1000)}`;
         const eventName = `tmp-promise-event-${reqId}`;
 
+        const scriptHeader = `(function() {
+            var promises = [];
+            var p;
+        `;
+        const scriptBody = scriptCodes.map((scriptCode) => `p = ${scriptCode}; promises.push(p);`);
+        const scriptFooter = `
+            return Promise.all(promises);
+        })()`;
+
+        const scriptCode = `${scriptHeader}
+        ${scriptBody.join(';')}
+        ${scriptFooter}`;
+        const trimmedScriptCode = scriptCode.trim();
+
         const promiseScriptCode = `
+            var eventName = ${JSON.stringify(eventName)};
             try {
-                Promise.resolve(${scriptCode})
-                    .then(function(data) {
-                        window.nsWebViewBridge.emit(${JSON.stringify(eventName)}, {
-                            data: data
-                        });
-                    })
-                    .catch(function(err) {
-                        if (err && err.message) {
-                            window.nsWebViewBridge.emit(${JSON.stringify(eventName)}, {
-                                err: {
-                                    message: err.message,
-                                    stack: err.stack,
-                                }
-                            });
-                        } else {
-                            window.nsWebViewBridge.emit(${JSON.stringify(eventName)}, {
-                                err: err
-                            });
-                        }
-                    });
+                var promise = (function() {return ${trimmedScriptCode}})();
+                window.nsWebViewBridge.executePromise(promise, eventName);
             } catch (err) {
-                window.nsWebViewBridge.emit(${JSON.stringify(eventName)}, {
-                    err: {
-                        message: err.message,
-                        stack: err.stack,
-                    }
-                });
+                window.nsWebViewBridge.emitError(err, eventName);
             }
         `;
 
@@ -549,46 +570,14 @@ export class WebViewExtBase extends View {
      * Generate scriptcode for loading javascript-file.
      */
     protected generateLoadJavaScriptFileScriptCode(scriptHref: string) {
-        const elId = scriptHref.replace(/[^a-z0-9]/g, '');
-        return `(function() {
-            if (document.getElementById("${elId}")) {
-                console.log("${elId} already exists");
-                return;
-            }
-
-            var script = document.createElement("script");
-            script.setAttribute("id", "${elId}");
-            script.src = "${scriptHref}";
-            script.addEventListener("error", function(error) {
-                console.error("Failed to load ${scriptHref} - error: " + error);
-            });
-
-            document.body.appendChild(script);
-        })();`;
+        return `window.nsWebViewBridge.injectJavaScriptFile(${JSON.stringify(scriptHref)});`;
     }
 
     /**
      * Generate scriptcode for loading CSS-file.
      */
     protected generaateLoadCSSFileScriptCode(stylesheetHref: string, insertBefore = false) {
-        const elId = stylesheetHref.replace(`${this.interceptScheme}://`, '').replace(/[^a-z0-9]/g, '');
-        return `(function() {
-            if (document.getElementById("${elId}")) {
-                console.log("${elId} already exists");
-                return;
-            }
-            var linkElement = document.createElement("link");
-            var insertBefore = !!JSON.parse("${!!insertBefore}");
-            linkElement.setAttribute("id", "${elId}");
-            linkElement.setAttribute("rel", "stylesheet");
-            linkElement.setAttribute("type", "text/css");
-            linkElement.setAttribute("href", "${stylesheetHref}");
-            if (insertBefore && document.head.childElementCount > 0) {
-                document.head.insertBefore(linkElement, document.head.firstElementChild);
-            } else {
-                document.head.appendChild(linkElement);
-            }
-        })();`;
+        return `window.nsWebViewBridge.injectStyleSheetFile(${JSON.stringify(stylesheetHref)}, ${!!insertBefore});`;
     }
 
     /**
@@ -598,7 +587,8 @@ export class WebViewExtBase extends View {
         return webViewBridgeJsCodePromise
             .then((webViewInterfaceJsCode) => this.executeJavaScript(webViewInterfaceJsCode, false))
             .then(() => this.loadJavaScriptFiles(this.autoInjectScriptFiles))
-            .then(() => this.loadStyleSheetFiles(this.autoInjectStyleSheetFiles));
+            .then(() => this.loadStyleSheetFiles(this.autoInjectStyleSheetFiles))
+            .then(() => this.executePromises(this.autoInjectJavaScriptBlocks.map((data) => data.scriptCode)));
     }
 
     /**

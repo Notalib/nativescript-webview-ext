@@ -18,18 +18,22 @@ declare const androidWebViewBridge: {
  * Creates temporary iFrame element to load custom url, for sending handshake message
  * to iOS which is necessary to initiate data transfer from webView to iOS
  */
-function createIFrame(src: string): HTMLIFrameElement {
+function createIFrameForUIWebView(src: string): HTMLIFrameElement {
   const rootElm = document.documentElement;
-  const newFrameElm = document.createElement('IFRAME') as HTMLIFrameElement;
+  const newFrameElm = document.createElement('iframe');
   newFrameElm.setAttribute('src', src);
   rootElm.appendChild(newFrameElm);
   return newFrameElm;
 }
 
+interface WKWebViewMessageHandler {
+  postMessage(message: string): void;
+}
+
 /**
  * With WKWebView it's assumed the there is a WKScriptMessage named nsBridge
  */
-function getWkWebViewMessageHandler() {
+function getWkWebViewMessageHandler(): WKWebViewMessageHandler | void {
   const w = window as any;
   if (!w || !w.webkit || !w.webkit.messageHandlers) {
     return;
@@ -106,8 +110,8 @@ class NSWebViewBridge {
       eventName: eventName,
       resId: this.iosUIWebViewResponseId,
     };
-    const url = 'js2ios:' + JSON.stringify(metadata);
-    const iFrame = createIFrame(url);
+    const url = `js2ios:${JSON.stringify(metadata)}`;
+    const iFrame = createIFrameForUIWebView(url);
     if (iFrame && iFrame.parentNode) {
       iFrame.parentNode.removeChild(iFrame);
     } else {
@@ -129,7 +133,8 @@ class NSWebViewBridge {
   }
 
   /**
-   * Returns data to iOS. This function is called from iOS when using UIWebView.
+   * Returns data to iOS.
+   * This function is called from iOS when using UIWebView.
    */
   public getUIWebViewResponse(resId: string) {
     const response = this.iosUIWebViewResponseMap[resId];
@@ -138,7 +143,7 @@ class NSWebViewBridge {
   }
 
   /**
-   * Registers handlers for events from the native layer.
+   * Add an event listener for event from native-layer
    */
   public on(eventName: string, callback: EventListener) {
     if (!callback) {
@@ -151,7 +156,8 @@ class NSWebViewBridge {
   }
 
   /**
-   * Deregister handlers for events from the native layer.
+   * Remove an event listener for event from native-layer.
+   * If callback is undefiend all events for the eventName will be removed.
    */
   public off(eventName: string, callback?: EventListener) {
     if (!callback) {
@@ -168,7 +174,7 @@ class NSWebViewBridge {
   }
 
   /**
-   * Emits event to android/ios
+   * Emit an event to the native-layer
    */
   public emit(eventName: string, data: any) {
     if (this.androidWebViewBridge) {
@@ -176,6 +182,116 @@ class NSWebViewBridge {
     } else {
       this.emitEventToIOS(eventName, data);
     }
+  }
+
+  /**
+   * Injects a javascript file.
+   * This is usually called from WebViewExt.loadJavaScriptFiles(...)
+   */
+  public injectJavaScriptFile(href: string): Promise<void> {
+    const elId = this.elementIdFromHref(href);
+
+    if (document.getElementById(elId)) {
+      console.log(`${elId} already exists`);
+      return Promise.resolve();
+    }
+
+    return new Promise<void>((resolve, reject) => {
+      const script = document.createElement("script");
+      script.async = true;
+      script.setAttribute("id", elId);
+      script.addEventListener("error", function (error) {
+        console.error(`Failed to load ${href} - error: ${error}`);
+        reject(error);
+      });
+      script.addEventListener("load", function () {
+        console.info(`Loaded ${href}`);
+        window.requestAnimationFrame(() => {
+          resolve();
+        });
+
+        if (script.parentElement){
+          script.parentElement.removeChild(script);
+        }
+      });
+      script.src = href;
+
+      document.body.appendChild(script);
+    });
+  }
+
+  /**
+   * Injects a StyleSheet file.
+   * This is usually called from WebViewExt.loadStyleSheetFiles(...)
+   */
+  public injectStyleSheetFile(href: string, insertBefore?: boolean): Promise<void> {
+    const elId = this.elementIdFromHref(href);
+
+    if (document.getElementById(elId)) {
+      console.log(`${elId} already exists`);
+      return Promise.resolve();
+    }
+
+    return new Promise((resolve, reject) => {
+      const linkElement = document.createElement("link");
+      linkElement.addEventListener("error", (error) => {
+        console.error(`Failed to load ${href} - error: ${error}`);
+        reject(error);
+      });
+      linkElement.addEventListener("load", () => {
+        console.info(`Loaded ${href}`);
+        window.requestAnimationFrame(() => {
+          resolve();
+        });
+      });
+      linkElement.setAttribute("id", elId);
+      linkElement.setAttribute("rel", "stylesheet");
+      linkElement.setAttribute("type", "text/css");
+      linkElement.setAttribute("href", href);
+      if (insertBefore && document.head.childElementCount > 0) {
+        document.head.insertBefore(linkElement, document.head.firstElementChild);
+      } else {
+        document.head.appendChild(linkElement);
+      }
+    });
+  }
+
+  /**
+   * Helper function for WebViewExt.executePromise(scriptCode).
+   */
+  public async executePromise(promise: Promise<any>, eventName: string) {
+    try {
+      const data = await Promise.resolve(promise);
+      this.emit(eventName, {
+        data,
+      });
+    } catch (err) {
+      this.emitError(err, eventName);
+    }
+  }
+
+  /**
+   * Emit an error to the native-layer.
+   * This is used to workaround the problem of serializing an Error-object.
+   * If err is an Error the message and stack will be extracted and emitted to the native-layer.
+   */
+  public emitError(err: any, eventName = 'web-error') {
+    if (err && err.message) {
+      this.emit(eventName, {
+        err: {
+          message: err.message,
+          stack: err.stack,
+        }
+      });
+    } else {
+      this.emit(eventName, {
+        err: err
+      });
+    }
+  }
+
+  private elementIdFromHref(href: string) {
+    return href.replace(/^[:]*:\/\//, '').replace(/[^a-z0-9]/g, '');
   }
 }
 

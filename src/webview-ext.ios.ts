@@ -87,7 +87,7 @@ export class WebViewExt extends WebViewExtBase {
     public executeJavaScript<T>(scriptCode: string, stringifyResult = true): Promise<T> {
         if (stringifyResult) {
             scriptCode = `
-            var result = ${scriptCode};
+            var result = ${scriptCode.trim()};
 
             try {
                 JSON.stringify(result);

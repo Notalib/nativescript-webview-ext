@@ -672,6 +672,48 @@ export class WebViewTest extends testModule.UITest<webViewModule.WebViewExt> {
         // << webview-x-local-inject-once
     }
 
+    public async testAutoExecuteJavaScript(done) {
+        const webview = this.testView;
+
+        const expectedMessage = `${new Date()}`;
+        let gotMessage = false;
+        webview.on('tns-message', (args) => {
+            const actualMessage = args.data;
+            TKUnit.assertEqual(actualMessage, expectedMessage, `Message on load`);
+            gotMessage = true;
+        });
+
+        // >> webview-x-localfile
+        try {
+            webview.autoExecuteJavaScript(`(function(){
+                window.nsWebViewBridge.emit("tns-message", ${JSON.stringify(expectedMessage)});
+                return new Promise(function(resolve) {
+                    setTimeout(resolve, 50);
+                });
+            })()`, 'tns-message');
+
+            const args = await webview.loadUrl(emptyHTMLFile);
+            // >> (hide)
+            const expectedTitle = 'Blank';
+            const actualTitle = await webview.getTitle();
+
+            try {
+                TKUnit.assertNull(args.error, args.error);
+                TKUnit.assertEqual(actualTitle, expectedTitle, `File "${emptyHTMLFile}" not loaded properly.`);
+                TKUnit.assertEqual(gotMessage, true, `tns-message emitted before load finished`);
+
+                done(null);
+            }
+            catch (e) {
+                done(e);
+            }
+            // << (hide)
+        } catch (err) {
+            done(err);
+        }
+        // << webview-x-localfile
+    }
+
     public testLoadUpperCaseSrc(done) {
         const webview = this.testView;
         const targetSrc = "HTTPS://github.com/";

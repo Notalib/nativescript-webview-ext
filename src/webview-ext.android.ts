@@ -346,8 +346,8 @@ export class WebViewExt extends WebViewExtBase {
         return result;
     }
 
-    public executeJavaScript<T>(scriptCode): Promise<T> {
-        return new Promise<any>((resolve, reject) => {
+    public executeJavaScript<T>(scriptCode: string): Promise<T> {
+        return new Promise<T>((resolve, reject) => {
             if (Number(platform.device.sdkVersion) < 19) {
                 this.writeTrace(`WebViewExt<android>.executeJavaScript() -> SDK:${platform.device.sdkVersion} not supported`, traceMessageType.error);
                 reject(new Error('Android API < 19 not supported'));
