@@ -362,7 +362,7 @@ export class WebViewExt extends WebViewExtBase {
             const that = this;
             this.android.evaluateJavascript(scriptCode, new android.webkit.ValueCallback({
                 onReceiveValue(result) {
-                    resolve(that.parseWebviewJavascriptResult(result));
+                    resolve(that.parseWebViewJavascriptResult(result));
                 },
             }));
         });

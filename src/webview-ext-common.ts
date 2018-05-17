@@ -134,21 +134,23 @@ export class WebViewExtBase extends View {
     protected _tmpStopLoading = false;
 
     public _onLoadFinished(url: string, error?: string): Promise<LoadFinishedEventData> {
-        try {
-            this._tmpStopLoading = true;
-            this.src = url;
-            this._tmpStopLoading = false;
-        } finally {
-            this._tmpStopLoading = false;
+        if (!error) {
+            try {
+                this._tmpStopLoading = true;
+                this.src = url;
+                this._tmpStopLoading = false;
+            } finally {
+                this._tmpStopLoading = false;
+            }
         }
 
-        const args = <LoadFinishedEventData>{
+        const args = {
             eventName: WebViewExtBase.loadFinishedEvent,
             object: this,
             url,
             navigationType: undefined,
             error,
-        };
+        } as LoadFinishedEventData;
 
         if (error) {
             this.notify(args);
@@ -161,10 +163,11 @@ export class WebViewExtBase extends View {
             }
 
             return this.injectWebViewBridge()
+                .then(() => args)
                 .catch((error) => {
                     return {...args, error};
                 })
-                .then(() => {
+                .then((args) => {
                     this.notify(args);
                     return args;
                 });
@@ -340,6 +343,9 @@ export class WebViewExtBase extends View {
      * @returns {Promise<LoadFinishedEventData>}
      */
     public loadUrl(src: string): Promise<LoadFinishedEventData> {
+        if (!src) {
+            return this._onLoadFinished(src, 'empty src');
+        }
         return new Promise<LoadFinishedEventData>((resolve, reject) => {
             const loadFinishedEvent = (args: LoadFinishedEventData) => {
                 this.off(WebViewExtBase.loadFinishedEvent, loadFinishedEvent);
@@ -484,8 +490,10 @@ export class WebViewExtBase extends View {
             this.executePromise(scriptCode).catch(() => void 0);
         }
 
-        const fixedCodeBlock = `(function() { return ${scriptCode.trim()} })()`;
-        this.autoInjectJavaScriptBlocks.push({ scriptCode, name });
+        this.removeAutoExecuteJavaScript(name);
+
+        const fixedCodeBlock = scriptCode.trim();
+        this.autoInjectJavaScriptBlocks.push({ scriptCode: fixedCodeBlock, name });
     }
 
     public removeAutoExecuteJavaScript(name: string) {
@@ -520,9 +528,21 @@ export class WebViewExtBase extends View {
 
         const scriptHeader = `(function() {
             var promises = [];
-            var p;
+            var p = Promise.resolve();
+            var i = 0;
         `;
-        const scriptBody = scriptCodes.map((scriptCode) => `p = ${scriptCode}; promises.push(p);`);
+
+        const scriptBody = [] as string[];
+
+        for (const scriptCode of scriptCodes) {
+            scriptBody.push(`
+                p = p.then(function() {
+                    return ${scriptCode.trim()};
+                });
+                promises.push(p);
+            `);
+        }
+
         const scriptFooter = `
             return Promise.all(promises);
         })()`;
@@ -548,7 +568,11 @@ export class WebViewExtBase extends View {
                 this.off(eventName);
                 const { data, err } = args.data || {} as any;
                 if (err) {
-                    reject(err);
+                    const error = new Error(err.message || err);
+                    if (err.stack) {
+                        (error as any).webStack = err.stack;
+                    }
+                    reject(error);
                     return;
                 }
                 resolve(data);
@@ -594,7 +618,7 @@ export class WebViewExtBase extends View {
     /**
      * Convert response from WebView into usable JS-type.
      */
-    protected parseWebviewJavascriptResult(result: any) {
+    protected parseWebViewJavascriptResult(result: any) {
         if (result === undefined) {
             return;
         }
