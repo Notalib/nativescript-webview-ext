@@ -583,10 +583,12 @@ export class WebViewExtBase extends View {
 
             this.executeJavaScript(promiseScriptCode, false);
 
-            timer = setTimeout(() => {
-                reject(new Error(`Timed out after: ${timeout}`));
-                this.off(eventName);
-            }, timeout);
+            if (timeout > 0) {
+                timer = setTimeout(() => {
+                    reject(new Error(`Timed out after: ${timeout}`));
+                    this.off(eventName);
+                }, timeout);
+            }
         });
     }
 
@@ -612,7 +614,7 @@ export class WebViewExtBase extends View {
             .then((webViewInterfaceJsCode) => this.executeJavaScript(webViewInterfaceJsCode, false))
             .then(() => this.loadJavaScriptFiles(this.autoInjectScriptFiles))
             .then(() => this.loadStyleSheetFiles(this.autoInjectStyleSheetFiles))
-            .then(() => this.executePromises(this.autoInjectJavaScriptBlocks.map((data) => data.scriptCode)));
+            .then(() => this.executePromises(this.autoInjectJavaScriptBlocks.map((data) => data.scriptCode), -1));
     }
 
     /**
