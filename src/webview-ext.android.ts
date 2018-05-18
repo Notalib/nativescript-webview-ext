@@ -133,10 +133,18 @@ function initializeWebViewClient(): void {
             owner.writeTrace(`WebViewClientClass.shouldInterceptRequest(${url}) - file: ${filepath} mimeType:${mimeType} encoding:${encoding}`);
 
             const response = new android.webkit.WebResourceResponse(mimeType, encoding, stream);
-
-            if ((response as any).getResponseHeaders) {
-                console.log((response as any).getResponseHeaders());
+            if (Number(platform.device.sdkVersion) < 21) {
+                return response;
             }
+
+            const r = response as any;
+            if (!r.getResponseHeaders) {
+                return response;
+            }
+
+            const responseHeaders = r.getResponseHeaders() as java.util.HashMap<string, string> || new java.util.HashMap<string, string>();
+            responseHeaders.put('Access-Control-Allow-Origin', '*');
+            r.setResponseHeaders(responseHeaders);
 
             return response;
         }
@@ -371,7 +379,7 @@ export class WebViewExt extends WebViewExtBase {
 
         const result = this.localResourceMap.get(resourceName);
 
-        this.writeTrace(`WebViewExt<android>.getRegistretLocalResource(${resourceName}) -> ${result} ${new Error().stack}`);
+        this.writeTrace(`WebViewExt<android>.getRegistretLocalResource(${resourceName})`);
 
         return result;
     }

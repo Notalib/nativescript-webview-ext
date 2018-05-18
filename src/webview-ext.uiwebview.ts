@@ -1,6 +1,6 @@
 /// <reference path="./node_modules/tns-platform-declarations/ios.d.ts" />
 
-import { NavigationType, traceCategories, traceEnabled, traceMessageType, traceWrite, WebViewExtBase } from "./webview-ext-common";
+import { NavigationType, traceCategories, traceEnabled, traceMessageType, WebViewExtBase } from "./webview-ext-common";
 
 export class UIWebViewDelegateImpl extends NSObject implements UIWebViewDelegate {
   public static ObjCProtocols = [UIWebViewDelegate];

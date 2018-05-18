@@ -1,7 +1,7 @@
 /// <reference path="./node_modules/tns-platform-declarations/ios.d.ts" />
 /// <reference path="./platforms/ios/NotaWebViewExt.d.ts" />
 
-import { NavigationType, traceCategories, traceEnabled, traceMessageType, traceWrite, WebViewExtBase } from "./webview-ext-common";
+import { NavigationType, traceCategories, traceEnabled, traceMessageType, WebViewExtBase } from "./webview-ext-common";
 
 export class WKNavigationDelegateImpl extends NSObject implements WKNavigationDelegate {
     public static ObjCProtocols = [WKNavigationDelegate];
@@ -51,44 +51,48 @@ export class WKNavigationDelegateImpl extends NSObject implements WKNavigationDe
             decisionHandler(WKNavigationActionPolicy.Allow);
 
             if (traceEnabled()) {
-                traceWrite(`WKNavigationDelegateClass.webViewDecidePolicyForNavigationActionDecisionHandler(${navigationAction.request.URL.absoluteString}, ${navigationAction.navigationType})`, traceCategories.Debug);
+                owner.writeTrace(`WKNavigationDelegateClass.webViewDecidePolicyForNavigationActionDecisionHandler(${navigationAction.request.URL.absoluteString}, ${navigationAction.navigationType})`);
             }
             owner._onLoadStarted(navigationAction.request.URL.absoluteString, navType);
         }
     }
 
     public webViewDidStartProvisionalNavigation(webView: WKWebView, navigation: WKNavigation): void {
-        if (traceEnabled()) {
-            traceWrite(`WKNavigationDelegateClass.webViewDidStartProvisionalNavigation(${webView.URL})`, traceCategories.Debug);
+        const owner = this._owner.get();
+        if (owner && traceEnabled()) {
+            owner.writeTrace(`WKNavigationDelegateClass.webViewDidStartProvisionalNavigation(${webView.URL})`);
         }
     }
 
     public webViewDidFinishNavigation(webView: WKWebView, navigation: WKNavigation): void {
-        if (traceEnabled()) {
-            traceWrite(`WKNavigationDelegateClass.webViewDidFinishNavigation(${webView.URL})`, traceCategories.Debug);
-        }
         const owner = this._owner.get();
-        if (owner) {
-            let src = owner.src;
-            if (webView.URL) {
-                src = webView.URL.absoluteString;
-            }
-            owner._onLoadFinished(src);
+        if (!owner) {
+            return;
         }
+        if (traceEnabled()) {
+            owner.writeTrace(`WKNavigationDelegateClass.webViewDidFinishNavigation(${webView.URL})`);
+        }
+        let src = owner.src;
+        if (webView.URL) {
+            src = webView.URL.absoluteString;
+        }
+        owner._onLoadFinished(src);
     }
 
     public webViewDidFailNavigationWithError(webView: WKWebView, navigation: WKNavigation, error: NSError): void {
         const owner = this._owner.get();
-        if (owner) {
-            let src = owner.src;
-            if (webView.URL) {
-                src = webView.URL.absoluteString;
-            }
-            if (traceEnabled()) {
-                traceWrite(`WKNavigationDelegateClass.webViewDidFailNavigationWithError(${error.localizedDescription})`, traceCategories.Debug);
-            }
-            owner._onLoadFinished(src, error.localizedDescription);
+        if (!owner) {
+            return;
         }
+
+        let src = owner.src;
+        if (webView.URL) {
+            src = webView.URL.absoluteString;
+        }
+        if (traceEnabled()) {
+            owner.writeTrace(`WKNavigationDelegateClass.webViewDidFailNavigationWithError(${error.localizedDescription})`);
+        }
+        owner._onLoadFinished(src, error.localizedDescription);
     }
 }
 

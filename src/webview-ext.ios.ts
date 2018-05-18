@@ -4,7 +4,7 @@ import * as fs from 'tns-core-modules/file-system';
 import * as platform from "tns-core-modules/platform";
 import { profile } from "tns-core-modules/profiling";
 import { layout, traceMessageType } from "tns-core-modules/ui/core/view";
-import { knownFolders, NavigationType, traceCategories, traceEnabled, traceWrite, WebViewExtBase } from "./webview-ext-common";
+import { knownFolders, NavigationType, traceCategories, traceEnabled, WebViewExtBase } from "./webview-ext-common";
 import { UIWebViewDelegateImpl } from './webview-ext.uiwebview';
 import { WKNavigationDelegateImpl, WKScriptMessageHandlerImpl } from './webview-ext.wkwebview';
 
