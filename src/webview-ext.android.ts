@@ -3,7 +3,7 @@
 import * as fs from 'tns-core-modules/file-system';
 import * as platform from "tns-core-modules/platform";
 
-import { knownFolders, traceCategories, traceEnabled, traceMessageType, traceWrite, WebViewExtBase } from "./webview-ext-common";
+import { knownFolders, traceCategories, traceEnabled, traceMessageType, WebViewExtBase } from "./webview-ext-common";
 
 export * from "./webview-ext-common";
 
@@ -32,12 +32,23 @@ let WebViewBridgeInterface: new () => dk.nota.webviewinterface.WebViewBridgeInte
 
 const extToMimeType = new Map<string, string>([
     ['css', 'text/css'],
-    ['js', 'text/javascript'],
-    ['jpg', 'image/jpeg'],
-    ['jpeg', 'image/jpeg'],
-    ['png', 'image/png'],
     ['gif', 'image/gif'],
+    ['jpeg', 'image/jpeg'],
+    ['jpg', 'image/jpeg'],
+    ['js', 'text/javascript'],
+    ['otf', 'application/vnd.ms-opentype'],
+    ['png', 'image/png'],
     ['svg', 'image/svg+xml'],
+    ['ttf', 'application/x-font-ttf'],
+]);
+
+const extToBinaryEncoding = new Set<string>([
+    "gif",
+    "jpeg",
+    "jpg",
+    "otf",
+    "png",
+    "ttf",
 ]);
 
 function initializeWebViewClient(): void {
@@ -75,7 +86,7 @@ function initializeWebViewClient(): void {
             }
 
             if (traceEnabled()) {
-                traceWrite("WebViewClientClass.shouldOverrideUrlLoading(" + url + ")", traceCategories.Debug);
+                owner.writeTrace(`WebViewClientClass.shouldOverrideUrlLoading(${url})`);
             }
             return false;
         }
@@ -92,6 +103,7 @@ function initializeWebViewClient(): void {
             }
 
             if (typeof url !== 'string') {
+                owner.writeTrace(`WebViewClientClass.shouldInterceptRequest(${url}) - is not a string`);
                 return super.shouldInterceptRequest(view, request);
             }
 
@@ -100,7 +112,13 @@ function initializeWebViewClient(): void {
             }
 
             const filepath = owner.getRegistretLocalResource(url);
-            if (!filepath || !fs.File.exists(filepath)) {
+            if (!filepath) {
+                owner.writeTrace(`WebViewClientClass.shouldInterceptRequest(${url}) - no matching file`);
+                return super.shouldInterceptRequest(view, request);
+            }
+
+            if (!fs.File.exists(filepath)) {
+                owner.writeTrace(`WebViewClientClass.shouldInterceptRequest(${url}) - file: ${filepath} doesn't exists`);
                 return super.shouldInterceptRequest(view, request);
             }
 
@@ -108,10 +126,19 @@ function initializeWebViewClient(): void {
 
             const javaFile = new java.io.File(tnsFile.path);
             const stream = new java.io.FileInputStream(javaFile);
-            const mimeType = extToMimeType.get(tnsFile.extension.substr(1)) || 'application/octet-stream';
-            const encoding = mimeType.startsWith('image/') || mimeType === 'application/octet-stream' ? 'binary' : 'UTF-8';
+            const ext = tnsFile.extension.substr(1).toLowerCase();
+            const mimeType = extToMimeType.get(ext) || 'application/octet-stream';
+            const encoding = extToBinaryEncoding.has(ext) || mimeType === 'application/octet-stream' ? 'binary' : 'UTF-8';
 
-            return new android.webkit.WebResourceResponse(mimeType, encoding, stream);
+            owner.writeTrace(`WebViewClientClass.shouldInterceptRequest(${url}) - file: ${filepath} mimeType:${mimeType} encoding:${encoding}`);
+
+            const response = new android.webkit.WebResourceResponse(mimeType, encoding, stream);
+
+            if ((response as any).getResponseHeaders) {
+                console.log((response as any).getResponseHeaders());
+            }
+
+            return response;
         }
 
         public onPageStarted(view: android.webkit.WebView, url: string, favicon: android.graphics.Bitmap) {
@@ -121,9 +148,9 @@ function initializeWebViewClient(): void {
                 return;
             }
             if (traceEnabled()) {
-                traceWrite("WebViewClientClass.onPageStarted(" + url + ", " + favicon + ")", traceCategories.Debug);
+                owner.writeTrace(`WebViewClientClass.onPageStarted(${url}, ${favicon})`);
             }
-            owner._onLoadStarted(url, undefined);
+            owner._onLoadStarted(url);
         }
 
         public onPageFinished(view: android.webkit.WebView, url: string) {
@@ -133,9 +160,9 @@ function initializeWebViewClient(): void {
                 return;
             }
             if (traceEnabled()) {
-                traceWrite("WebViewClientClass.onPageFinished(" + url + ")", traceCategories.Debug);
+                owner.writeTrace(`WebViewClientClass.onPageFinished(${url})`);
             }
-            owner._onLoadFinished(url, undefined);
+            owner._onLoadFinished(url);
         }
 
         public onReceivedError() {
@@ -151,12 +178,15 @@ function initializeWebViewClient(): void {
         private onReceivedErrorAPI23(view: android.webkit.WebView, request: any, error: any) {
             super.onReceivedError(view, request, error);
             const owner = this.owner;
-            if (owner) {
-                if (traceEnabled()) {
-                    traceWrite("WebViewClientClass.onReceivedError(" + error.getErrorCode() + ", " + error.getDescription() + ", " + (error.getUrl && error.getUrl()) + ")", traceCategories.Debug);
-                }
-                owner._onLoadFinished(error.getUrl && error.getUrl(), error.getDescription() + "(" + error.getErrorCode() + ")");
+            if (!owner) {
+                return;
             }
+
+            if (traceEnabled()) {
+                owner.writeTrace(`WebViewClientClass.onReceivedError(${error.getErrorCode()}, ${error.getDescription()}, ${error.getUrl && error.getUrl()})`);
+            }
+
+            owner._onLoadFinished(error.getUrl && error.getUrl(), `${error.getDescription()}(${error.getErrorCode()})`);
 
         }
 
@@ -166,9 +196,9 @@ function initializeWebViewClient(): void {
             const owner = this.owner;
             if (owner) {
                 if (traceEnabled()) {
-                    traceWrite("WebViewClientClass.onReceivedError(" + errorCode + ", " + description + ", " + failingUrl + ")", traceCategories.Debug);
+                    owner.writeTrace(`WebViewClientClass.onReceivedError(${errorCode}, ${description}, ${failingUrl})`);
                 }
-                owner._onLoadFinished(failingUrl, description + "(" + errorCode + ")");
+                owner._onLoadFinished(failingUrl, `${description}(${errorCode})`);
             }
 
         }
@@ -341,7 +371,7 @@ export class WebViewExt extends WebViewExtBase {
 
         const result = this.localResourceMap.get(resourceName);
 
-        this.writeTrace(`WebViewExt<android>.getRegistretLocalResource(${resourceName}) -> ${result}`);
+        this.writeTrace(`WebViewExt<android>.getRegistretLocalResource(${resourceName}) -> ${result} ${new Error().stack}`);
 
         return result;
     }

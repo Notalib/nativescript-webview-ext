@@ -51,7 +51,7 @@ export class WKNavigationDelegateImpl extends NSObject implements WKNavigationDe
             decisionHandler(WKNavigationActionPolicy.Allow);
 
             if (traceEnabled()) {
-                traceWrite("WKNavigationDelegateClass.webViewDecidePolicyForNavigationActionDecisionHandler(" + navigationAction.request.URL.absoluteString + ", " + navigationAction.navigationType + ")", traceCategories.Debug);
+                traceWrite(`WKNavigationDelegateClass.webViewDecidePolicyForNavigationActionDecisionHandler(${navigationAction.request.URL.absoluteString}, ${navigationAction.navigationType})`, traceCategories.Debug);
             }
             owner._onLoadStarted(navigationAction.request.URL.absoluteString, navType);
         }
@@ -59,13 +59,13 @@ export class WKNavigationDelegateImpl extends NSObject implements WKNavigationDe
 
     public webViewDidStartProvisionalNavigation(webView: WKWebView, navigation: WKNavigation): void {
         if (traceEnabled()) {
-            traceWrite("WKNavigationDelegateClass.webViewDidStartProvisionalNavigation(" + webView.URL + ")", traceCategories.Debug);
+            traceWrite(`WKNavigationDelegateClass.webViewDidStartProvisionalNavigation(${webView.URL})`, traceCategories.Debug);
         }
     }
 
     public webViewDidFinishNavigation(webView: WKWebView, navigation: WKNavigation): void {
         if (traceEnabled()) {
-            traceWrite("WKNavigationDelegateClass.webViewDidFinishNavigation(" + webView.URL + ")", traceCategories.Debug);
+            traceWrite(`WKNavigationDelegateClass.webViewDidFinishNavigation(${webView.URL})`, traceCategories.Debug);
         }
         const owner = this._owner.get();
         if (owner) {
@@ -85,7 +85,7 @@ export class WKNavigationDelegateImpl extends NSObject implements WKNavigationDe
                 src = webView.URL.absoluteString;
             }
             if (traceEnabled()) {
-                traceWrite("WKNavigationDelegateClass.webViewDidFailNavigationWithError(" + error.localizedDescription + ")", traceCategories.Debug);
+                traceWrite(`WKNavigationDelegateClass.webViewDidFailNavigationWithError(${error.localizedDescription})`, traceCategories.Debug);
             }
             owner._onLoadFinished(src, error.localizedDescription);
         }

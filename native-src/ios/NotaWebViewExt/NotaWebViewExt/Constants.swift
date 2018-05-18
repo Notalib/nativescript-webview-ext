@@ -12,11 +12,13 @@ struct Constants {
     static let customURLScheme = "x-local"
     static let mimeType: [String: String] = [
         "css": "text/css",
-        "js": "text/javascript",
-        "jpg": "image/jpeg",
-        "jpeg": "image/jpeg",
-        "png": "image/png",
         "gif": "image/gif",
+        "jpeg": "image/jpeg",
+        "jpg": "image/jpeg",
+        "js": "text/javascript",
+        "otf": "application/vnd.ms-opentype",
+        "png": "image/png",
         "svg": "image/svg+xml",
+        "ttf": "application/x-font-ttf",
     ]
 }

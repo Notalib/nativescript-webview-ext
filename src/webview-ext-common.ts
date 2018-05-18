@@ -174,7 +174,7 @@ export class WebViewExtBase extends View {
         }
     }
 
-    public _onLoadStarted(url: string, navigationType: NavigationType) {
+    public _onLoadStarted(url: string, navigationType?: NavigationType) {
         let args = <LoadStartedEventData>{
             eventName: WebViewExtBase.loadStartedEvent,
             object: this,
@@ -272,7 +272,7 @@ export class WebViewExtBase extends View {
             src = `file://${fs.knownFolders.currentApp().path}/${src.substr(2)}`;
             this.writeTrace(`WebViewExt.src = ${originSrc} startsWith ~/ resolved to ${src}`);
         } else if (src.startsWith("/")) {
-            src = "file://" + src;
+            src = `file://${src}`;
             this.writeTrace(`WebViewExt.src = ${originSrc} startsWith "/" resolved to ${src}`);
         }
 
@@ -440,7 +440,7 @@ export class WebViewExtBase extends View {
 
             promiseScriptCodes.push(scriptCode);
 
-            this.writeTrace('WebViewExt.loadStyleSheetFiles() - > Loading stylesheet file: ' + href);
+            this.writeTrace(`WebViewExt.loadStyleSheetFiles() - > Loading stylesheet file: ${href}`);
         }
 
         if (promiseScriptCodes.length !== files.length) {

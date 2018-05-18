@@ -38,7 +38,7 @@ export class UIWebViewDelegateImpl extends NSObject implements UIWebViewDelegate
           }
 
           const absoluteUrl = request.URL.absoluteString;
-          owner.writeTrace("UIWebViewDelegateClass.webViewShouldStartLoadWithRequestNavigationType(" + absoluteUrl + ", " + navigationType + ")");
+          owner.writeTrace(`UIWebViewDelegateClass.webViewShouldStartLoadWithRequestNavigationType(${absoluteUrl}, ${navigationType})`);
           if (navType === "other" && absoluteUrl.startsWith("js2ios:")) {
               owner.onUIWebViewEvent(absoluteUrl);
               return false;
@@ -54,7 +54,7 @@ export class UIWebViewDelegateImpl extends NSObject implements UIWebViewDelegate
   public webViewDidStartLoad(webView: UIWebView) {
       let owner = this._owner.get();
       if (owner) {
-          owner.writeTrace("UIWebViewDelegateClass.webViewDidStartLoad(" + webView.request.URL + ")");
+          owner.writeTrace(`UIWebViewDelegateClass.webViewDidStartLoad(${webView.request.URL})`);
       }
   }
 
@@ -62,7 +62,7 @@ export class UIWebViewDelegateImpl extends NSObject implements UIWebViewDelegate
       let owner = this._owner.get();
 
       if (owner) {
-          owner.writeTrace("UIWebViewDelegateClass.webViewDidFinishLoad(" + webView.request.URL + ")");
+          owner.writeTrace(`UIWebViewDelegateClass.webViewDidFinishLoad(${webView.request.URL})`);
 
           let src = owner.src;
           if (webView.request && webView.request.URL) {
@@ -80,7 +80,7 @@ export class UIWebViewDelegateImpl extends NSObject implements UIWebViewDelegate
               src = webView.request.URL.absoluteString;
           }
 
-          owner.writeTrace("UIWebViewDelegateClass.webViewDidFailLoadWithError(" + error.localizedDescription + ") url: " + src);
+          owner.writeTrace(`UIWebViewDelegateClass.webViewDidFailLoadWithError(${error.localizedDescription}) url: ${src}`);
           owner._onLoadFinished(src, error.localizedDescription);
       }
   }
