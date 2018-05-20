@@ -399,4 +399,10 @@ export class WebViewExt extends WebViewExtBase {
     public getTitle() {
         return Promise.resolve(this.nativeViewProtected.getTitle());
     }
+
+    [debugProperty.setNative](value: boolean) {
+        if (Number(platform.device.sdkVersion) < 19) {
+            (<any>android.webkit.WebView).setWebContentsDebuggingEnabled(!!value);
+        }
+    }
 }

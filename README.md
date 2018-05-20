@@ -26,7 +26,6 @@ Supports Android 19+ and iOS9+.
 * Share cache with native-layer?
 
 ### Android
-* Setup remote debugging, e.g calling `android.webkit.WebView.setWebContentsDebuggingEnabled(true);`
 
 #### iOS
 * Optionas for native scrolllView.
@@ -61,6 +60,7 @@ The custom `NSURLProtocol` used with UIWebView is shared with all instances of t
 | isWkWebView | true / false | Is the native webview an WKWebView? True if `iOS >=11` |
 | src | | Load src |
 | autoInjectJSBridge | true / false | Should the window.nsWebViewBridge be injected on `loadFinishedEvent`? Defaults to true |
+| debugMode | true / false | Enable chrome debugger for webview on Android. Note: Applies to all webviews in App |
 
 | Function | Description |
 | --- | --- |

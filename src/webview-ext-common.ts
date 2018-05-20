@@ -7,6 +7,7 @@ export * from "tns-core-modules/ui//core/view";
 
 export const srcProperty = new Property<WebViewExtBase, string>({ name: "src" });
 export const autoInjectJSBridgeProperty = new Property<WebViewExtBase, boolean>({ name: "autoInjectJSBridge", defaultValue: true });
+export const debugProperty = new Property<WebViewExtBase, boolean>({ name: "debugMode", defaultValue: false });
 
 export interface LoadJavaScriptResource {
     resourceName: string;
@@ -116,6 +117,8 @@ export class WebViewExtBase extends View {
      * Auto Inject WebView JavaScript Bridge on load finished? Defaults to true.
      */
     public autoInjectJSBridge = true;
+
+    public debugMode: boolean;
 
     /**
      * List of js-files to be auto injected on load finished
@@ -295,6 +298,10 @@ export class WebViewExtBase extends View {
             this._loadData(src);
             this.writeTrace(`WebViewExt.src = ${originSrc} - LoadData(${src})}`);
         }
+    }
+
+    [debugProperty.getDefault]() {
+        return false;
     }
 
     protected resolveLocalResourceFilePath(filepath: string): string | void {
@@ -712,3 +719,4 @@ export interface WebViewExtBase {
 
 srcProperty.register(WebViewExtBase);
 autoInjectJSBridgeProperty.register(WebViewExtBase);
+debugProperty.register(WebViewExtBase);
