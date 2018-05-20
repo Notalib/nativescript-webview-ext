@@ -72,10 +72,10 @@ export class WebViewTest extends testModule.UITest<webViewModule.WebViewExt> {
         webView.on(webViewModule.WebViewExt.loadFinishedEvent, (args: webViewModule.LoadEventData) => {
             let message;
             if (!args.error) {
-                message = "WebView finished loading " + args.url;
+                message = `WebView finished loading ${args.url}`;
             }
             else {
-                message = "Error loading " + args.url + ": " + args.error;
+                message = `Error loading ${args.url}: ${args.error}`;
             }
 
             // >> (hide)
@@ -103,10 +103,10 @@ export class WebViewTest extends testModule.UITest<webViewModule.WebViewExt> {
 
             let message;
             if (!args.error) {
-                message = "WebView finished loading " + args.url;
+                message = `WebView finished loading ${args.url}`;
             }
             else {
-                message = "Error loading " + args.url + ": " + args.error;
+                message = `Error loading ${args.url}: ${args.error}`;
             }
 
             // >> (hide)
@@ -149,10 +149,10 @@ export class WebViewTest extends testModule.UITest<webViewModule.WebViewExt> {
 
             let message;
             if (!args.error) {
-                message = "WebView finished loading " + args.url;
+                message = `WebView finished loading ${args.url}`;
             }
             else {
-                message = "Error loading " + args.url + ": " + args.error;
+                message = `Error loading ${args.url}: ${args.error}`;
             }
         });
         webView.src = targetSrc;
@@ -177,10 +177,10 @@ export class WebViewTest extends testModule.UITest<webViewModule.WebViewExt> {
 
             let message;
             if (!args.error) {
-                message = "WebView finished loading " + args.url;
+                message = `WebView finished loading ${args.url}`;
             }
             else {
-                message = "Error loading " + args.url + ": " + args.error;
+                message = `Error loading ${args.url}: ${args.error}`;
             }
         });
         webview.src = "~/ui/web-view/test with spaces.html";
@@ -207,10 +207,10 @@ export class WebViewTest extends testModule.UITest<webViewModule.WebViewExt> {
 
             let message;
             if (!args.error) {
-                message = "WebView finished loading " + args.url;
+                message = `WebView finished loading ${args.url}`;
             }
             else {
-                message = "Error loading " + args.url + ": " + args.error;
+                message = `Error loading ${args.url}: ${args.error}`;
             }
         });
         webview.src = '<!DOCTYPE html><html><head><title>MyTitle</title><meta charset="utf-8" /></head><body><span style="color:red">TestÖ</span></body></html>';
@@ -240,10 +240,10 @@ export class WebViewTest extends testModule.UITest<webViewModule.WebViewExt> {
 
             let message;
             if (!args.error) {
-                message = "WebView finished loading " + args.url;
+                message = `WebView finished loading ${args.url}`;
             }
             else {
-                message = "Error loading " + args.url + ": " + args.error;
+                message = `Error loading ${args.url}: ${args.error}`;
             }
         } catch (err) {
             done(err);
@@ -276,10 +276,10 @@ export class WebViewTest extends testModule.UITest<webViewModule.WebViewExt> {
 
             let message;
             if (!args.error) {
-                message = "WebView finished loading " + args.url;
+                message = `WebView finished loading ${args.url}`;
             }
             else {
-                message = "Error loading " + args.url + ": " + args.error;
+                message = `Error loading ${args.url}: ${args.error}`;
             }
         });
         webview.src = emptyHTMLXLocalSource;
@@ -311,10 +311,10 @@ export class WebViewTest extends testModule.UITest<webViewModule.WebViewExt> {
 
             let message;
             if (!args.error) {
-                message = "WebView finished loading " + args.url;
+                message = `WebView finished loading ${args.url}`;
             }
             else {
-                message = "Error loading " + args.url + ": " + args.error;
+                message = `Error loading ${args.url}: ${args.error}`;
             }
         } catch (err) {
             done(err);
@@ -352,10 +352,10 @@ export class WebViewTest extends testModule.UITest<webViewModule.WebViewExt> {
 
             let message;
             if (!args.error) {
-                message = "WebView finished loading " + args.url;
+                message = `WebView finished loading ${args.url}`;
             }
             else {
-                message = "Error loading " + args.url + ": " + args.error;
+                message = `Error loading ${args.url}: ${args.error}`;
             }
         });
         webview.src = cssPreDefinedlinkFile;
@@ -394,10 +394,10 @@ export class WebViewTest extends testModule.UITest<webViewModule.WebViewExt> {
 
             let message;
             if (!args.error) {
-                message = "WebView finished loading " + args.url;
+                message = `WebView finished loading ${args.url}`;
             }
             else {
-                message = "Error loading " + args.url + ": " + args.error;
+                message = `Error loading ${args.url}: ${args.error}`;
             }
         });
         webview.src = cssNotPredefinedFile;
@@ -432,10 +432,10 @@ export class WebViewTest extends testModule.UITest<webViewModule.WebViewExt> {
 
             let message;
             if (!args.error) {
-                message = "WebView finished loading " + args.url;
+                message = `WebView finished loading ${args.url}`;
             }
             else {
-                message = "Error loading " + args.url + ": " + args.error;
+                message = `Error loading ${args.url}: ${args.error}`;
             }
         });
         webview.src = javascriptCallsXLocalFile;
@@ -474,10 +474,10 @@ export class WebViewTest extends testModule.UITest<webViewModule.WebViewExt> {
 
             let message;
             if (!args.error) {
-                message = "WebView finished loading " + args.url;
+                message = `WebView finished loading ${args.url}`;
             }
             else {
-                message = "Error loading " + args.url + ": " + args.error;
+                message = `Error loading ${args.url}: ${args.error}`;
             }
         });
 
@@ -527,10 +527,10 @@ export class WebViewTest extends testModule.UITest<webViewModule.WebViewExt> {
 
             let message;
             if (!args.error) {
-                message = "WebView finished loading " + args.url;
+                message = `WebView finished loading ${args.url}`;
             }
             else {
-                message = "Error loading " + args.url + ": " + args.error;
+                message = `Error loading ${args.url}: ${args.error}`;
             }
         });
 
@@ -610,10 +610,10 @@ export class WebViewTest extends testModule.UITest<webViewModule.WebViewExt> {
 
             let message;
             if (!args.error) {
-                message = "WebView finished loading " + args.url;
+                message = `WebView finished loading ${args.url}`;
             }
             else {
-                message = "Error loading " + args.url + ": " + args.error;
+                message = `Error loading ${args.url}: ${args.error}`;
             }
         });
 
@@ -661,10 +661,10 @@ export class WebViewTest extends testModule.UITest<webViewModule.WebViewExt> {
 
             let message;
             if (!args.error) {
-                message = "WebView finished loading " + args.url;
+                message = `WebView finished loading ${args.url}`;
             }
             else {
-                message = "Error loading " + args.url + ": " + args.error;
+                message = `Error loading ${args.url}: ${args.error}`;
             }
         });
 
