@@ -3,8 +3,8 @@
 import * as fs from 'tns-core-modules/file-system';
 import * as platform from "tns-core-modules/platform";
 import { profile } from "tns-core-modules/profiling";
-import { layout, traceMessageType } from "tns-core-modules/ui/core/view";
-import { knownFolders, NavigationType, traceCategories, traceEnabled, WebViewExtBase } from "./webview-ext-common";
+import { traceMessageType } from "tns-core-modules/ui/core/view";
+import { WebViewExtBase } from "./webview-ext-common";
 import { UIWebViewDelegateImpl } from './webview-ext.uiwebview';
 import { WKNavigationDelegateImpl, WKScriptMessageHandlerImpl } from './webview-ext.wkwebview';
 
@@ -99,7 +99,6 @@ export class WebViewExt extends WebViewExtBase {
 
         // this.writeTrace('Executing Javascript: ' + scriptCode);
         return new Promise((resolve, reject) => {
-            let result: any;
             if (this._wkWebView) {
                 this._wkWebView.evaluateJavaScriptCompletionHandler(scriptCode, (data, error) => {
                     if (error) {
@@ -162,7 +161,7 @@ export class WebViewExt extends WebViewExtBase {
     }
 
     public _loadData(content: string) {
-        const nsURL = NSURL.alloc().initWithString(`file:///${knownFolders.currentApp().path}/`);
+        const nsURL = NSURL.alloc().initWithString(`file:///${fs.knownFolders.currentApp().path}/`);
         if (this._wkWebView) {
             this.writeTrace(`WebViewExt<ios>._loadUrl(content) -> this._wkWebView.loadHTMLStringBaseURL(${nsURL})`);
             this._wkWebView.loadHTMLStringBaseURL(content, nsURL);

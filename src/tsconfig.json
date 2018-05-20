@@ -13,6 +13,7 @@
         "pretty": false,
         "allowUnreachableCode": false,
         "allowUnusedLabels": false,
+        "noUnusedLocals": true,
         "noEmitHelpers": true,
         "noEmitOnError": false,
         "noImplicitAny": false,

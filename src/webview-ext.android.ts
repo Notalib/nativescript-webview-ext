@@ -3,7 +3,7 @@
 import * as fs from 'tns-core-modules/file-system';
 import * as platform from "tns-core-modules/platform";
 
-import { knownFolders, traceCategories, traceEnabled, traceMessageType, WebViewExtBase } from "./webview-ext-common";
+import { debugProperty, traceMessageType, WebViewExtBase } from "./webview-ext-common";
 
 export * from "./webview-ext-common";
 
@@ -85,9 +85,7 @@ function initializeWebViewClient(): void {
                 return true;
             }
 
-            if (traceEnabled()) {
-                owner.writeTrace(`WebViewClientClass.shouldOverrideUrlLoading(${url})`);
-            }
+            owner.writeTrace(`WebViewClientClass.shouldOverrideUrlLoading(${url})`);
             return false;
         }
 
@@ -155,9 +153,8 @@ function initializeWebViewClient(): void {
             if (!owner) {
                 return;
             }
-            if (traceEnabled()) {
-                owner.writeTrace(`WebViewClientClass.onPageStarted(${url}, ${favicon})`);
-            }
+            owner.writeTrace(`WebViewClientClass.onPageStarted(${url}, ${favicon})`);
+
             owner._onLoadStarted(url);
         }
 
@@ -167,9 +164,8 @@ function initializeWebViewClient(): void {
             if (!owner) {
                 return;
             }
-            if (traceEnabled()) {
-                owner.writeTrace(`WebViewClientClass.onPageFinished(${url})`);
-            }
+
+            owner.writeTrace(`WebViewClientClass.onPageFinished(${url})`);
             owner._onLoadFinished(url);
         }
 
@@ -190,9 +186,7 @@ function initializeWebViewClient(): void {
                 return;
             }
 
-            if (traceEnabled()) {
-                owner.writeTrace(`WebViewClientClass.onReceivedError(${error.getErrorCode()}, ${error.getDescription()}, ${error.getUrl && error.getUrl()})`);
-            }
+            owner.writeTrace(`WebViewClientClass.onReceivedError(${error.getErrorCode()}, ${error.getDescription()}, ${error.getUrl && error.getUrl()})`);
 
             owner._onLoadFinished(error.getUrl && error.getUrl(), `${error.getDescription()}(${error.getErrorCode()})`);
 
@@ -203,9 +197,7 @@ function initializeWebViewClient(): void {
 
             const owner = this.owner;
             if (owner) {
-                if (traceEnabled()) {
-                    owner.writeTrace(`WebViewClientClass.onReceivedError(${errorCode}, ${description}, ${failingUrl})`);
-                }
+                owner.writeTrace(`WebViewClientClass.onReceivedError(${errorCode}, ${description}, ${failingUrl})`);
                 owner._onLoadFinished(failingUrl, `${description}(${errorCode})`);
             }
 
@@ -234,8 +226,6 @@ function initializeWebViewClient(): void {
 
     WebViewBridgeInterface = WebViewBridgeInterfaceImpl;
 }
-
-declare function escape(input: string): string;
 
 let instanceNo = 0;
 export class WebViewExt extends WebViewExtBase {
@@ -304,7 +294,7 @@ export class WebViewExt extends WebViewExtBase {
             return;
         }
 
-        const baseUrl = `file:///${knownFolders.currentApp().path}/`;
+        const baseUrl = `file:///${fs.knownFolders.currentApp().path}/`;
         this.writeTrace(`WebViewExt<android>._loadData(${src}) -> baseUrl: ${baseUrl}`);
         nativeView.loadDataWithBaseURL(baseUrl, src, "text/html", "utf-8", null);
     }

@@ -1,10 +1,8 @@
 import * as fs from "tns-core-modules/file-system";
-import { EventData, Property, traceEnabled, traceMessageType, traceWrite, View, ViewBase } from "tns-core-modules/ui/core/view";
-import { WebViewExt as WebViewExtDefinition } from "./";
+import { EventData, Property, traceEnabled, traceMessageType, traceWrite, View } from "tns-core-modules/ui/core/view";
 
 import { webViewBridgeJsCodePromise } from "./nativescript-webview-bridge-loader";
 
-export { File, knownFolders, path } from "tns-core-modules/file-system";
 export * from "tns-core-modules/ui//core/view";
 
 export const srcProperty = new Property<WebViewExtBase, string>({ name: "src" });

@@ -1,7 +1,7 @@
 /// <reference path="./node_modules/tns-platform-declarations/ios.d.ts" />
 /// <reference path="./platforms/ios/NotaWebViewExt.d.ts" />
 
-import { NavigationType, traceCategories, traceEnabled, traceMessageType, WebViewExtBase } from "./webview-ext-common";
+import { NavigationType, traceMessageType, WebViewExtBase } from "./webview-ext-common";
 
 export class WKNavigationDelegateImpl extends NSObject implements WKNavigationDelegate {
     public static ObjCProtocols = [WKNavigationDelegate];
@@ -16,7 +16,7 @@ export class WKNavigationDelegateImpl extends NSObject implements WKNavigationDe
         const owner = this._owner.get();
 
         if (!owner) {
-            decisionHandler(WKNavigationActionPolicy.Allow);
+            decisionHandler(WKNavigationActionPolicy.Cancel);
             return;
         }
 
@@ -50,16 +50,14 @@ export class WKNavigationDelegateImpl extends NSObject implements WKNavigationDe
             }
             decisionHandler(WKNavigationActionPolicy.Allow);
 
-            if (traceEnabled()) {
-                owner.writeTrace(`WKNavigationDelegateClass.webViewDecidePolicyForNavigationActionDecisionHandler(${navigationAction.request.URL.absoluteString}, ${navigationAction.navigationType})`);
-            }
+            owner.writeTrace(`WKNavigationDelegateClass.webViewDecidePolicyForNavigationActionDecisionHandler(${navigationAction.request.URL.absoluteString}, ${navigationAction.navigationType})`);
             owner._onLoadStarted(navigationAction.request.URL.absoluteString, navType);
         }
     }
 
     public webViewDidStartProvisionalNavigation(webView: WKWebView, navigation: WKNavigation): void {
         const owner = this._owner.get();
-        if (owner && traceEnabled()) {
+        if (owner) {
             owner.writeTrace(`WKNavigationDelegateClass.webViewDidStartProvisionalNavigation(${webView.URL})`);
         }
     }
@@ -69,9 +67,8 @@ export class WKNavigationDelegateImpl extends NSObject implements WKNavigationDe
         if (!owner) {
             return;
         }
-        if (traceEnabled()) {
-            owner.writeTrace(`WKNavigationDelegateClass.webViewDidFinishNavigation(${webView.URL})`);
-        }
+
+        owner.writeTrace(`WKNavigationDelegateClass.webViewDidFinishNavigation(${webView.URL})`);
         let src = owner.src;
         if (webView.URL) {
             src = webView.URL.absoluteString;
@@ -89,9 +86,7 @@ export class WKNavigationDelegateImpl extends NSObject implements WKNavigationDe
         if (webView.URL) {
             src = webView.URL.absoluteString;
         }
-        if (traceEnabled()) {
-            owner.writeTrace(`WKNavigationDelegateClass.webViewDidFailNavigationWithError(${error.localizedDescription})`);
-        }
+        owner.writeTrace(`WKNavigationDelegateClass.webViewDidFailNavigationWithError(${error.localizedDescription})`);
         owner._onLoadFinished(src, error.localizedDescription);
     }
 }
