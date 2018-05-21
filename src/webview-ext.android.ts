@@ -2,8 +2,7 @@
 
 import * as fs from 'tns-core-modules/file-system';
 import * as platform from "tns-core-modules/platform";
-
-import { debugProperty, traceMessageType, WebViewExtBase } from "./webview-ext-common";
+import { debugProperty, traceMessageType, UnsupportSDKError, WebViewExtBase } from "./webview-ext-common";
 
 export * from "./webview-ext-common";
 
@@ -27,9 +26,6 @@ export interface AndroidWebView extends android.webkit.WebView {
     bridgeInterface?: dk.nota.webviewinterface.WebViewBridgeInterface;
 }
 
-let WebViewExtClient: new () => AndroidWebViewClient;
-let WebViewBridgeInterface: new () => dk.nota.webviewinterface.WebViewBridgeInterface;
-
 const extToMimeType = new Map<string, string>([
     ['css', 'text/css'],
     ['gif', 'image/gif'],
@@ -51,6 +47,9 @@ const extToBinaryEncoding = new Set<string>([
     "ttf",
 ]);
 
+//#region android_native_classes
+let WebViewExtClient: new () => AndroidWebViewClient;
+let WebViewBridgeInterface: new () => dk.nota.webviewinterface.WebViewBridgeInterface;
 function initializeWebViewClient(): void {
     if (WebViewExtClient) {
         return;
@@ -75,17 +74,16 @@ function initializeWebViewClient(): void {
                 url = request.getUrl().toString();
             }
 
-            const scheme = `${owner.interceptScheme}://`;
-            if (url.startsWith(scheme)) {
+            if (url.startsWith(owner.interceptScheme)) {
                 return true;
             }
 
-            let urlOverrideHandlerFn = owner.urlOverrideHandler;
+            const urlOverrideHandlerFn = owner.urlOverrideHandler;
             if (urlOverrideHandlerFn && urlOverrideHandlerFn(url) === true) {
                 return true;
             }
 
-            owner.writeTrace(`WebViewClientClass.shouldOverrideUrlLoading(${url})`);
+            owner.writeTrace(`WebViewClientClass.shouldOverrideUrlLoading("${url}")`);
             return false;
         }
 
@@ -101,7 +99,7 @@ function initializeWebViewClient(): void {
             }
 
             if (typeof url !== 'string') {
-                owner.writeTrace(`WebViewClientClass.shouldInterceptRequest(${url}) - is not a string`);
+                owner.writeTrace(`WebViewClientClass.shouldInterceptRequest("${url}") - is not a string`);
                 return super.shouldInterceptRequest(view, request);
             }
 
@@ -111,12 +109,12 @@ function initializeWebViewClient(): void {
 
             const filepath = owner.getRegistretLocalResource(url);
             if (!filepath) {
-                owner.writeTrace(`WebViewClientClass.shouldInterceptRequest(${url}) - no matching file`);
+                owner.writeTrace(`WebViewClientClass.shouldInterceptRequest("${url}") - no matching file`);
                 return super.shouldInterceptRequest(view, request);
             }
 
             if (!fs.File.exists(filepath)) {
-                owner.writeTrace(`WebViewClientClass.shouldInterceptRequest(${url}) - file: ${filepath} doesn't exists`);
+                owner.writeTrace(`WebViewClientClass.shouldInterceptRequest("${url}") - file: "${filepath}" doesn't exists`);
                 return super.shouldInterceptRequest(view, request);
             }
 
@@ -128,7 +126,7 @@ function initializeWebViewClient(): void {
             const mimeType = extToMimeType.get(ext) || 'application/octet-stream';
             const encoding = extToBinaryEncoding.has(ext) || mimeType === 'application/octet-stream' ? 'binary' : 'UTF-8';
 
-            owner.writeTrace(`WebViewClientClass.shouldInterceptRequest(${url}) - file: ${filepath} mimeType:${mimeType} encoding:${encoding}`);
+            owner.writeTrace(`WebViewClientClass.shouldInterceptRequest("${url}") - file: "${filepath}" mimeType:${mimeType} encoding:${encoding}`);
 
             const response = new android.webkit.WebResourceResponse(mimeType, encoding, stream);
             if (Number(platform.device.sdkVersion) < 21) {
@@ -153,7 +151,7 @@ function initializeWebViewClient(): void {
             if (!owner) {
                 return;
             }
-            owner.writeTrace(`WebViewClientClass.onPageStarted(${url}, ${favicon})`);
+            owner.writeTrace(`WebViewClientClass.onPageStarted("${url}", "${favicon}")`);
 
             owner._onLoadStarted(url);
         }
@@ -165,7 +163,7 @@ function initializeWebViewClient(): void {
                 return;
             }
 
-            owner.writeTrace(`WebViewClientClass.onPageFinished(${url})`);
+            owner.writeTrace(`WebViewClientClass.onPageFinished("${url}")`);
             owner._onLoadFinished(url);
         }
 
@@ -197,7 +195,7 @@ function initializeWebViewClient(): void {
 
             const owner = this.owner;
             if (owner) {
-                owner.writeTrace(`WebViewClientClass.onReceivedError(${errorCode}, ${description}, ${failingUrl})`);
+                owner.writeTrace(`WebViewClientClass.onReceivedError(${errorCode}, "${description}", "${failingUrl}")`);
                 owner._onLoadFinished(failingUrl, `${description}(${errorCode})`);
             }
 
@@ -226,6 +224,7 @@ function initializeWebViewClient(): void {
 
     WebViewBridgeInterface = WebViewBridgeInterfaceImpl;
 }
+//#endregion android_native_classes
 
 let instanceNo = 0;
 export class WebViewExt extends WebViewExtBase {
@@ -246,18 +245,18 @@ export class WebViewExt extends WebViewExtBase {
     public createNativeView() {
         initializeWebViewClient();
 
-        const nativeView = new android.webkit.WebView(this._context);
+        const nativeView = new android.webkit.WebView(this._context) as AndroidWebView;
         const settings = nativeView.getSettings();
         settings.setJavaScriptEnabled(true);
         settings.setBuiltInZoomControls(true);
 
         const client = new WebViewExtClient();
         nativeView.setWebViewClient(client);
-        (nativeView as any).client = client;
+        nativeView.client = client;
 
         const bridgeInterface = new WebViewBridgeInterface();
         nativeView.addJavascriptInterface(bridgeInterface, 'androidWebViewBridge');
-        (nativeView as any).bridgeInterface = bridgeInterface;
+        nativeView.bridgeInterface = bridgeInterface;
         return nativeView;
     }
 
@@ -284,7 +283,7 @@ export class WebViewExt extends WebViewExtBase {
             return;
         }
 
-        this.writeTrace(`WebViewExt<android>._loadUrl(${src})`);
+        this.writeTrace(`WebViewExt<android>._loadUrl("${src}")`);
         nativeView.loadUrl(src);
     }
 
@@ -295,7 +294,7 @@ export class WebViewExt extends WebViewExtBase {
         }
 
         const baseUrl = `file:///${fs.knownFolders.currentApp().path}/`;
-        this.writeTrace(`WebViewExt<android>._loadData(${src}) -> baseUrl: ${baseUrl}`);
+        this.writeTrace(`WebViewExt<android>._loadData("${src}") -> baseUrl: "${baseUrl}"`);
         nativeView.loadDataWithBaseURL(baseUrl, src, "text/html", "utf-8", null);
     }
 
@@ -348,17 +347,17 @@ export class WebViewExt extends WebViewExtBase {
 
         const filepath = this.resolveLocalResourceFilePath(path);
         if (!filepath) {
-            this.writeTrace(`WebViewExt<android>.registerLocalResource(${resourceName}, ${path}) -> file doesn't exist`, traceMessageType.error);
+            this.writeTrace(`WebViewExt<android>.registerLocalResource("${resourceName}", "${path}") -> file doesn't exist`, traceMessageType.error);
             return;
         }
 
-        this.writeTrace(`WebViewExt<android>.registerLocalResource(${resourceName}, ${path}) -> file: ${filepath}`);
+        this.writeTrace(`WebViewExt<android>.registerLocalResource("${resourceName}", "${path}") -> file: "${filepath}"`);
 
         this.localResourceMap.set(resourceName, filepath);
     }
 
     public unregisterLocalResource(resourceName: string) {
-        this.writeTrace(`WebViewExt<android>.unregisterLocalResource(${resourceName})`);
+        this.writeTrace(`WebViewExt<android>.unregisterLocalResource("${resourceName}")`);
         resourceName = this.fixLocalResourceName(resourceName);
 
         this.localResourceMap.delete(resourceName);
@@ -369,31 +368,30 @@ export class WebViewExt extends WebViewExtBase {
 
         const result = this.localResourceMap.get(resourceName);
 
-        this.writeTrace(`WebViewExt<android>.getRegistretLocalResource(${resourceName})`);
+        this.writeTrace(`WebViewExt<android>.getRegistretLocalResource("${resourceName}") => "${result}"`);
 
         return result;
     }
 
     public executeJavaScript<T>(scriptCode: string): Promise<T> {
-        return new Promise<T>((resolve, reject) => {
-            if (Number(platform.device.sdkVersion) < 19) {
-                this.writeTrace(`WebViewExt<android>.executeJavaScript() -> SDK:${platform.device.sdkVersion} not supported`, traceMessageType.error);
-                reject(new Error('Android API < 19 not supported'));
-                return;
-            }
+        if (Number(platform.device.sdkVersion) < 19) {
+            this.writeTrace(`WebViewExt<android>.executeJavaScript() -> SDK:${platform.device.sdkVersion} not supported`, traceMessageType.error);
+            return Promise.reject(new UnsupportSDKError(19));
+        }
+
+        return new Promise((resolve, reject) => {
             if (!this.android) {
                 this.writeTrace(`WebViewExt<android>.executeJavaScript() -> no nativeview?`, traceMessageType.error);
                 reject(new Error('Native Android not inited, cannot call executeJavaScript'));
                 return;
             }
 
-            const that = this;
             this.android.evaluateJavascript(scriptCode, new android.webkit.ValueCallback({
                 onReceiveValue(result) {
-                    resolve(that.parseWebViewJavascriptResult(result));
+                    resolve(result);
                 },
             }));
-        });
+        }).then((result): T => this.parseWebViewJavascriptResult(result));
     }
 
     public getTitle() {

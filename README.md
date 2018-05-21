@@ -26,9 +26,21 @@ Supports Android 19+ and iOS9+.
 * Share cache with native-layer?
 
 ### Android
+* Settings
+    * Cache mode?
+    * AllowFileAccess?
+    * AllowFileAccessFromFileURLs?
+    * AppCache and AppCAchePath?
+    * BuiltInZoomControls? and SupportZoom?
+    * DOM Storage?
+    * User agent?
+    * 
 
 #### iOS
 * Optionas for native scrolllView.
+* Disable/Enable scroll bounce.
+* UIWebView? scalesPageToFit.
+
 
 ## Installation
 

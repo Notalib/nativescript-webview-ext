@@ -21,45 +21,57 @@ export class WKNavigationDelegateImpl extends NSObject implements WKNavigationDe
         }
 
         const url = navigationAction.request.URL && navigationAction.request.URL.absoluteString;
-        owner.writeTrace(`webViewDecidePolicyForNavigationActionDecisionHandler: ${url}`);
-        if (url) {
-            let urlOverrideHandlerFn = owner.urlOverrideHandler;
-            if (urlOverrideHandlerFn && urlOverrideHandlerFn(url) === true) {
-                decisionHandler(WKNavigationActionPolicy.Cancel);
-                return;
-            }
-
-            let navType: NavigationType = "other";
-
-            switch (navigationAction.navigationType) {
-                case WKNavigationType.LinkActivated:
-                    navType = "linkClicked";
-                    break;
-                case WKNavigationType.FormSubmitted:
-                    navType = "formSubmitted";
-                    break;
-                case WKNavigationType.BackForward:
-                    navType = "backForward";
-                    break;
-                case WKNavigationType.Reload:
-                    navType = "reload";
-                    break;
-                case WKNavigationType.FormResubmitted:
-                    navType = "formResubmitted";
-                    break;
-            }
-            decisionHandler(WKNavigationActionPolicy.Allow);
-
-            owner.writeTrace(`WKNavigationDelegateClass.webViewDecidePolicyForNavigationActionDecisionHandler(${navigationAction.request.URL.absoluteString}, ${navigationAction.navigationType})`);
-            owner._onLoadStarted(navigationAction.request.URL.absoluteString, navType);
+        owner.writeTrace(`webViewDecidePolicyForNavigationActionDecisionHandler: "${url}"`);
+        if (!url) {
+            return;
         }
+
+        const urlOverrideHandlerFn = owner.urlOverrideHandler;
+        if (urlOverrideHandlerFn && urlOverrideHandlerFn(url) === true) {
+            decisionHandler(WKNavigationActionPolicy.Cancel);
+            return;
+        }
+
+        let navType: NavigationType = "other";
+
+        switch (navigationAction.navigationType) {
+            case WKNavigationType.LinkActivated: {
+                navType = "linkClicked";
+                break;
+            }
+            case WKNavigationType.FormSubmitted: {
+                navType = "formSubmitted";
+                break;
+            }
+            case WKNavigationType.BackForward: {
+                navType = "backForward";
+                break;
+            }
+            case WKNavigationType.Reload: {
+                navType = "reload";
+                break;
+            }
+            case WKNavigationType.FormResubmitted: {
+                navType = "formResubmitted";
+                break;
+            }
+            default: {
+                navType = "other";
+                break;
+            }
+        }
+        decisionHandler(WKNavigationActionPolicy.Allow);
+
+        owner.writeTrace(`WKNavigationDelegateClass.webViewDecidePolicyForNavigationActionDecisionHandler("${url}", "${navigationAction.navigationType}") -> "${navType}"`);
+        owner._onLoadStarted(navigationAction.request.URL.absoluteString, navType);
     }
 
     public webViewDidStartProvisionalNavigation(webView: WKWebView, navigation: WKNavigation): void {
         const owner = this._owner.get();
-        if (owner) {
-            owner.writeTrace(`WKNavigationDelegateClass.webViewDidStartProvisionalNavigation(${webView.URL})`);
+        if (!owner) {
+            return;
         }
+            owner.writeTrace(`WKNavigationDelegateClass.webViewDidStartProvisionalNavigation("${webView.URL}")`);
     }
 
     public webViewDidFinishNavigation(webView: WKWebView, navigation: WKNavigation): void {
@@ -68,7 +80,7 @@ export class WKNavigationDelegateImpl extends NSObject implements WKNavigationDe
             return;
         }
 
-        owner.writeTrace(`WKNavigationDelegateClass.webViewDidFinishNavigation(${webView.URL})`);
+        owner.writeTrace(`WKNavigationDelegateClass.webViewDidFinishNavigation("${webView.URL}")`);
         let src = owner.src;
         if (webView.URL) {
             src = webView.URL.absoluteString;
@@ -86,7 +98,7 @@ export class WKNavigationDelegateImpl extends NSObject implements WKNavigationDe
         if (webView.URL) {
             src = webView.URL.absoluteString;
         }
-        owner.writeTrace(`WKNavigationDelegateClass.webViewDidFailNavigationWithError(${error.localizedDescription})`);
+        owner.writeTrace(`WKNavigationDelegateClass.webViewDidFailNavigationWithError("${error.localizedDescription}")`);
         owner._onLoadFinished(src, error.localizedDescription);
     }
 }
@@ -97,7 +109,7 @@ export class WKScriptMessageHandlerImpl extends NSObject implements WKScriptMess
     private _owner: WeakRef<WebViewExtBase>;
 
     public static initWithOwner(owner: WeakRef<WebViewExtBase>): WKScriptMessageHandlerImpl {
-        let delegate = <WKScriptMessageHandlerImpl>WKScriptMessageHandlerImpl.new();
+        const delegate = <WKScriptMessageHandlerImpl>WKScriptMessageHandlerImpl.new();
         delegate._owner = owner;
         return delegate;
     }

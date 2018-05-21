@@ -1,6 +1,5 @@
 import * as fs from "tns-core-modules/file-system";
 import { EventData, Property, traceEnabled, traceMessageType, traceWrite, View } from "tns-core-modules/ui/core/view";
-
 import { webViewBridgeJsCodePromise } from "./nativescript-webview-bridge-loader";
 
 export * from "tns-core-modules/ui//core/view";
@@ -71,6 +70,14 @@ export type NavigationType = "linkClicked" | "formSubmitted" | "backForward" | "
  * @return boolean - true to prevent url from being loaded.
  */
 export type urlOverrideHandlerFn = (url: String) => boolean;
+
+export class UnsupportSDKError extends Error {
+    constructor(minSdk: number) {
+        super(`Android API < ${minSdk} not supported`);
+
+        Object.setPrototypeOf(this, UnsupportSDKError.prototype);
+    }
+}
 
 export class WebViewExtBase extends View {
     /**
@@ -255,13 +262,13 @@ export class WebViewExtBase extends View {
         this.stopLoading();
 
         if (src.startsWith(this.interceptScheme)) {
-            this.writeTrace(`WebViewExt.src = ${originSrc} resolve x-local file`);
+            this.writeTrace(`WebViewExt.src = "${originSrc}" resolve x-local file`);
             const fileparh = this.getRegistretLocalResource(src);
             if (fileparh) {
                 src = `file://${fileparh}`;
-                this.writeTrace(`WebViewExt.src = ${originSrc} x-local resolved to ${src}`);
+                this.writeTrace(`WebViewExt.src = "${originSrc}" x-local resolved to "${src}"`);
             } else {
-                this.writeTrace(`WebViewExt.src = ${originSrc} x-local couldn't resolve to file`, traceMessageType.error);
+                this.writeTrace(`WebViewExt.src = "${originSrc}" x-local couldn't resolve to file`, traceMessageType.error);
                 this._onLoadFinished(src, 'unknown x-local-resource');
                 return;
             }
@@ -271,10 +278,10 @@ export class WebViewExtBase extends View {
         // They should be loaded with _loadUrl() method as it handles query params.
         if (src.startsWith("~/")) {
             src = `file://${fs.knownFolders.currentApp().path}/${src.substr(2)}`;
-            this.writeTrace(`WebViewExt.src = ${originSrc} startsWith ~/ resolved to ${src}`);
+            this.writeTrace(`WebViewExt.src = "${originSrc}" startsWith ~/ resolved to "${src}"`);
         } else if (src.startsWith("/")) {
             src = `file://${src}`;
-            this.writeTrace(`WebViewExt.src = ${originSrc} startsWith "/" resolved to ${src}`);
+            this.writeTrace(`WebViewExt.src = "${originSrc}" startsWith "/" resolved to ${src}`);
         }
 
         const lcSrc = src.toLowerCase();
@@ -283,7 +290,7 @@ export class WebViewExtBase extends View {
         if (lcSrc.startsWith("file:///")) {
             src = encodeURI(src);
             if (lcSrc !== src) {
-                this.writeTrace(`WebViewExt.src = ${originSrc} escaped to ${src}`);
+                this.writeTrace(`WebViewExt.src = "${originSrc}" escaped to "${src}"`);
             }
         }
 
@@ -293,10 +300,10 @@ export class WebViewExtBase extends View {
         ) {
             this._loadUrl(src);
 
-            this.writeTrace(`WebViewExt.src = ${originSrc} - LoadUrl(${src})}`);
+            this.writeTrace(`WebViewExt.src = "${originSrc}" - LoadUrl("${src}")`);
         } else {
             this._loadData(src);
-            this.writeTrace(`WebViewExt.src = ${originSrc} - LoadData(${src})}`);
+            this.writeTrace(`WebViewExt.src = "${originSrc}" - LoadData("${src}")`);
         }
     }
 

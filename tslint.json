@@ -1,7 +1,5 @@
 {
     "rules": {
-        "prefer-template": true,
-        "ordered-imports": true,
         "class-name": true,
         "comment-format": [
             true,
@@ -22,6 +20,8 @@
             "check-open-brace",
             "check-whitespace"
         ],
+        "ordered-imports": true,
+        "prefer-template": true,
         "quotemark": [
             false,
             "double"
