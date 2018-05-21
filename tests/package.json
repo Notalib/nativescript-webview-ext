@@ -18,6 +18,7 @@
     "tns-core-modules": "~4.0.0"
   },
   "devDependencies": {
+    "@types/node": "^10.1.2",
     "babel-traverse": "6.9.0",
     "babel-types": "6.9.0",
     "babylon": "6.8.0",
@@ -25,6 +26,7 @@
     "lazy": "1.0.11",
     "nativescript-dev-typescript": "^0.7.1",
     "tns-platform-declarations": "~4.0.0",
+    "tslib": "^1.9.1",
     "tslint": "^5.10.0",
     "typescript": "~2.6.1"
   }

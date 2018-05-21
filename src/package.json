@@ -77,7 +77,7 @@
         "prettier": "^1.12.1",
         "prompt": "^1.0.0",
         "rimraf": "^2.6.2",
-        "tns-core-modules": "~4.0.0",
+        "tns-core-modules": "^4.0.1",
         "tns-platform-declarations": "~4.0.0",
         "tslint": "^5.0.0",
         "typescript": "~2.6.0"
