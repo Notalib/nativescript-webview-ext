@@ -6,7 +6,7 @@ export * from "tns-core-modules/ui//core/view";
 
 export const srcProperty = new Property<WebViewExtBase, string>({ name: "src" });
 export const autoInjectJSBridgeProperty = new Property<WebViewExtBase, boolean>({ name: "autoInjectJSBridge", defaultValue: true });
-export const debugProperty = new Property<WebViewExtBase, boolean>({ name: "debugMode", defaultValue: false });
+export const debugModeProperty = new Property<WebViewExtBase, boolean>({ name: "debugMode", defaultValue: false });
 
 export interface LoadJavaScriptResource {
     resourceName: string;
@@ -307,7 +307,7 @@ export class WebViewExtBase extends View {
         }
     }
 
-    [debugProperty.getDefault]() {
+    [debugModeProperty.getDefault]() {
         return false;
     }
 
@@ -604,6 +604,11 @@ export class WebViewExtBase extends View {
         });
     }
 
+    protected ensurePromiseSupport() {
+        this.writeTrace('WebViewExt<common>.ensurePromiseSupport() - dummy');
+        return Promise.resolve();
+    }
+
     /**
      * Generate scriptcode for loading javascript-file.
      */
@@ -624,6 +629,7 @@ export class WebViewExtBase extends View {
     public injectWebViewBridge() {
         return webViewBridgeJsCodePromise
             .then((webViewInterfaceJsCode) => this.executeJavaScript(webViewInterfaceJsCode, false))
+            .then(() => this.ensurePromiseSupport())
             .then(() => this.loadJavaScriptFiles(this.autoInjectScriptFiles))
             .then(() => this.loadStyleSheetFiles(this.autoInjectStyleSheetFiles))
             .then(() => this.executePromises(this.autoInjectJavaScriptBlocks.map((data) => data.scriptCode), -1));
@@ -726,4 +732,4 @@ export interface WebViewExtBase {
 
 srcProperty.register(WebViewExtBase);
 autoInjectJSBridgeProperty.register(WebViewExtBase);
-debugProperty.register(WebViewExtBase);
+debugModeProperty.register(WebViewExtBase);

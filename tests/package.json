@@ -1,4 +1,5 @@
 {
+  "private": true,
   "description": "NativeScript Application",
   "license": "SEE LICENSE IN <your-license-filename>",
   "readme": "NativeScript Application",
@@ -14,8 +15,9 @@
   },
   "dependencies": {
     "@nota/nativescript-webview-ext": "file:../src",
-    "nativescript-tslib": "^1.8.1-beta.4",
-    "tns-core-modules": "~4.0.0"
+    "nativescript-tslib": "^1.9.1-beta.1",
+    "tns-core-modules": "~4.0.0",
+    "url": "^0.11.0"
   },
   "devDependencies": {
     "@types/node": "^10.1.2",
@@ -26,6 +28,7 @@
     "lazy": "1.0.11",
     "nativescript-dev-typescript": "^0.7.1",
     "tns-platform-declarations": "~4.0.0",
+    "ts-node": "^6.0.3",
     "tslib": "^1.9.1",
     "tslint": "^5.10.0",
     "typescript": "~2.6.1"

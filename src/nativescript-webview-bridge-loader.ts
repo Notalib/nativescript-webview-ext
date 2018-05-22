@@ -11,3 +11,17 @@ if (global.TNS_WEBPACK) {
 }
 
 export { webViewBridgeJsCodePromise };
+
+let promisePolyfillJsCodePromise: Promise<string>;
+
+if (global.TNS_WEBPACK) {
+  promisePolyfillJsCodePromise = Promise.resolve(require('raw-loader!./www/promise-polyfill.js'));
+} else {
+  const { knownFolders } = require( "tns-core-modules/file-system");
+
+  promisePolyfillJsCodePromise = knownFolders.currentApp()
+    .getFile('tns_modules/@nota/nativescript-webview-ext/www/promise-polyfill.js')
+    .readText();
+}
+
+export { promisePolyfillJsCodePromise };

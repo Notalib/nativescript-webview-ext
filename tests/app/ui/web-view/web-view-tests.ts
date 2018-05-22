@@ -8,6 +8,9 @@ import * as webViewModule from "@nota/nativescript-webview-ext";
 import * as trace from 'tns-core-modules/trace';
 trace.setCategories('NOTA');
 
+import { Color } from 'tns-core-modules/color';
+import * as url from 'url';
+
 // >> declare-webview-xml
 //  <Page>
 //       {%raw%}<WebView src="{{ someUrl | pathToLocalFile | htmlString }}" />{%endraw%}
@@ -60,7 +63,7 @@ export class WebViewTest extends testModule.UITest<webViewModule.WebViewExt> {
 
     public create(): webViewModule.WebViewExt {
         // >> declare-webview
-        let webView = new webViewModule.WebViewExt();
+        const webView = new webViewModule.WebViewExt();
         // << declare-webview
         return webView;
     }
@@ -68,20 +71,14 @@ export class WebViewTest extends testModule.UITest<webViewModule.WebViewExt> {
     public testLoadExistingUrl(done) {
         const webView = this.testView;
 
+        const targetSrc = "https://github.com/";
+
         // >> webview-url
         webView.on(webViewModule.WebViewExt.loadFinishedEvent, (args: webViewModule.LoadEventData) => {
-            let message;
-            if (!args.error) {
-                message = `WebView finished loading ${args.url}`;
-            }
-            else {
-                message = `Error loading ${args.url}: ${args.error}`;
-            }
-
             // >> (hide)
             try {
                 TKUnit.assertNull(args.error, args.error);
-                TKUnit.assertEqual(args.url, "https://github.com/", "args.url");
+                TKUnit.assertDeepEqual(url.parse(args.url), url.parse(targetSrc), "args.url");
                 done(null);
             }
             catch (e) {
@@ -90,29 +87,22 @@ export class WebViewTest extends testModule.UITest<webViewModule.WebViewExt> {
 
             // << (hide)
         });
-        webView.src = "https://github.com/";
+        webView.src = targetSrc;
         // << webview-url
     }
 
     public async testLoadExistingUrlWithPromise(done) {
         const webView = this.testView;
 
-        const src = "https://github.com/";
-        try {
-            const args = await webView.loadUrl(src);
+        const targetSrc = "https://github.com/";
 
-            let message;
-            if (!args.error) {
-                message = `WebView finished loading ${args.url}`;
-            }
-            else {
-                message = `Error loading ${args.url}: ${args.error}`;
-            }
+        try {
+            const args = await webView.loadUrl(targetSrc);
 
             // >> (hide)
             try {
                 TKUnit.assertNull(args.error, args.error);
-                TKUnit.assertEqual(args.url, src, "args.url");
+                TKUnit.assertDeepEqual(url.parse(args.url), url.parse(targetSrc), "args.url");
                 done(null);
             }
             catch (e) {
@@ -139,21 +129,13 @@ export class WebViewTest extends testModule.UITest<webViewModule.WebViewExt> {
 
             try {
                 TKUnit.assertNull(args.error, args.error);
-                TKUnit.assertEqual(actualTitle, expectedTitle, `File ${targetSrc} not loaded properly.`);
+                TKUnit.assertEqual(actualTitle, expectedTitle, `File "${targetSrc}" not loaded properly.`);
                 done(null);
             }
             catch (e) {
                 done(e);
             }
             // << (hide)
-
-            let message;
-            if (!args.error) {
-                message = `WebView finished loading ${args.url}`;
-            }
-            else {
-                message = `Error loading ${args.url}: ${args.error}`;
-            }
         });
         webView.src = targetSrc;
         // << webview-localfile
@@ -162,28 +144,22 @@ export class WebViewTest extends testModule.UITest<webViewModule.WebViewExt> {
     public testLoadLocalFileWithSpaceInPath(done) {
         const webview = this.testView;
 
+        const targetSrc = "~/ui/web-view/test with spaces.html";
         webview.on(webViewModule.WebViewExt.loadFinishedEvent, async (args: webViewModule.LoadEventData) => {
             const actualTitle = await webview.getTitle();
             const expectedTitle = 'MyTitle';
 
             try {
                 TKUnit.assertNull(args.error, args.error);
-                TKUnit.assertEqual(actualTitle, expectedTitle, "File ~/ui/web-view/test.html not loaded properly.");
+                TKUnit.assertEqual(actualTitle, expectedTitle, `File "${targetSrc}" not loaded properly.`);
                 done(null);
             }
             catch (e) {
                 done(e);
             }
-
-            let message;
-            if (!args.error) {
-                message = `WebView finished loading ${args.url}`;
-            }
-            else {
-                message = `Error loading ${args.url}: ${args.error}`;
-            }
         });
-        webview.src = "~/ui/web-view/test with spaces.html";
+
+        webview.src = targetSrc;
     }
 
     public testLoadHTMLString(done) {
@@ -204,14 +180,6 @@ export class WebViewTest extends testModule.UITest<webViewModule.WebViewExt> {
                 done(e);
             }
             // << (hide)
-
-            let message;
-            if (!args.error) {
-                message = `WebView finished loading ${args.url}`;
-            }
-            else {
-                message = `Error loading ${args.url}: ${args.error}`;
-            }
         });
         webview.src = '<!DOCTYPE html><html><head><title>MyTitle</title><meta charset="utf-8" /></head><body><span style="color:red">TestÖ</span></body></html>';
         // << webview-string
@@ -237,14 +205,6 @@ export class WebViewTest extends testModule.UITest<webViewModule.WebViewExt> {
                 done(e);
             }
             // << (hide)
-
-            let message;
-            if (!args.error) {
-                message = `WebView finished loading ${args.url}`;
-            }
-            else {
-                message = `Error loading ${args.url}: ${args.error}`;
-            }
         } catch (err) {
             done(err);
         }
@@ -273,14 +233,6 @@ export class WebViewTest extends testModule.UITest<webViewModule.WebViewExt> {
                 done(e);
             }
             // << (hide)
-
-            let message;
-            if (!args.error) {
-                message = `WebView finished loading ${args.url}`;
-            }
-            else {
-                message = `Error loading ${args.url}: ${args.error}`;
-            }
         });
         webview.src = emptyHTMLXLocalSource;
         // << webview-x-localfile
@@ -308,14 +260,6 @@ export class WebViewTest extends testModule.UITest<webViewModule.WebViewExt> {
                 done(e);
             }
             // << (hide)
-
-            let message;
-            if (!args.error) {
-                message = `WebView finished loading ${args.url}`;
-            }
-            else {
-                message = `Error loading ${args.url}: ${args.error}`;
-            }
         } catch (err) {
             done(err);
         }
@@ -325,7 +269,7 @@ export class WebViewTest extends testModule.UITest<webViewModule.WebViewExt> {
     public testInjectFilesPredefinedStyleSheetLink(done) {
         const webview = this.testView;
 
-        const expectedRedColor = 'rgb(0, 128, 0)';
+        const expectedRedColor = new Color('rgb(0, 128, 0)');
 
         webview.registerLocalResource(localStyleSheetCssNAME, localStyleSheetCssFile);
 
@@ -342,21 +286,13 @@ export class WebViewTest extends testModule.UITest<webViewModule.WebViewExt> {
 
                 const styles = await webview.executeJavaScript<any>(jsGetElementStyleSheet);
                 TKUnit.assertNotNull(styles, `Couldn't load styles`);
-                TKUnit.assertEqual(styles.color, expectedRedColor, `div.red isn't red`);
+                TKUnit.assertEqual(new Color(styles.color).hex, expectedRedColor.hex, `div.red isn't red`);
                 done(null);
             }
             catch (e) {
                 done(e);
             }
             // << (hide)
-
-            let message;
-            if (!args.error) {
-                message = `WebView finished loading ${args.url}`;
-            }
-            else {
-                message = `Error loading ${args.url}: ${args.error}`;
-            }
         });
         webview.src = cssPreDefinedlinkFile;
         // << webview-x-local-predefined-link
@@ -365,7 +301,7 @@ export class WebViewTest extends testModule.UITest<webViewModule.WebViewExt> {
     public testInjectFilesStyleSheetLink(done) {
         const webview = this.testView;
 
-        const expectedRedColor = 'rgb(0, 128, 0)';
+        const expectedRedColor = new Color('rgb(0, 128, 0)');
 
         webview.registerLocalResource(localStyleSheetCssNAME, localStyleSheetCssFile);
 
@@ -384,21 +320,13 @@ export class WebViewTest extends testModule.UITest<webViewModule.WebViewExt> {
 
                 const styles = await webview.executeJavaScript<any>(jsGetElementStyleSheet);
                 TKUnit.assertNotNull(styles, `Couldn't load styles`);
-                TKUnit.assertEqual(styles.color, expectedRedColor, `div.red isn't red`);
+                TKUnit.assertEqual(new Color(styles.color).hex, expectedRedColor.hex, `div.red isn't red`);
                 done(null);
             }
             catch (e) {
                 done(e);
             }
             // << (hide)
-
-            let message;
-            if (!args.error) {
-                message = `WebView finished loading ${args.url}`;
-            }
-            else {
-                message = `Error loading ${args.url}: ${args.error}`;
-            }
         });
         webview.src = cssNotPredefinedFile;
         // << webview-x-local-inject-once
@@ -429,14 +357,6 @@ export class WebViewTest extends testModule.UITest<webViewModule.WebViewExt> {
                 done(e);
             }
             // << (hide)
-
-            let message;
-            if (!args.error) {
-                message = `WebView finished loading ${args.url}`;
-            }
-            else {
-                message = `Error loading ${args.url}: ${args.error}`;
-            }
         });
         webview.src = javascriptCallsXLocalFile;
         // << webview-x-local-inject-once
@@ -471,14 +391,6 @@ export class WebViewTest extends testModule.UITest<webViewModule.WebViewExt> {
                 done(e);
             }
             // << (hide)
-
-            let message;
-            if (!args.error) {
-                message = `WebView finished loading ${args.url}`;
-            }
-            else {
-                message = `Error loading ${args.url}: ${args.error}`;
-            }
         });
 
         webview.src = targetSrc;
@@ -524,14 +436,6 @@ export class WebViewTest extends testModule.UITest<webViewModule.WebViewExt> {
                 done(e);
             }
             // << (hide)
-
-            let message;
-            if (!args.error) {
-                message = `WebView finished loading ${args.url}`;
-            }
-            else {
-                message = `Error loading ${args.url}: ${args.error}`;
-            }
         });
 
         webview.src = javascriptCallsFile;
@@ -607,14 +511,6 @@ export class WebViewTest extends testModule.UITest<webViewModule.WebViewExt> {
                 done(e);
             }
             // << (hide)
-
-            let message;
-            if (!args.error) {
-                message = `WebView finished loading ${args.url}`;
-            }
-            else {
-                message = `Error loading ${args.url}: ${args.error}`;
-            }
         });
 
         webview.src = javascriptCallsFile;
@@ -658,14 +554,6 @@ export class WebViewTest extends testModule.UITest<webViewModule.WebViewExt> {
             }
 
             // << (hide)
-
-            let message;
-            if (!args.error) {
-                message = `WebView finished loading ${args.url}`;
-            }
-            else {
-                message = `Error loading ${args.url}: ${args.error}`;
-            }
         });
 
         webview.src = javascriptCallsFile;
@@ -686,7 +574,7 @@ export class WebViewTest extends testModule.UITest<webViewModule.WebViewExt> {
         // >> webview-x-localfile
         try {
             webview.autoExecuteJavaScript(`new Promise(function(resolve) {
-                console.log('FIRST_PROMISE');
+                // console.log('FIRST_PROMISE');
                 window.nsWebViewBridge.emit("tns-message", ${JSON.stringify(expectedMessage)});
 
                 setTimeout(resolve, 50);
@@ -695,7 +583,7 @@ export class WebViewTest extends testModule.UITest<webViewModule.WebViewExt> {
             });`, 'tns-message');
 
             webview.autoExecuteJavaScript(`new Promise(function(resolve, reject) {
-                console.log('SECOND_PROMISE: ' + !!window.firstPromiseResolved);
+                // console.log('SECOND_PROMISE: ' + !!window.firstPromiseResolved);
                 if (!window.firstPromiseResolved) {
                     reject(new Error('First promise not resolved'));
                     return;
@@ -706,7 +594,7 @@ export class WebViewTest extends testModule.UITest<webViewModule.WebViewExt> {
             });`, 'tns-message-2');
 
             webview.autoExecuteJavaScript(`new Promise(function(resolve, reject) {
-                console.log('THIRD_PROMISE: ' + !!window.secondPromiseResolved);
+                // console.log('THIRD_PROMISE: ' + !!window.secondPromiseResolved);
                 if (!window.secondPromiseResolved) {
                     reject(new Error('Second promise not resolved'));
                     return;
@@ -739,7 +627,7 @@ export class WebViewTest extends testModule.UITest<webViewModule.WebViewExt> {
         webview.on(webViewModule.WebViewExt.loadFinishedEvent, (args: webViewModule.LoadEventData) => {
             try {
                 TKUnit.assertNull(args.error, args.error);
-                TKUnit.assertEqual(args.url, targetSrc.toLowerCase(), "args.url");
+                TKUnit.assertDeepEqual(url.parse(args.url), url.parse(targetSrc), "args.url");
                 done(null);
             }
             catch (e) {
