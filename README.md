@@ -34,7 +34,6 @@ Supports Android 19+ and iOS9+.
     * BuiltInZoomControls? and SupportZoom?
     * DOM Storage?
     * User agent?
-    * 
 
 #### iOS
 * Optionas for native scrolllView.

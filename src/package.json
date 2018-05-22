@@ -1,6 +1,6 @@
 {
     "name": "@nota/nativescript-webview-ext",
-    "version": "0.3.2",
+    "version": "0.3.3",
     "description": "Extended WebView for NativeScript which adds 'x-local' scheme for local-files. events between WebView and native-layer, javascript execution, injecting CSS and JS-files.",
     "main": "webview-ext",
     "typings": "webview-ext.d.ts",
@@ -18,7 +18,7 @@
     },
     "scripts": {
         "tsc": "tsc -skipLibCheck",
-        "build": "npm i && npm-run-all build:polyfill build:webview-bridge tsc",
+        "build": "npm i && npm-run-all build:webview-bridge build:polyfill tsc",
         "build:polyfill": "cp ./node_modules/promise-polyfill/dist/polyfill.min.js ./www/promise-polyfill.js",
         "build:webview-bridge": "export WWW_OUTDIR=$PWD/www; cd $(git rev-parse --show-toplevel)/www-src && npm i && npm run build -- --outDir ${WWW_OUTDIR}",
         "build:webview-bridge:watch": "npm run build:webview-bridge -- -w",
