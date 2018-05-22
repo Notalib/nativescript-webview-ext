@@ -212,7 +212,7 @@ export function runAll(testSelector?: string) {
         }
     }
 
-    console.log(`TESTS: ${singleModuleName || ''} ${singleTestName || ''}`);
+    TKUnit.write(`TESTS: ${singleModuleName || ''} ${singleTestName || ''}`);
 
     const totalSuccess = 0;
     const totalFailed: Array<TKUnit.TestFailure> = [];

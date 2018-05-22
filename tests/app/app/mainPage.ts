@@ -3,7 +3,6 @@ import { Page } from "tns-core-modules/ui/page";
 import * as tests from "../testRunner";
 
 trace.enable();
-trace.addCategories(trace.categories.Test + "," + trace.categories.Error);
 
 // When debugging
 // trace.setCategories(trace.categories.concat(

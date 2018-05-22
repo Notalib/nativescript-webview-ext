@@ -23,6 +23,9 @@ const sdkVersion = parseInt(platform.device.sdkVersion);
 
 trace.enable();
 
+const env = require('./environment.json');
+console.log(env);
+
 export interface TestInfoEntry {
     testFunc: () => void;
     instance: Object;
@@ -45,7 +48,7 @@ export function time(): number {
 
 export function write(message: string, type?: number) {
     //console.log(message);
-    trace.write(message, trace.categories.Test, type);
+    trace.write(`${env.testUUID || ''} ${message}`.trim(), trace.categories.Test, type);
 }
 
 function runTest(testInfo: TestInfoEntry) {
