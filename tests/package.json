@@ -15,6 +15,7 @@
   },
   "dependencies": {
     "@nota/nativescript-webview-ext": "file:../src",
+    "nativescript-exit": "^1.0.1",
     "nativescript-tslib": "^1.9.1-beta.1",
     "tns-core-modules": "~4.0.0",
     "url": "^0.11.0"
@@ -27,6 +28,7 @@
     "filewalker": "0.1.2",
     "lazy": "1.0.11",
     "nativescript-dev-typescript": "^0.7.1",
+    "nativescript-environment": "file:tools/hooks",
     "tns-platform-declarations": "~4.0.0",
     "ts-node": "^6.0.3",
     "tslib": "^1.9.1",

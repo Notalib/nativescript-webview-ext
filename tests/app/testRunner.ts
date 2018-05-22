@@ -1,4 +1,5 @@
-﻿/* tslint:disable */
+﻿/* tslint:disable:ordered-imports */
+/* tslint:disable:prefer-template */
 import * as TKUnit from "./TKUnit";
 import { _resetRootView, getRootView } from "tns-core-modules/application";
 import { messageType } from "tns-core-modules/trace";
@@ -12,6 +13,9 @@ import "./ui-test";
 import * as fs from "tns-core-modules/file-system";
 import { unsetValue } from "tns-core-modules/ui/core/properties";
 import { ad } from "tns-core-modules/utils/utils";
+import { exit } from 'nativescript-exit';
+
+const env = require('./environment.json');
 
 Frame.defaultAnimatedNavigation = false;
 
@@ -26,7 +30,7 @@ export function isRunningOnEmulator(): boolean {
             android.os.Build.PRODUCT.toLocaleLowerCase().indexOf("emulator") > -1; // VS Emulator
     }
     else if (platform.device.os === platform.platformNames.ios) {
-        //return platform.device.model === "iPhone Simulator";
+        // return platform.device.model === "iPhone Simulator";
         return (__dirname.search("Simulator") > -1);
     } else {
         throw new Error('Unsupported platform');
@@ -40,22 +44,18 @@ allTests["WEB-VIEW"] = webViewTests;
 
 const testsSuitesWithLongDelay = {
     HTTP: 15 * 1000,
-}
+};
 
 const testsWithLongDelay = {
     testLocation: 10000,
     testLocationOnce: 10000,
     testLocationOnceMaximumAge: 10000,
-    //web-view-tests
+    // web-view-tests
     testLoadExistingUrl: 10000 * 5,
     testLoadLocalFile: 10000 * 5,
     testLoadInvalidUrl: 10000,
     testLoadUpperCaseSrc: 10000 * 5,
-    test_SettingImageSrc: 30 * 1000,
-    test_ChainingAnimations: 30 * 1000,
-    test_AnimatingProperties: 30 * 1000,
-    test_AnimateBackgroundColor_FromString: 10 * 1000
-}
+};
 
 let startTime;
 let running = false;
@@ -103,7 +103,11 @@ function printRunTestStats() {
     // DO NOT CHANGE THE FIRST ROW! Used as an indicator for test run pass detection.
     TKUnit.write(`Tests EOF!`, messageType.info);
 
-    showReportPage(finalMessage);
+    if (env.ci) {
+        exit();
+    } else {
+        showReportPage(finalMessage);
+    }
 }
 
 function generateTestFile(allTests: TestInfo[]) {
@@ -114,10 +118,10 @@ function generateTestFile(allTests: TestInfo[]) {
         let testName = testCase.testName;
         let duration = (testCase.duration / 1000).toFixed(2);
 
-        testCases.push(`<testcase classname="${platform.device.os}" name="${testName}" time="${duration}">`)
+        testCases.push(`<testcase classname="${platform.device.os}" name="${testName}" time="${duration}">`);
         if (!testCase.isPassed) {
             failedTestCount++;
-            testCases.push(`<failure type="exceptions.AssertionError"><![CDATA[${testCase.errorMessage}]]></failure>`)
+            testCases.push(`<failure type="exceptions.AssertionError"><![CDATA[${testCase.errorMessage}]]></failure>`);
         }
         testCases.push(`</testcase>`);
     });
@@ -178,7 +182,7 @@ function log(): void {
     TKUnit.write(testsName + " COMPLETED for " + duration.toFixed(2) + " BACKSTACK DEPTH: " + topmost().backStack.length, messageType.info);
 }
 
-let testsSelector: string
+let testsSelector: string;
 export function runAll(testSelector?: string) {
     testsSelector = testSelector;
     if (running) {
@@ -235,7 +239,7 @@ export function runAll(testSelector?: string) {
             }
 
             const testFunction = test[testName];
-            if ((typeof (testFunction) === "function") && (testName.substring(0, 4) == "test")) {
+            if ((typeof (testFunction) === "function") && (testName.substring(0, 4) === "test")) {
                 if (test.setUp) {
                     testsQueue.push(new TestInfo(test.setUp, test));
                 }

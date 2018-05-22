@@ -3,8 +3,20 @@ import * as bm from "tns-core-modules/ui/button";
 import * as listViewDef from "tns-core-modules/ui/list-view";
 import * as pages from "tns-core-modules/ui/page";
 import * as tests from "../testRunner";
+
+const env = require('./environment.json');
+
+const traceCategories = [
+    trace.categories.Test,
+    trace.categories.Error,
+];
+
+if (!env.ci) {
+    traceCategories.push("NOTA");
+}
+
 trace.enable();
-trace.addCategories(trace.categories.Test + "," + trace.categories.Error);
+trace.addCategories(traceCategories.join(","));
 
 export function createPage() {
     let data: string[] = [""];

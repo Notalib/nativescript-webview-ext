@@ -5,9 +5,6 @@ import * as testModule from "../../ui-test";
 import * as webViewModule from "@nota/nativescript-webview-ext";
 // << webview-require
 
-import * as trace from 'tns-core-modules/trace';
-trace.setCategories('NOTA');
-
 import { Color } from 'tns-core-modules/color';
 import * as url from 'url';
 

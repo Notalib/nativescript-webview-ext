@@ -1,4 +1,5 @@
-﻿import 'nativescript-tslib';
+﻿/* tslint:disable:prefer-template */
+import 'nativescript-tslib';
 
 let start;
 if (typeof NSDate !== "undefined") {
