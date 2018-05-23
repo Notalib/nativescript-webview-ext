@@ -8,6 +8,12 @@ export const srcProperty = new Property<WebViewExtBase, string>({ name: "src" })
 export const autoInjectJSBridgeProperty = new Property<WebViewExtBase, boolean>({ name: "autoInjectJSBridge", defaultValue: true });
 export const debugModeProperty = new Property<WebViewExtBase, boolean>({ name: "debugMode", defaultValue: false });
 
+export enum EventNames {
+    LoadFinished = 'loadFinished',
+    LoadStarted = 'loadStarted',
+    ShouldOverrideUrlLoading = 'shouldOverideUrlLoading',
+}
+
 export interface LoadJavaScriptResource {
     resourceName: string;
     filepath: string;
@@ -28,6 +34,8 @@ export interface InjectExecuteJavaScript {
  * Event data containing information for the loading events of a WebView.
  */
 export interface LoadEventData extends EventData {
+    object: WebViewExtBase;
+
     /**
      * Gets the url of the web-view.
      */
@@ -41,15 +49,22 @@ export interface LoadEventData extends EventData {
     /**
      * Gets the error (if any).
      */
-    error: string;
+    error?: string;
 }
 
 export interface LoadStartedEventData extends LoadEventData {
-    eventName: 'loadStarted';
+    eventName: EventNames.LoadStarted;
 }
 
 export interface LoadFinishedEventData extends LoadEventData {
-    eventName: 'loadFinished';
+    eventName: EventNames.LoadFinished;
+}
+
+export interface ShouldOverideUrlLoadEventData extends LoadEventData {
+    eventName: EventNames.ShouldOverrideUrlLoading;
+
+    /** Flip this to true in your callback, if you want to cancel the url-loading */
+    cancel?: boolean;
 }
 
 /**
@@ -63,13 +78,6 @@ export interface WebViewEventData extends EventData {
  * Represents navigation type
  */
 export type NavigationType = "linkClicked" | "formSubmitted" | "backForward" | "reload" | "formResubmitted" | "other" | void;
-
-/**
- * Callback function for override URL loading.
- * @param url - url to be loaded in the WebView
- * @return boolean - true to prevent url from being loaded.
- */
-export type urlOverrideHandlerFn = (url: String) => boolean;
 
 export class UnsupportSDKError extends Error {
     constructor(minSdk: number) {
@@ -98,12 +106,21 @@ export class WebViewExtBase extends View {
     /**
      * String value used when hooking to loadStarted event.
      */
-    public static readonly loadStartedEvent: 'loadStarted' = "loadStarted";
+    public static get loadStartedEvent() {
+        return EventNames.LoadStarted;
+    }
 
     /**
      * String value used when hooking to loadFinished event.
      */
-    public static readonly loadFinishedEvent: 'loadFinished' = "loadFinished";
+    public static get loadFinishedEvent() {
+        return EventNames.LoadFinished;
+    }
+
+    /** String value used when hooking to shouldOverideUrlLoading event */
+    public static get shouldOverrideUrlLoadingEvent() {
+        return EventNames.ShouldOverrideUrlLoading;
+    }
 
     /**
      * iOS <11 uses a UIWebview
@@ -137,18 +154,20 @@ export class WebViewExtBase extends View {
      */
     protected autoInjectStyleSheetFiles = [] as LoadStyleSheetResource[];
 
+    /** List of code blocks to be executed after JS-files and CSS-files have been loaded. */
     protected autoInjectJavaScriptBlocks = [] as InjectExecuteJavaScript[];
 
-    protected _tmpStopLoading = false;
+    /** Prevent this.src loading changes from the webview's onLoadFinished-event */
+    protected tempSuspendSrcLoading = false;
 
     public _onLoadFinished(url: string, error?: string): Promise<LoadFinishedEventData> {
         if (!error) {
             try {
-                this._tmpStopLoading = true;
+                this.tempSuspendSrcLoading = true;
                 this.src = url;
-                this._tmpStopLoading = false;
+                this.tempSuspendSrcLoading = false;
             } finally {
-                this._tmpStopLoading = false;
+                this.tempSuspendSrcLoading = false;
             }
         }
 
@@ -183,15 +202,27 @@ export class WebViewExtBase extends View {
     }
 
     public _onLoadStarted(url: string, navigationType?: NavigationType) {
-        let args = <LoadStartedEventData>{
+        const args = {
             eventName: WebViewExtBase.loadStartedEvent,
             object: this,
-            url: url,
-            navigationType: navigationType,
-            error: undefined
-        };
+            url,
+            navigationType,
+        } as LoadStartedEventData;
 
         this.notify(args);
+    }
+
+    public _onShouldOverrideUrlLoading(url: string, navigationType?: NavigationType) {
+        const args = {
+            eventName: WebViewExtBase.shouldOverrideUrlLoadingEvent,
+            object: this,
+            url,
+            navigationType,
+        } as ShouldOverideUrlLoadEventData;
+
+        this.notify(args);
+
+        return args.cancel;
     }
 
     public _loadUrl(src: string): void {
@@ -244,17 +275,12 @@ export class WebViewExtBase extends View {
         throw new Error("Method not implemented.");
     }
 
-    /**
-     * Set callback function to overriding URL loading in the WebView. If the function returns true, the URL will not be loaded by the WebView.
-     */
-    public urlOverrideHandler: urlOverrideHandlerFn;
-
     [srcProperty.getDefault](): string {
         return "";
     }
 
     [srcProperty.setNative](src: string) {
-        if (!src || this._tmpStopLoading) {
+        if (!src || this.tempSuspendSrcLoading) {
             return;
         }
         const originSrc = src;
@@ -720,14 +746,20 @@ export interface WebViewExtBase {
     on(eventNames: string, callback: (data: WebViewEventData) => void, thisArg?: any);
 
     /**
-     * Raised when a loadFinished event occurs.
+     * Raised before the webview requests an URL.
+     * Can be cancelled by settings args.cancel = true in your event handler.
      */
-    on(event: "loadFinished", callback: (args: LoadFinishedEventData) => void, thisArg?: any);
+    on(event: EventNames.ShouldOverrideUrlLoading, callback: (args: ShouldOverideUrlLoadEventData) => void, thisArg?: any);
 
     /**
      * Raised when a loadStarted event occurs.
      */
-    on(event: "loadStarted", callback: (args: LoadStartedEventData) => void, thisArg?: any);
+    on(event: EventNames.LoadStarted, callback: (args: LoadStartedEventData) => void, thisArg?: any);
+
+    /**
+     * Raised when a loadFinished event occurs.
+     */
+    on(event: EventNames.LoadFinished, callback: (args: LoadFinishedEventData) => void, thisArg?: any);
 }
 
 srcProperty.register(WebViewExtBase);

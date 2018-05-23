@@ -26,12 +26,6 @@ export class WKNavigationDelegateImpl extends NSObject implements WKNavigationDe
             return;
         }
 
-        const urlOverrideHandlerFn = owner.urlOverrideHandler;
-        if (urlOverrideHandlerFn && urlOverrideHandlerFn(url) === true) {
-            decisionHandler(WKNavigationActionPolicy.Cancel);
-            return;
-        }
-
         let navType: NavigationType = "other";
 
         switch (navigationAction.navigationType) {
@@ -59,6 +53,12 @@ export class WKNavigationDelegateImpl extends NSObject implements WKNavigationDe
                 navType = "other";
                 break;
             }
+        }
+        const shouldOverrideUrlLoad = owner._onShouldOverrideUrlLoading(url, navType);
+        if (shouldOverrideUrlLoad === true) {
+            owner.writeTrace(`WKNavigationDelegateClass.webViewDecidePolicyForNavigationActionDecisionHandler("${url}", "${navigationAction.navigationType}") -> "${navType}" -> cancel`);
+            decisionHandler(WKNavigationActionPolicy.Cancel);
+            return;
         }
         decisionHandler(WKNavigationActionPolicy.Allow);
 

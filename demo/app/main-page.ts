@@ -1,4 +1,4 @@
-import { WebViewExt } from '@nota/nativescript-webview-ext';
+import { LoadEventData, LoadFinishedEventData, ShouldOverideUrlLoadEventData, WebViewExt } from '@nota/nativescript-webview-ext';
 import * as _ from 'lodash';
 import * as observable from 'tns-core-modules/data/observable';
 import { isAndroid } from 'tns-core-modules/platform';
@@ -15,23 +15,27 @@ export function pageLoaded(args: observable.EventData) {
 }
 
 let gotMessageData: any = null;
-export function webviewLoaded(args: observable.EventData) {
-    webview = args.object as WebViewExt;
+export function webviewLoaded(args: LoadEventData) {
+    webview = args.object;
 
     if (isAndroid) {
         webview.src = 'http://10.0.2.2:8080';
-
-        (<any>android.webkit.WebView).setWebContentsDebuggingEnabled(true);
     } else {
         webview.src = 'http://localhost:8080';
     }
 
-    webview.on(WebViewExt.loadFinishedEvent, (args) => {
-        console.log('WebViewExt.loadFinishedEvent: ' + (<any>args.object).src);
+    webview.on(WebViewExt.shouldOverrideUrlLoadingEvent, (args: ShouldOverideUrlLoadEventData) => {
+        if (args.url.indexOf('google.com') !== -1) {
+            args.cancel = true;
+        }
+    });
+
+    webview.on(WebViewExt.loadFinishedEvent, (args: LoadFinishedEventData) => {
+        console.log(`WebViewExt.loadFinishedEvent: ${args.url}`);
         webview.loadStyleSheetFile('local-stylesheet.css', '~/assets/test-data/css/local-stylesheet.css', false);
     });
 
-    webview.on('gotMessage', (msg: any) => {
+    webview.on('gotMessage', (msg) => {
         gotMessageData = msg.data;
         console.log(`webview.gotMessage: ${JSON.stringify(msg.data)} (${typeof msg})`);
     });

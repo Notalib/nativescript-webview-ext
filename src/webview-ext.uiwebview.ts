@@ -52,20 +52,21 @@ export class UIWebViewDelegateImpl extends NSObject implements UIWebViewDelegate
             }
         }
 
-        const absoluteUrl = request.URL.absoluteString;
-        owner.writeTrace(`UIWebViewDelegateClass.webViewShouldStartLoadWithRequestNavigationType("${absoluteUrl}", "${navigationType}")`);
-        if (absoluteUrl.startsWith("js2ios:")) {
-            owner.writeTrace(`UIWebViewDelegateClass.webViewShouldStartLoadWithRequestNavigationType("${absoluteUrl}", "${navigationType}") -> onUIWebViewEvent`);
-            owner.onUIWebViewEvent(absoluteUrl);
+        const url = request.URL.absoluteString;
+        owner.writeTrace(`UIWebViewDelegateClass.webViewShouldStartLoadWithRequestNavigationType("${url}", "${navigationType}")`);
+        if (url.startsWith("js2ios:")) {
+            owner.writeTrace(`UIWebViewDelegateClass.webViewShouldStartLoadWithRequestNavigationType("${url}", "${navigationType}") -> onUIWebViewEvent`);
+            owner.onUIWebViewEvent(url);
             return false;
         }
 
-        const urlOverrideHandlerFn = owner.urlOverrideHandler;
-        if (urlOverrideHandlerFn && urlOverrideHandlerFn(absoluteUrl) === true) {
-            owner.writeTrace(`UIWebViewDelegateClass.webViewShouldStartLoadWithRequestNavigationType("${absoluteUrl}", "${navigationType}") - urlOverrideHandler`);
+        const shouldOverrideUrlLoad = owner._onShouldOverrideUrlLoading(url);
+        if (shouldOverrideUrlLoad === true) {
+            owner.writeTrace(`UIWebViewDelegateClass.webViewShouldStartLoadWithRequestNavigationType("${url}", "${navigationType}") - cancel`);
             return false;
         }
-        owner._onLoadStarted(request.URL.absoluteString, navType);
+
+        owner._onLoadStarted(url, navType);
 
         return true;
     }

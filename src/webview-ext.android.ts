@@ -73,20 +73,34 @@ function initializeWebViewClient(): void {
             }
 
             let url = request as string;
+            let method = 'GET';
+            let isRedirect = false;
+            let hasGesture = false;
+            let isForMainFrame = false;
+            let requestHeaders: java.util.Map<string, string> | null = null;
             if (typeof request === 'object') {
+                method = request.getMethod();
+                isRedirect = request.isRedirect();
+                hasGesture = request.hasGesture();
+                isForMainFrame = request.isForMainFrame();
+                requestHeaders = request.getRequestHeaders();
+
                 url = request.getUrl().toString();
             }
 
+            owner.writeTrace(`WebViewClientClass.shouldOverrideUrlLoading("${url}") - method:${method} isRedirect:${isRedirect} hasGesture:${hasGesture} isForMainFrame:${isForMainFrame} headers:${requestHeaders}`);
+
             if (url.startsWith(owner.interceptScheme)) {
+                owner.writeTrace(`WebViewClientClass.shouldOverrideUrlLoading("${url}") - "${owner.interceptScheme}" - cancel`);
                 return true;
             }
 
-            const urlOverrideHandlerFn = owner.urlOverrideHandler;
-            if (urlOverrideHandlerFn && urlOverrideHandlerFn(url) === true) {
+            const shouldOverrideUrlLoad = method === 'GET' && owner._onShouldOverrideUrlLoading(url);
+            if (shouldOverrideUrlLoad === true) {
+                owner.writeTrace(`WebViewClientClass.shouldOverrideUrlLoading("${url}") - cancel loading url`);
                 return true;
             }
 
-            owner.writeTrace(`WebViewClientClass.shouldOverrideUrlLoading("${url}")`);
             return false;
         }
 
@@ -154,8 +168,8 @@ function initializeWebViewClient(): void {
             if (!owner) {
                 return;
             }
-            owner.writeTrace(`WebViewClientClass.onPageStarted("${url}", "${favicon}")`);
 
+            owner.writeTrace(`WebViewClientClass.onPageStarted("${url}", "${favicon}")`);
             owner._onLoadStarted(url);
         }
 

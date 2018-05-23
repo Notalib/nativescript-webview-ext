@@ -90,6 +90,13 @@ The custom `NSURLProtocol` used with UIWebView is shared with all instances of t
 | executePromise(scriptCode: string, timeout: number = 500) | Run a promise inside the webview. *Note:* Executing scriptCode must return a promise. |
 | getTitle() | Returns a promise with the current document title. |
 
+## Events
+| Event | Description |
+| --- | --- |
+| 'shouldOverideUrlLoading' | Raised before the webview requests an URL. Can cancelled by setting args.cancel = true in the `ShouldOverideUrlLoadEventData` |
+| 'loadStarted' | Raised when a loadStarted event occurs. args is an `LoadStartedEventData` |
+| 'loadFinished' | Raised when a loadFinished event occurs. args is an `LoadFinishedEventData` |
+
 ### WebView
 
 | Function | Description |
