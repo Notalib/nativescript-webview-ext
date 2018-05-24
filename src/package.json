@@ -1,6 +1,6 @@
 {
     "name": "@nota/nativescript-webview-ext",
-    "version": "0.3.3",
+    "version": "0.4.0",
     "description": "Extended WebView for NativeScript which adds 'x-local' scheme for local-files. events between WebView and native-layer, javascript execution, injecting CSS and JS-files.",
     "main": "webview-ext",
     "typings": "webview-ext.d.ts",
