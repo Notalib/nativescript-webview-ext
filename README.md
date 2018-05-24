@@ -19,28 +19,6 @@ Supports Android 19+ and iOS9+.
     * Android 19+
     * iOS 9+
 
-### Possible features to come:
-
-* Cookie helpers
-* Setting view-port metadata
-* Share cache with native-layer?
-
-### Android
-* Settings
-    * Cache mode?
-    * AllowFileAccess?
-    * AllowFileAccessFromFileURLs?
-    * AppCache and AppCAchePath?
-    * BuiltInZoomControls? and SupportZoom?
-    * DOM Storage?
-    * User agent?
-
-#### iOS
-* Optionas for native scrolllView.
-* Disable/Enable scroll bounce.
-* UIWebView? scalesPageToFit.
-
-
 ## Installation
 
 Describe your plugin installation steps. Ideally it would be something like:
@@ -90,6 +68,13 @@ The custom `NSURLProtocol` used with UIWebView is shared with all instances of t
 | executePromise(scriptCode: string, timeout: number = 500) | Run a promise inside the webview. *Note:* Executing scriptCode must return a promise. |
 | getTitle() | Returns a promise with the current document title. |
 
+## Events
+| Event | Description |
+| --- | --- |
+| 'shouldOverideUrlLoading' | Raised before the webview requests an URL. Can cancelled by setting args.cancel = true in the `ShouldOverideUrlLoadEventData` |
+| 'loadStarted' | Raised when a loadStarted event occurs. args is an `LoadStartedEventData` |
+| 'loadFinished' | Raised when a loadFinished event occurs. args is an `LoadFinishedEventData` |
+
 ### WebView
 
 | Function | Description |
@@ -97,6 +82,27 @@ The custom `NSURLProtocol` used with UIWebView is shared with all instances of t
 | window.nsWebViewBridge.on(eventName: string, cb: (data: any) => void) | Registers handlers for events from the native layer. |
 | window.nsWebViewBridge.off(eventName: string, cb?: (data: any) => void) | Deregister handlers for events from the native layer. |
 | window.nsWebViewBridge.emit(eventName: string, data: any) | Emits event to NativeScript layer. Will be emitted on the WebViewExt as any other event, data will be a part of the WebViewEventData-object |
+
+## Possible features to come:
+
+* Cookie helpers
+* Setting view-port metadata
+* Share cache with native-layer?
+
+### Android
+* Settings
+    * Cache mode?
+    * AllowFileAccess?
+    * AllowFileAccessFromFileURLs?
+    * AppCache and AppCAchePath?
+    * BuiltInZoomControls? and SupportZoom?
+    * DOM Storage?
+    * User agent?
+
+#### iOS
+* Optionas for native scrolllView.
+* Disable/Enable scroll bounce.
+* UIWebView? scalesPageToFit.
 
 ## License
 

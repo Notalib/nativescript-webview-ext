@@ -7,28 +7,24 @@ export class WKNavigationDelegateImpl extends NSObject implements WKNavigationDe
     public static ObjCProtocols = [WKNavigationDelegate];
     public static initWithOwner(owner: WeakRef<WebViewExtBase>): WKNavigationDelegateImpl {
         const handler = <WKNavigationDelegateImpl>WKNavigationDelegateImpl.new();
-        handler._owner = owner;
+        handler.owner = owner;
         return handler;
     }
-    private _owner: WeakRef<WebViewExtBase>;
+
+    private owner: WeakRef<WebViewExtBase>;
 
     public webViewDecidePolicyForNavigationActionDecisionHandler(webView: WKWebView, navigationAction: WKNavigationAction, decisionHandler: any): void {
-        const owner = this._owner.get();
-
+        const owner = this.owner.get();
         if (!owner) {
             decisionHandler(WKNavigationActionPolicy.Cancel);
             return;
         }
 
-        const url = navigationAction.request.URL && navigationAction.request.URL.absoluteString;
+        const request = navigationAction.request;
+        const httpMethod = request.HTTPMethod;
+        const url = request.URL && request.URL.absoluteString;
         owner.writeTrace(`webViewDecidePolicyForNavigationActionDecisionHandler: "${url}"`);
         if (!url) {
-            return;
-        }
-
-        const urlOverrideHandlerFn = owner.urlOverrideHandler;
-        if (urlOverrideHandlerFn && urlOverrideHandlerFn(url) === true) {
-            decisionHandler(WKNavigationActionPolicy.Cancel);
             return;
         }
 
@@ -60,22 +56,30 @@ export class WKNavigationDelegateImpl extends NSObject implements WKNavigationDe
                 break;
             }
         }
+
+        const shouldOverrideUrlLoading = owner._onShouldOverrideUrlLoading(url, httpMethod, navType);
+        if (shouldOverrideUrlLoading === true) {
+            owner.writeTrace(`WKNavigationDelegateClass.webViewDecidePolicyForNavigationActionDecisionHandler("${url}", "${navigationAction.navigationType}") -> method:${httpMethod} "${navType}" -> cancel`);
+            decisionHandler(WKNavigationActionPolicy.Cancel);
+            return;
+        }
         decisionHandler(WKNavigationActionPolicy.Allow);
 
-        owner.writeTrace(`WKNavigationDelegateClass.webViewDecidePolicyForNavigationActionDecisionHandler("${url}", "${navigationAction.navigationType}") -> "${navType}"`);
-        owner._onLoadStarted(navigationAction.request.URL.absoluteString, navType);
+        owner.writeTrace(`WKNavigationDelegateClass.webViewDecidePolicyForNavigationActionDecisionHandler("${url}", "${navigationAction.navigationType}") -> method:${httpMethod} "${navType}"`);
+        owner._onLoadStarted(url, navType);
     }
 
     public webViewDidStartProvisionalNavigation(webView: WKWebView, navigation: WKNavigation): void {
-        const owner = this._owner.get();
+        const owner = this.owner.get();
         if (!owner) {
             return;
         }
-            owner.writeTrace(`WKNavigationDelegateClass.webViewDidStartProvisionalNavigation("${webView.URL}")`);
+
+        owner.writeTrace(`WKNavigationDelegateClass.webViewDidStartProvisionalNavigation("${webView.URL}")`);
     }
 
     public webViewDidFinishNavigation(webView: WKWebView, navigation: WKNavigation): void {
-        const owner = this._owner.get();
+        const owner = this.owner.get();
         if (!owner) {
             return;
         }
@@ -89,7 +93,7 @@ export class WKNavigationDelegateImpl extends NSObject implements WKNavigationDe
     }
 
     public webViewDidFailNavigationWithError(webView: WKWebView, navigation: WKNavigation, error: NSError): void {
-        const owner = this._owner.get();
+        const owner = this.owner.get();
         if (!owner) {
             return;
         }
@@ -106,16 +110,16 @@ export class WKNavigationDelegateImpl extends NSObject implements WKNavigationDe
 export class WKScriptMessageHandlerImpl extends NSObject implements WKScriptMessageHandler {
     public static ObjCProtocols = [WKScriptMessageHandler];
 
-    private _owner: WeakRef<WebViewExtBase>;
+    private owner: WeakRef<WebViewExtBase>;
 
     public static initWithOwner(owner: WeakRef<WebViewExtBase>): WKScriptMessageHandlerImpl {
         const delegate = <WKScriptMessageHandlerImpl>WKScriptMessageHandlerImpl.new();
-        delegate._owner = owner;
+        delegate.owner = owner;
         return delegate;
     }
 
     public userContentControllerDidReceiveScriptMessage(userContentController: WKUserContentController, webViewMessage: WKScriptMessage) {
-        const owner = this._owner.get();
+        const owner = this.owner.get();
         if (!owner) {
             return;
         }

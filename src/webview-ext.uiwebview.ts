@@ -5,16 +5,16 @@ import { NavigationType, WebViewExtBase } from "./webview-ext-common";
 export class UIWebViewDelegateImpl extends NSObject implements UIWebViewDelegate {
     public static ObjCProtocols = [UIWebViewDelegate];
 
-    private _owner: WeakRef<WebViewExtBase>;
+    private owner: WeakRef<WebViewExtBase>;
 
     public static initWithOwner(owner: WeakRef<WebViewExtBase>): UIWebViewDelegateImpl {
-        let delegate = <UIWebViewDelegateImpl>UIWebViewDelegateImpl.new();
-        delegate._owner = owner;
+        const delegate = <UIWebViewDelegateImpl>UIWebViewDelegateImpl.new();
+        delegate.owner = owner;
         return delegate;
     }
 
     public webViewShouldStartLoadWithRequestNavigationType(webView: UIWebView, request: NSURLRequest, navigationType: number) {
-        const owner = this._owner.get();
+        const owner = this.owner.get();
         if (!owner) {
             return true;
         }
@@ -22,6 +22,8 @@ export class UIWebViewDelegateImpl extends NSObject implements UIWebViewDelegate
         if (!request.URL) {
             return true;
         }
+
+        const httpMethod = request.HTTPMethod;
 
         let navType: NavigationType = "other";
 
@@ -52,20 +54,21 @@ export class UIWebViewDelegateImpl extends NSObject implements UIWebViewDelegate
             }
         }
 
-        const absoluteUrl = request.URL.absoluteString;
-        owner.writeTrace(`UIWebViewDelegateClass.webViewShouldStartLoadWithRequestNavigationType("${absoluteUrl}", "${navigationType}")`);
-        if (absoluteUrl.startsWith("js2ios:")) {
-            owner.writeTrace(`UIWebViewDelegateClass.webViewShouldStartLoadWithRequestNavigationType("${absoluteUrl}", "${navigationType}") -> onUIWebViewEvent`);
-            owner.onUIWebViewEvent(absoluteUrl);
+        const url = request.URL.absoluteString;
+        owner.writeTrace(`UIWebViewDelegateClass.webViewShouldStartLoadWithRequestNavigationType("${url}", "${navigationType}")`);
+        if (url.startsWith("js2ios:")) {
+            owner.writeTrace(`UIWebViewDelegateClass.webViewShouldStartLoadWithRequestNavigationType("${url}", "${navigationType}") -> onUIWebViewEvent`);
+            owner.onUIWebViewEvent(url);
             return false;
         }
 
-        const urlOverrideHandlerFn = owner.urlOverrideHandler;
-        if (urlOverrideHandlerFn && urlOverrideHandlerFn(absoluteUrl) === true) {
-            owner.writeTrace(`UIWebViewDelegateClass.webViewShouldStartLoadWithRequestNavigationType("${absoluteUrl}", "${navigationType}") - urlOverrideHandler`);
+        const shouldOverrideUrlLoading = owner._onShouldOverrideUrlLoading(url, httpMethod, navType);
+        if (shouldOverrideUrlLoading === true) {
+            owner.writeTrace(`UIWebViewDelegateClass.webViewShouldStartLoadWithRequestNavigationType("${url}", "${navigationType}") - cancel`);
             return false;
         }
-        owner._onLoadStarted(request.URL.absoluteString, navType);
+
+        owner._onLoadStarted(url, navType);
 
         return true;
     }
@@ -73,7 +76,7 @@ export class UIWebViewDelegateImpl extends NSObject implements UIWebViewDelegate
     public uiWebViewJSNavigation = false;
 
     public webViewDidStartLoad(webView: UIWebView) {
-        const owner = this._owner.get();
+        const owner = this.owner.get();
         if (!owner) {
             return;
         }
@@ -82,7 +85,7 @@ export class UIWebViewDelegateImpl extends NSObject implements UIWebViewDelegate
     }
 
     public webViewDidFinishLoad(webView: UIWebView) {
-        const owner = this._owner.get();
+        const owner = this.owner.get();
         if (!owner) {
             return;
         }
@@ -96,7 +99,7 @@ export class UIWebViewDelegateImpl extends NSObject implements UIWebViewDelegate
     }
 
     public webViewDidFailLoadWithError(webView: UIWebView, error: NSError) {
-        const owner = this._owner.get();
+        const owner = this.owner.get();
         if (!owner) {
             return;
         }
