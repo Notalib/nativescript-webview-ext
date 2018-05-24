@@ -35,7 +35,7 @@ module.exports = function($projectData) {
     oldData = fs.readFileSync(config, 'UTF-8');
   }
 
-  const dataJSON = JSON.stringify(options, null, 2);
+  const dataJSON = JSON.stringify(options || {}, null, 2);
   if (oldData && oldData === dataJSON) {
     return Promise.resolve();
   }

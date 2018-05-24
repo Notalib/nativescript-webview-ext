@@ -93,16 +93,30 @@ export class WebViewExt extends WebViewExtBase {
     }
 
     public executeJavaScript<T>(scriptCode: string, stringifyResult = true): Promise<T> {
+        scriptCode = scriptCode.trim();
+
         if (stringifyResult) {
             scriptCode = `
-            var result = ${scriptCode.trim()};
+                (function(window) {
+                    var result = null;
 
-            try {
-                JSON.stringify(result);
-            } catch (err) {
-                result;
-            }
-            `;
+                    try {
+                        result = ${scriptCode.trim()};
+                    } catch (err) {
+                        return JSON.stringify({
+                            error: true,
+                            message: err.message,
+                            stack: err.stack
+                        });
+                    }
+
+                    try {
+                        return JSON.stringify(result);
+                    } catch (err) {
+                        return result;
+                    }
+                })(window);
+            `.trim();
         }
 
         return new Promise((resolve, reject) => {
@@ -123,7 +137,17 @@ export class WebViewExt extends WebViewExtBase {
                 }
             }
         })
-        .then((result): T => this.parseWebViewJavascriptResult(result));
+        .then((result): T => this.parseWebViewJavascriptResult(result))
+        .then((result) => {
+            const r = result as any;
+            if (r && typeof r === 'object' && r.error) {
+                const error = new Error(r.message);
+                (error as any).webStack = r.stack;
+                return Promise.reject(error);
+            }
+
+            return Promise.resolve(result);
+        });
     }
 
     @profile
