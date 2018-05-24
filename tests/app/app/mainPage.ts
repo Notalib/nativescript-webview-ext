@@ -1,18 +1,5 @@
-﻿import * as trace from "tns-core-modules/trace";
-import { Page } from "tns-core-modules/ui/page";
+﻿import { Page } from "tns-core-modules/ui/page";
 import * as tests from "../testRunner";
-
-trace.enable();
-
-// When debugging
-// trace.setCategories(trace.categories.concat(
-//    trace.categories.Test,
-//    trace.categories.Navigation,
-//    trace.categories.Transition,
-//    trace.categories.NativeLifecycle,
-//    trace.categories.ViewHierarchy,
-//    trace.categories.VisualTreeEvents
-// ));
 
 function runTests() {
     setTimeout(() => tests.runAll(''), 10);

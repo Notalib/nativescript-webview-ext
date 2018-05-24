@@ -1,21 +1,44 @@
-﻿/* tslint:disable:ordered-imports */
-/* tslint:disable:prefer-template */
-import * as TKUnit from "./TKUnit";
+﻿/* tslint:disable:prefer-template */
+import { exit } from 'nativescript-exit';
 import { _resetRootView, getRootView } from "tns-core-modules/application";
+import * as fs from "tns-core-modules/file-system";
+import * as platform from "tns-core-modules/platform";
+import * as trace from "tns-core-modules/trace";
 import { messageType } from "tns-core-modules/trace";
-import { topmost, Frame, NavigationEntry } from "tns-core-modules/ui/frame";
+import { Button } from "tns-core-modules/ui/button";
+import { unsetValue } from "tns-core-modules/ui/core/properties";
+import { Frame, NavigationEntry, topmost } from "tns-core-modules/ui/frame";
+import { StackLayout } from "tns-core-modules/ui/layouts/stack-layout";
 import { Page } from "tns-core-modules/ui/page";
 import { TextView } from "tns-core-modules/ui/text-view";
-import { Button } from "tns-core-modules/ui/button";
-import { StackLayout } from "tns-core-modules/ui/layouts/stack-layout";
-import * as platform from "tns-core-modules/platform";
-import "./ui-test";
-import * as fs from "tns-core-modules/file-system";
-import { unsetValue } from "tns-core-modules/ui/core/properties";
 import { ad } from "tns-core-modules/utils/utils";
-import { exit } from 'nativescript-exit';
+
+import * as TKUnit from "./TKUnit";
+import "./ui-test";
+
+// When debugging
+// trace.setCategories(trace.categories.concat(
+//    trace.categories.Test,
+//    trace.categories.Navigation,
+//    trace.categories.Transition,
+//    trace.categories.NativeLifecycle,
+//    trace.categories.ViewHierarchy,
+//    trace.categories.VisualTreeEvents
+// ));
 
 const env = require('./environment.json');
+
+const traceCategories = [
+    trace.categories.Test,
+    trace.categories.Error,
+];
+
+if (!env.ci) {
+    traceCategories.push("NOTA");
+}
+
+trace.enable();
+trace.addCategories(traceCategories.join(","));
 
 Frame.defaultAnimatedNavigation = false;
 
