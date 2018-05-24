@@ -73,13 +73,13 @@ function initializeWebViewClient(): void {
             }
 
             let url = request as string;
-            let method = 'GET';
+            let httpMethod = 'GET';
             let isRedirect = false;
             let hasGesture = false;
             let isForMainFrame = false;
             let requestHeaders: java.util.Map<string, string> | null = null;
             if (typeof request === 'object') {
-                method = request.getMethod();
+                httpMethod = request.getMethod();
                 isRedirect = request.isRedirect();
                 hasGesture = request.hasGesture();
                 isForMainFrame = request.isForMainFrame();
@@ -88,15 +88,15 @@ function initializeWebViewClient(): void {
                 url = request.getUrl().toString();
             }
 
-            owner.writeTrace(`WebViewClientClass.shouldOverrideUrlLoading("${url}") - method:${method} isRedirect:${isRedirect} hasGesture:${hasGesture} isForMainFrame:${isForMainFrame} headers:${requestHeaders}`);
+            owner.writeTrace(`WebViewClientClass.shouldOverrideUrlLoading("${url}") - method:${httpMethod} isRedirect:${isRedirect} hasGesture:${hasGesture} isForMainFrame:${isForMainFrame} headers:${requestHeaders}`);
 
             if (url.startsWith(owner.interceptScheme)) {
                 owner.writeTrace(`WebViewClientClass.shouldOverrideUrlLoading("${url}") - "${owner.interceptScheme}" - cancel`);
                 return true;
             }
 
-            const shouldOverrideUrlLoad = method === 'GET' && owner._onShouldOverrideUrlLoading(url);
-            if (shouldOverrideUrlLoad === true) {
+            const shouldOverrideUrlLoading = owner._onShouldOverrideUrlLoading(url, httpMethod);
+            if (shouldOverrideUrlLoading === true) {
                 owner.writeTrace(`WebViewClientClass.shouldOverrideUrlLoading("${url}") - cancel loading url`);
                 return true;
             }

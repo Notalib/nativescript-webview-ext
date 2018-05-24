@@ -25,6 +25,8 @@ export function webviewLoaded(args: LoadEventData) {
     }
 
     webview.on(WebViewExt.shouldOverrideUrlLoadingEvent, (args: ShouldOverideUrlLoadEventData) => {
+        console.log(args.url);
+        console.log(args.httpMethod);
         if (args.url.indexOf('google.com') !== -1) {
             args.cancel = true;
         }

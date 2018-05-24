@@ -44,7 +44,7 @@ export interface LoadEventData extends EventData {
     /**
      * Gets the navigation type of the web-view.
      */
-    navigationType: NavigationType;
+    navigationType?: NavigationType;
 
     /**
      * Gets the error (if any).
@@ -62,6 +62,8 @@ export interface LoadFinishedEventData extends LoadEventData {
 
 export interface ShouldOverideUrlLoadEventData extends LoadEventData {
     eventName: EventNames.ShouldOverrideUrlLoading;
+
+    httpMethod: string;
 
     /** Flip this to true in your callback, if you want to cancel the url-loading */
     cancel?: boolean;
@@ -172,11 +174,11 @@ export class WebViewExtBase extends View {
         }
 
         const args = {
+            error,
             eventName: WebViewExtBase.loadFinishedEvent,
+            navigationType: undefined,
             object: this,
             url,
-            navigationType: undefined,
-            error,
         } as LoadFinishedEventData;
 
         if (error) {
@@ -204,20 +206,21 @@ export class WebViewExtBase extends View {
     public _onLoadStarted(url: string, navigationType?: NavigationType) {
         const args = {
             eventName: WebViewExtBase.loadStartedEvent,
+            navigationType,
             object: this,
             url,
-            navigationType,
         } as LoadStartedEventData;
 
         this.notify(args);
     }
 
-    public _onShouldOverrideUrlLoading(url: string, navigationType?: NavigationType) {
+    public _onShouldOverrideUrlLoading(url: string, httpMethod: string, navigationType?: NavigationType) {
         const args = {
             eventName: WebViewExtBase.shouldOverrideUrlLoadingEvent,
+            httpMethod,
+            navigationType,
             object: this,
             url,
-            navigationType,
         } as ShouldOverideUrlLoadEventData;
 
         this.notify(args);

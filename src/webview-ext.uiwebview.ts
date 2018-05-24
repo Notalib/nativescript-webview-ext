@@ -5,16 +5,16 @@ import { NavigationType, WebViewExtBase } from "./webview-ext-common";
 export class UIWebViewDelegateImpl extends NSObject implements UIWebViewDelegate {
     public static ObjCProtocols = [UIWebViewDelegate];
 
-    private _owner: WeakRef<WebViewExtBase>;
+    private owner: WeakRef<WebViewExtBase>;
 
     public static initWithOwner(owner: WeakRef<WebViewExtBase>): UIWebViewDelegateImpl {
-        let delegate = <UIWebViewDelegateImpl>UIWebViewDelegateImpl.new();
-        delegate._owner = owner;
+        const delegate = <UIWebViewDelegateImpl>UIWebViewDelegateImpl.new();
+        delegate.owner = owner;
         return delegate;
     }
 
     public webViewShouldStartLoadWithRequestNavigationType(webView: UIWebView, request: NSURLRequest, navigationType: number) {
-        const owner = this._owner.get();
+        const owner = this.owner.get();
         if (!owner) {
             return true;
         }
@@ -22,6 +22,8 @@ export class UIWebViewDelegateImpl extends NSObject implements UIWebViewDelegate
         if (!request.URL) {
             return true;
         }
+
+        const httpMethod = request.HTTPMethod;
 
         let navType: NavigationType = "other";
 
@@ -60,8 +62,8 @@ export class UIWebViewDelegateImpl extends NSObject implements UIWebViewDelegate
             return false;
         }
 
-        const shouldOverrideUrlLoad = owner._onShouldOverrideUrlLoading(url);
-        if (shouldOverrideUrlLoad === true) {
+        const shouldOverrideUrlLoading = owner._onShouldOverrideUrlLoading(url, httpMethod, navType);
+        if (shouldOverrideUrlLoading === true) {
             owner.writeTrace(`UIWebViewDelegateClass.webViewShouldStartLoadWithRequestNavigationType("${url}", "${navigationType}") - cancel`);
             return false;
         }
@@ -74,7 +76,7 @@ export class UIWebViewDelegateImpl extends NSObject implements UIWebViewDelegate
     public uiWebViewJSNavigation = false;
 
     public webViewDidStartLoad(webView: UIWebView) {
-        const owner = this._owner.get();
+        const owner = this.owner.get();
         if (!owner) {
             return;
         }
@@ -83,7 +85,7 @@ export class UIWebViewDelegateImpl extends NSObject implements UIWebViewDelegate
     }
 
     public webViewDidFinishLoad(webView: UIWebView) {
-        const owner = this._owner.get();
+        const owner = this.owner.get();
         if (!owner) {
             return;
         }
@@ -97,7 +99,7 @@ export class UIWebViewDelegateImpl extends NSObject implements UIWebViewDelegate
     }
 
     public webViewDidFailLoadWithError(webView: UIWebView, error: NSError) {
-        const owner = this._owner.get();
+        const owner = this.owner.get();
         if (!owner) {
             return;
         }
