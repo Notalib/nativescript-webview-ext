@@ -32,7 +32,7 @@ export class UITest<T extends View> implements trace.TraceWriter {
     }
 
     public create(): T {
-        throw new Error(this + " should implement Create method.");
+        throw new Error(`${this} should implement Create method.`);
     }
 
     public setUpModule(): void {

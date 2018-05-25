@@ -567,11 +567,11 @@ export class WebViewExtBase extends View {
         const reqId = `${Math.round(Math.random() * 1000)}`;
         const eventName = `tmp-promise-event-${reqId}`;
 
-        const scriptHeader = `(function() {
+        const scriptHeader = `
             var promises = [];
             var p = Promise.resolve();
             var i = 0;
-        `;
+        `.trim();
 
         const scriptBody = [] as string[];
 
@@ -581,27 +581,30 @@ export class WebViewExtBase extends View {
                     return ${scriptCode.trim()};
                 });
                 promises.push(p);
-            `);
+            `.trim());
         }
 
         const scriptFooter = `
             return Promise.all(promises);
-        })()`;
+        `.trim();
 
-        const scriptCode = `${scriptHeader}
-        ${scriptBody.join(';')}
-        ${scriptFooter}`;
-        const trimmedScriptCode = scriptCode.trim();
+        const scriptCode = `(function() {
+            ${scriptHeader}
+            ${scriptBody.join(';')}
+            ${scriptFooter}
+        })()`.trim();
 
         const promiseScriptCode = `
-            var eventName = ${JSON.stringify(eventName)};
-            try {
-                var promise = (function() {return ${trimmedScriptCode}})();
-                window.nsWebViewBridge.executePromise(promise, eventName);
-            } catch (err) {
-                window.nsWebViewBridge.emitError(err, eventName);
-            }
-        `;
+            (function() {
+                var eventName = ${JSON.stringify(eventName)};
+                try {
+                    var promise = (function() {return ${scriptCode}})();
+                    window.nsWebViewBridge.executePromise(promise, eventName);
+                } catch (err) {
+                    window.nsWebViewBridge.emitError(err, eventName);
+                }
+            })();
+        `.trim();
 
         return new Promise<T>((resolve, reject) => {
             let timer: any;

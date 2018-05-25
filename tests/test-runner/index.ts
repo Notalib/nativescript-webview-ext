@@ -1,6 +1,8 @@
+import * as byline from 'byline';
 import * as cp from 'child_process';
 import 'tslib';
 import * as util from 'util';
+import * as uuid from 'uuid';
 
 export interface IOSSimulatorInstance {
   state: string;
@@ -74,7 +76,6 @@ function listAndroidEmulators() {
 
   return output;
 }
-console.log(listAndroidEmulators());
 
 function parseAndroidDevice(deviceStr: string) {
   const nameKey = 'Name:';
@@ -113,3 +114,121 @@ function parseAndroidDevice(deviceStr: string) {
     },
   };
 }
+
+function runAndroidTest() {
+  const emulators = listAndroidEmulators();
+
+  const testUUID = uuid.v4();
+  return new Promise((resolve, reject) => {
+    const tnsCommand = cp.exec(`tns run android --device ${emulators[0].udid} --env.ci --env.testUUID=${testUUID}`);
+    const testLines = [] as string[];
+
+    let testsOk: number;
+    let testsFailed: number;
+    let duration: number;
+
+    const allTestsCompletedStr = '=== ALL TESTS COMPLETE ===';
+    const endAllTestsCompletedStr = '=== END OF TESTS ===';
+    const okFailedRegExp = /([0-9]+) OK, ([0-9]) failed/;
+    const durationRegExp = /DURATION: ([0-9]+(\.[0-9]+)) ms/;
+    const eofRegExp = /Tests EOF!/;
+    let gotAllTestsCompleted = false;
+
+    byline(tnsCommand.stdout).on('data', (line: string) => {
+      console.log(line);
+      if (line.indexOf(testUUID) === -1) {
+        return;
+      }
+
+      if (line.indexOf('app died, no saved state') !== -1) {
+        console.log({
+          testsOk,
+          testsFailed,
+          duration,
+          testLines,
+        });
+        tnsCommand.kill();
+        return;
+      }
+
+      const testLine = line.match(/Test: (.*)$/);
+      if (testLine && testLine[1]) {
+        testLines.push(testLine[1]);
+        if (eofRegExp.test(testLine[1])) {
+          tnsCommand.kill();
+          console.log({
+            testsOk,
+            testsFailed,
+            duration,
+            testLines,
+          });
+        }
+        return;
+      }
+
+      if (line.indexOf(allTestsCompletedStr) !== -1) {
+        gotAllTestsCompleted = true;
+        testLines.push(allTestsCompletedStr);
+        return;
+      }
+
+      if (line.indexOf(endAllTestsCompletedStr) !== -1) {
+        gotAllTestsCompleted = false;
+        testLines.push(endAllTestsCompletedStr);
+        return;
+      }
+
+      if (gotAllTestsCompleted) {
+        let m = line.match(okFailedRegExp);
+        if (m) {
+          testLines.push(m[0]);
+          testsOk = Number(m[1]);
+          testsFailed = Number(m[2]);
+          return;
+        }
+
+        m = line.match(durationRegExp);
+        if (m) {
+          testLines.push(m[0]);
+          duration = Number(m[1]);
+          return;
+        }
+      }
+    });
+
+    tnsCommand.on('error', (err) => {
+      reject(err);
+      tnsCommand.kill();
+    });
+
+    const finished = () => {
+      if (testsFailed > 0) {
+        reject({
+          testsOk,
+          testsFailed,
+          duration,
+          testLines,
+        });
+        return;
+      }
+      resolve({
+        testsOk,
+        testsFailed,
+        duration,
+      });
+    };
+
+    tnsCommand.on('disconnect', () => {
+      console.log('disconnect');
+      finished();
+    });
+    tnsCommand.on('close', () => {
+      console.log('close');
+      finished();
+    });
+  });
+}
+
+runAndroidTest()
+  .then((res) => console.log(res))
+  .catch((err) => console.error(err));
