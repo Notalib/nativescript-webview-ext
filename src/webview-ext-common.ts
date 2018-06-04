@@ -194,7 +194,7 @@ export class WebViewExtBase extends View {
             return this.injectWebViewBridge()
                 .then(() => args)
                 .catch((error) => {
-                    return {...args, error};
+                    return Object.assign({}, args, {error});
                 })
                 .then((args) => {
                     this.notify(args);
