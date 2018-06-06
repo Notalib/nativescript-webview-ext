@@ -350,6 +350,10 @@ export class WebViewExtBase extends View {
             filepath = fs.path.normalize(fs.knownFolders.currentApp().path + filepath.substr(1));
         }
 
+        if (filepath.startsWith('file://')) {
+            filepath = filepath.replace(/^file:\/\//, '');
+        }
+
         if (!fs.File.exists(filepath)) {
             console.error(`WebViewExt.resolveLocalResourceFilePath("${filepath}") - no such file`);
             return;

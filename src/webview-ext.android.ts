@@ -235,7 +235,12 @@ function initializeWebViewClient(): void {
                 return;
             }
 
-            owner.onWebViewEvent(eventName, JSON.parse(data));
+            try {
+                owner.onWebViewEvent(eventName, JSON.parse(data));
+                return;
+            } catch {
+            }
+            owner.onWebViewEvent(eventName, data);
         }
     }
 
