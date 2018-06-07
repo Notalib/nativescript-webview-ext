@@ -89,7 +89,7 @@ export class WKNavigationDelegateImpl extends NSObject implements WKNavigationDe
         if (webView.URL) {
             src = webView.URL.absoluteString;
         }
-        owner._onLoadFinished(src);
+        owner._onLoadFinished(src).catch(() => void 0);
     }
 
     public webViewDidFailNavigationWithError(webView: WKWebView, navigation: WKNavigation, error: NSError): void {
@@ -103,7 +103,7 @@ export class WKNavigationDelegateImpl extends NSObject implements WKNavigationDe
             src = webView.URL.absoluteString;
         }
         owner.writeTrace(`WKNavigationDelegateClass.webViewDidFailNavigationWithError("${error.localizedDescription}")`);
-        owner._onLoadFinished(src, error.localizedDescription);
+        owner._onLoadFinished(src, error.localizedDescription).catch(() => void 0);
     }
 }
 

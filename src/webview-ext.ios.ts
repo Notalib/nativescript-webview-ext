@@ -311,7 +311,7 @@ export class WebViewExt extends WebViewExtBase {
         try {
             const message = decodeURIComponent(url.replace(/^js2ios:/, ''));
             const { eventName, resId } = JSON.parse(message);
-            this.executeJavaScript(`window.nsWebViewBridge.getUIWebViewResponse(${JSON.stringify(resId)})`)
+            this.executeJavaScript<any>(`window.nsWebViewBridge.getUIWebViewResponse(${JSON.stringify(resId)})`)
                 .then((data) => {
                     this.onWebViewEvent(eventName, data);
                 })

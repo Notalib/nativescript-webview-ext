@@ -15,21 +15,17 @@ export declare namespace dk {
             class WebViewBridgeInterface extends java.lang.Object {
                 public owner?: WebViewExt;
 
-                emitEventToNativeScript(eventName: string, data: string): void;
+                public emitEventToNativeScript(eventName: string, data: string): void;
             }
         }
     }
 }
-export interface AndroidWebViewClient extends android.webkit.WebViewClient {
-    owner?: WebViewExt;
-}
-
-export interface AndroidWebView extends android.webkit.WebView {
-    client?: AndroidWebViewClient;
-    bridgeInterface?: dk.nota.webviewinterface.WebViewBridgeInterface;
-}
 
 const extToMimeType = new Map<string, string>([
+    ['html', 'text/html'],
+    ['htm', 'text/html'],
+    ['xhtml', 'text/html'],
+    ['xhtm', 'text/html'],
     ['css', 'text/css'],
     ['gif', 'image/gif'],
     ['jpeg', 'image/jpeg'],
@@ -51,6 +47,15 @@ const extToBinaryEncoding = new Set<string>([
 ]);
 
 //#region android_native_classes
+export interface AndroidWebViewClient extends android.webkit.WebViewClient {
+    owner?: WebViewExt;
+}
+
+export interface AndroidWebView extends android.webkit.WebView {
+    client?: AndroidWebViewClient;
+    bridgeInterface?: dk.nota.webviewinterface.WebViewBridgeInterface;
+}
+
 let WebViewExtClient: new () => AndroidWebViewClient;
 let WebViewBridgeInterface: new () => dk.nota.webviewinterface.WebViewBridgeInterface;
 function initializeWebViewClient(): void {
@@ -181,7 +186,7 @@ function initializeWebViewClient(): void {
             }
 
             owner.writeTrace(`WebViewClientClass.onPageFinished("${url}")`);
-            owner._onLoadFinished(url);
+            owner._onLoadFinished(url).catch(() => void 0);
         }
 
         public onReceivedError() {
@@ -201,10 +206,14 @@ function initializeWebViewClient(): void {
                 return;
             }
 
-            owner.writeTrace(`WebViewClientClass.onReceivedError(${error.getErrorCode()}, ${error.getDescription()}, ${error.getUrl && error.getUrl()})`);
+            let url = error.getUrl && error.getUrl();
+            if (!url && typeof request === 'object') {
+                url = request.getUrl().toString();
+            }
 
-            owner._onLoadFinished(error.getUrl && error.getUrl(), `${error.getDescription()}(${error.getErrorCode()})`);
+            owner.writeTrace(`WebViewClientClass.onReceivedErrorAPI23(${error.getErrorCode()}, ${error.getDescription()}, ${url})`);
 
+            owner._onLoadFinished(url, `${error.getDescription()}(${error.getErrorCode()})`).catch(() => void 0);
         }
 
         private onReceivedErrorBeforeAPI23(view: android.webkit.WebView, errorCode: number, description: string, failingUrl: string) {
@@ -212,10 +221,9 @@ function initializeWebViewClient(): void {
 
             const owner = this.owner;
             if (owner) {
-                owner.writeTrace(`WebViewClientClass.onReceivedError(${errorCode}, "${description}", "${failingUrl}")`);
-                owner._onLoadFinished(failingUrl, `${description}(${errorCode})`);
+                owner.writeTrace(`WebViewClientClass.onReceivedErrorBeforeAPI23(${errorCode}, "${description}", "${failingUrl}")`);
+                owner._onLoadFinished(failingUrl, `${description}(${errorCode})`).catch(() => void 0);
             }
-
         }
     }
 
@@ -229,7 +237,7 @@ function initializeWebViewClient(): void {
             return global.__native(this);
         }
 
-        emitEventToNativeScript(eventName: string, data: string) {
+        public emitEventToNativeScript(eventName: string, data: string) {
             const owner = this.owner;
             if (!owner) {
                 return;

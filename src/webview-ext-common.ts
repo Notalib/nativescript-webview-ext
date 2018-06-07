@@ -298,7 +298,7 @@ export class WebViewExtBase extends View {
                 this.writeTrace(`WebViewExt.src = "${originSrc}" x-local resolved to "${src}"`);
             } else {
                 this.writeTrace(`WebViewExt.src = "${originSrc}" x-local couldn't resolve to file`, traceMessageType.error);
-                this._onLoadFinished(src, 'unknown x-local-resource');
+                this._onLoadFinished(src, 'unknown x-local-resource').catch(() => void 0);
                 return;
             }
         }

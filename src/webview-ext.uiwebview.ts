@@ -95,7 +95,7 @@ export class UIWebViewDelegateImpl extends NSObject implements UIWebViewDelegate
         if (webView.request && webView.request.URL) {
             src = webView.request.URL.absoluteString;
         }
-        owner._onLoadFinished(src);
+        owner._onLoadFinished(src).catch(() => void 0);
     }
 
     public webViewDidFailLoadWithError(webView: UIWebView, error: NSError) {
@@ -110,6 +110,6 @@ export class UIWebViewDelegateImpl extends NSObject implements UIWebViewDelegate
         }
 
         owner.writeTrace(`UIWebViewDelegateClass.webViewDidFailLoadWithError("${error.localizedDescription}") url: "${src}"`);
-        owner._onLoadFinished(src, error.localizedDescription);
+        owner._onLoadFinished(src, error.localizedDescription).catch(() => void 0);
     }
 }
