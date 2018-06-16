@@ -3,7 +3,18 @@
 import * as fs from 'tns-core-modules/file-system';
 import * as platform from "tns-core-modules/platform";
 import { promisePolyfillJsCodePromise } from './nativescript-webview-bridge-loader';
-import { debugModeProperty, traceMessageType, UnsupportSDKError, WebViewExtBase } from "./webview-ext-common";
+import {
+    builtInZoomControlsProperty,
+    cacheModeProperty,
+    databaseStorageProperty,
+    debugModeProperty,
+    displayZoomControlsProperty,
+    domStorageProperty,
+    supportZoomProperty,
+    traceMessageType,
+    UnsupportSDKError,
+    WebViewExtBase,
+ } from "./webview-ext-common";
 
 export * from "./webview-ext-common";
 
@@ -46,7 +57,11 @@ const extToBinaryEncoding = new Set<string>([
     "ttf",
 ]);
 
+type CacheMode = 'default' | 'cache_first' | 'no_cache' | 'cache_only';
+
 //#region android_native_classes
+let cacheModeMap: Map<CacheMode, number>;
+
 export interface AndroidWebViewClient extends android.webkit.WebViewClient {
     owner?: WebViewExt;
 }
@@ -62,6 +77,13 @@ function initializeWebViewClient(): void {
     if (WebViewExtClient) {
         return;
     }
+
+    cacheModeMap = new Map<CacheMode, number>([
+        ['cache_first', android.webkit.WebSettings.LOAD_CACHE_ELSE_NETWORK],
+        ['cache_only', android.webkit.WebSettings.LOAD_CACHE_ONLY],
+        ['default', android.webkit.WebSettings.LOAD_DEFAULT],
+        ['no_cache', android.webkit.WebSettings.LOAD_NO_CACHE],
+    ]);
 
     class WebViewExtClientImpl extends android.webkit.WebViewClient {
         public owner: WebViewExt;
@@ -470,5 +492,77 @@ export class WebViewExt extends WebViewExtBase {
         if (androidSDK >= 19) {
             (android.webkit.WebView as any).setWebContentsDebuggingEnabled(!!value);
         }
+    }
+
+    [builtInZoomControlsProperty.getDefault]() {
+        const settings = this.nativeViewProtected.getSettings();
+        return settings.getBuiltInZoomControls();
+    }
+
+    [builtInZoomControlsProperty.setNative](enabled: boolean) {
+        const settings = this.nativeViewProtected.getSettings();
+        settings.setBuiltInZoomControls(enabled);
+    }
+
+    [displayZoomControlsProperty.getDefault]() {
+        const settings = this.nativeViewProtected.getSettings();
+        return settings.getDisplayZoomControls();
+    }
+
+    [displayZoomControlsProperty.setNative](enabled: boolean) {
+        const settings = this.nativeViewProtected.getSettings();
+        settings.setDisplayZoomControls(enabled);
+    }
+
+    [cacheModeProperty.getDefault](): CacheMode {
+        const settings = this.nativeViewProtected.getSettings();
+        const cacheModeInt = settings.getCacheMode();
+        for (const [key, value] of Array.from(cacheModeMap)) {
+            if (value === cacheModeInt) {
+                return key;
+            }
+        }
+
+        return null;
+    }
+
+    [cacheModeProperty.setNative](cacheMode: CacheMode) {
+        const settings = this.nativeViewProtected.getSettings();
+        for (const [key, value] of Array.from(cacheModeMap)) {
+            if (key === cacheMode) {
+                settings.setCacheMode(value);
+                return;
+            }
+        }
+    }
+
+    [databaseStorageProperty.getDefault]() {
+        const settings = this.nativeViewProtected.getSettings();
+        return settings.getDatabaseEnabled();
+    }
+
+    [databaseStorageProperty.setNative](enabled: boolean) {
+        const settings = this.nativeViewProtected.getSettings();
+        settings.setDatabaseEnabled(enabled);
+    }
+
+    [domStorageProperty.getDefault]() {
+        const settings = this.nativeViewProtected.getSettings();
+        return settings.getDomStorageEnabled();
+    }
+
+    [domStorageProperty.setNative](enabled: boolean) {
+        const settings = this.nativeViewProtected.getSettings();
+        settings.setDomStorageEnabled(enabled);
+    }
+
+    [supportZoomProperty.getDefault]() {
+        const settings = this.nativeViewProtected.getSettings();
+        return settings.supportZoom();
+    }
+
+    [supportZoomProperty.setNative](enabled: boolean) {
+        const settings = this.nativeViewProtected.getSettings();
+        settings.setSupportZoom(enabled);
     }
 }

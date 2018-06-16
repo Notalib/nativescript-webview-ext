@@ -4,9 +4,15 @@ import { webViewBridgeJsCodePromise } from "./nativescript-webview-bridge-loader
 
 export * from "tns-core-modules/ui//core/view";
 
-export const srcProperty = new Property<WebViewExtBase, string>({ name: "src" });
 export const autoInjectJSBridgeProperty = new Property<WebViewExtBase, boolean>({ name: "autoInjectJSBridge", defaultValue: true });
+export const builtInZoomControlsProperty = new Property<WebViewExtBase, boolean>({ name: "builtInZoomControls", defaultValue: false });
+export const cacheModeProperty = new Property<WebViewExtBase, string>({ name: "cacheMode", defaultValue: 'default' });
+export const databaseStorageProperty = new Property<WebViewExtBase, boolean>({ name: "databaseStorage", defaultValue: false });
+export const domStorageProperty = new Property<WebViewExtBase, boolean>({ name: "domStorage", defaultValue: false });
 export const debugModeProperty = new Property<WebViewExtBase, boolean>({ name: "debugMode", defaultValue: false });
+export const displayZoomControlsProperty = new Property<WebViewExtBase, boolean>({ name: "displayZoomControls", defaultValue: false });
+export const supportZoomProperty = new Property<WebViewExtBase, boolean>({ name: "supportZoom", defaultValue: false });
+export const srcProperty = new Property<WebViewExtBase, string>({ name: "src" });
 
 export enum EventNames {
     LoadFinished = 'loadFinished',
@@ -145,6 +151,16 @@ export class WebViewExtBase extends View {
     public autoInjectJSBridge = true;
 
     public debugMode: boolean;
+
+    public builtInZoomControls: boolean;
+
+    public displayZoomControls: boolean;
+
+    public databaseStorage: boolean;
+
+    public domStorage: boolean;
+
+    public supportZoom: boolean;
 
     /**
      * List of js-files to be auto injected on load finished
@@ -772,6 +788,12 @@ export interface WebViewExtBase {
     on(event: EventNames.LoadFinished, callback: (args: LoadFinishedEventData) => void, thisArg?: any);
 }
 
-srcProperty.register(WebViewExtBase);
 autoInjectJSBridgeProperty.register(WebViewExtBase);
+builtInZoomControlsProperty.register(WebViewExtBase);
+cacheModeProperty.register(WebViewExtBase);
+databaseStorageProperty.register(WebViewExtBase);
 debugModeProperty.register(WebViewExtBase);
+displayZoomControlsProperty.register(WebViewExtBase);
+domStorageProperty.register(WebViewExtBase);
+srcProperty.register(WebViewExtBase);
+supportZoomProperty.register(WebViewExtBase);
