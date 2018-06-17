@@ -1,4 +1,7 @@
 {
+  "[typescript]": {
+    "editor.formatOnSave": true
+  },
   "files.exclude": {
     "**/.git": true,
     "**/.svn": true,
@@ -18,8 +21,12 @@
     "**/src/webview-ext{-common,.android,.ios,.*webview}.d.ts": {
       "when": "$(basename).ts"
     },
+    "**/src/**/*.d.ts": {
+      "when": "$(basename).ts"
+    },
     "**/*.js": {
       "when": "$(basename).ts"
     },
+    "**/*.metadata.json": true
   }
 }

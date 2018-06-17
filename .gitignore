@@ -24,3 +24,5 @@ demo/report/stats.json
 package-lock.json
 typings
 tests/test-runner/index.d.ts
+**/*.metadata.json
+src/angular/index.d.ts

@@ -20,17 +20,6 @@ export * from "./webview-ext-common";
 
 const androidSDK = Number(platform.device.sdkVersion);
 
-// Minor extention of the Native interface to allow for owner
-declare namespace dk {
-    namespace nota {
-        namespace webviewinterface {
-            class WebViewBridgeInterface extends java.lang.Object {
-                public owner?: WebViewExt;
-            }
-        }
-    }
-}
-
 const extToMimeType = new Map<string, string>([
     ['html', 'text/html'],
     ['htm', 'text/html'],
@@ -60,6 +49,17 @@ type CacheMode = 'default' | 'cache_first' | 'no_cache' | 'cache_only';
 
 //#region android_native_classes
 let cacheModeMap: Map<CacheMode, number>;
+
+// Minor extention of the Native interface to allow for owner
+export declare namespace dk {
+    namespace nota {
+        namespace webviewinterface {
+            class WebViewBridgeInterface extends java.lang.Object {
+                public owner?: WebViewExt;
+            }
+        }
+    }
+}
 
 export interface AndroidWebViewClient extends android.webkit.WebViewClient {
     owner?: WebViewExt;
