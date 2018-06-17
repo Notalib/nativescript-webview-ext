@@ -254,6 +254,20 @@ export class WebViewExtBase extends View {
             }
 
             return this.injectWebViewBridge()
+                .then(() =>
+                    this.loadJavaScriptFiles(this.autoInjectScriptFiles),
+                )
+                .then(() =>
+                    this.loadStyleSheetFiles(this.autoInjectStyleSheetFiles),
+                )
+                .then(() =>
+                    this.executePromises(
+                        this.autoInjectJavaScriptBlocks.map(
+                            (data) => data.scriptCode,
+                        ),
+                        -1,
+                    ),
+                )
                 .then(() => args)
                 .catch((error) => {
                     return Object.assign({}, args, { error });
@@ -523,16 +537,16 @@ export class WebViewExtBase extends View {
 
         const promiseScriptCodes = [];
 
-        for (let { resourceName, filepath } of files) {
-            resourceName = this.fixLocalResourceName(resourceName);
+        for (const { resourceName, filepath } of files) {
+            const fixedResourceName = this.fixLocalResourceName(resourceName);
             if (filepath) {
-                this.registerLocalResource(resourceName, filepath);
+                this.registerLocalResource(fixedResourceName, filepath);
             }
-            const href = `${this.interceptScheme}://${resourceName}`;
+            const href = `${this.interceptScheme}://${fixedResourceName}`;
             const scriptCode = this.generateLoadJavaScriptFileScriptCode(href);
             promiseScriptCodes.push(scriptCode);
             this.writeTrace(
-                `WebViewExt.loadJavaScriptFiles() - > Loading javascript file: "${resourceName}"`,
+                `WebViewExt.loadJavaScriptFiles() - > Loading javascript file: "${href}"`,
             );
         }
 
@@ -584,12 +598,12 @@ export class WebViewExtBase extends View {
 
         const promiseScriptCodes = [] as string[];
 
-        for (let { resourceName, filepath, insertBefore } of files) {
-            resourceName = this.fixLocalResourceName(resourceName);
+        for (const { resourceName, filepath, insertBefore } of files) {
+            const fixedResourceName = this.fixLocalResourceName(resourceName);
             if (filepath) {
-                this.registerLocalResource(resourceName, filepath);
+                this.registerLocalResource(fixedResourceName, filepath);
             }
-            const href = `${this.interceptScheme}://${resourceName}`;
+            const href = `${this.interceptScheme}://${fixedResourceName}`;
             const scriptCode = this.generaateLoadCSSFileScriptCode(
                 href,
                 insertBefore,
@@ -793,11 +807,6 @@ export class WebViewExtBase extends View {
         });
     }
 
-    protected ensurePromiseSupport() {
-        this.writeTrace("WebViewExt<common>.ensurePromiseSupport() - dummy");
-        return Promise.resolve();
-    }
-
     /**
      * Generate scriptcode for loading javascript-file.
      */
@@ -822,24 +831,12 @@ export class WebViewExtBase extends View {
     /**
      * Inject WebView JavaScript Bridge.
      */
-    public injectWebViewBridge() {
+    protected injectWebViewBridge(): Promise<void> {
         return webViewBridgeJsCodePromise
             .then((webViewInterfaceJsCode) =>
                 this.executeJavaScript(webViewInterfaceJsCode, false),
             )
-            .then(() => this.ensurePromiseSupport())
-            .then(() => this.loadJavaScriptFiles(this.autoInjectScriptFiles))
-            .then(() =>
-                this.loadStyleSheetFiles(this.autoInjectStyleSheetFiles),
-            )
-            .then(() =>
-                this.executePromises(
-                    this.autoInjectJavaScriptBlocks.map(
-                        (data) => data.scriptCode,
-                    ),
-                    -1,
-                ),
-            );
+            .then(() => void 0);
     }
 
     /**
@@ -905,6 +902,18 @@ export class WebViewExtBase extends View {
      */
     public onUIWebViewEvent(url: string) {
         throw new Error("WebViewExt.onUIWebViewEvent() only available on iOS");
+    }
+
+    public zoomIn(): boolean {
+        throw new Error("Method not implemented.");
+    }
+
+    public zoomOut(): boolean {
+        throw new Error("Method not implemented.");
+    }
+
+    public zoomBy(zoomFactor: number) {
+        throw new Error("Method not implemented.");
     }
 
     /**

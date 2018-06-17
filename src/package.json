@@ -6,8 +6,8 @@
     "typings": "webview-ext.d.ts",
     "nativescript": {
         "platforms": {
-            "android": "4.0.0",
-            "ios": "4.0.0"
+            "android": "4.1.0",
+            "ios": "4.1.0"
         },
         "plugin": {
             "nan": "true",

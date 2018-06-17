@@ -7,17 +7,14 @@
   "nativescript": {
     "id": "dk.nota.WebViewUnitTest",
     "tns-android": {
-      "version": "4.0.1"
-    },
-    "tns-ios": {
-      "version": "4.0.1"
+      "version": "4.1.3"
     }
   },
   "dependencies": {
     "@nota/nativescript-webview-ext": "file:../src",
     "nativescript-exit": "^1.0.1",
-    "nativescript-tslib": "^1.9.1-beta.1",
-    "tns-core-modules": "~4.0.0",
+    "nativescript-tslib": "^1.9.1-r1",
+    "tns-core-modules": "^4.1.0",
     "url": "^0.11.0"
   },
   "devDependencies": {
@@ -29,8 +26,8 @@
     "byline": "^5.0.0",
     "filewalker": "0.1.2",
     "lazy": "1.0.11",
-    "nativescript-dev-typescript": "^0.7.1",
     "nativescript-app-environment": "^1.0.0",
+    "nativescript-dev-typescript": "^0.7.1",
     "tns-platform-declarations": "~4.0.0",
     "ts-node": "^6.0.3",
     "tslib": "^1.9.1",

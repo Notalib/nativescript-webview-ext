@@ -599,16 +599,49 @@ export class WebViewExt extends WebViewExtBase {
             .then(() => void 0);
     }
 
+    protected injectWebViewBridge() {
+        return super
+            .injectWebViewBridge()
+            .then(() => this.ensurePromiseSupport());
+    }
+
     public getTitle() {
         return Promise.resolve(this.nativeViewProtected.getTitle());
     }
 
-    [debugModeProperty.setNative](value: boolean) {
-        if (androidSDK >= 19) {
-            (android.webkit.WebView as any).setWebContentsDebuggingEnabled(
-                !!value,
+    public zoomIn() {
+        return this.nativeViewProtected.zoomIn();
+    }
+
+    public zoomOut() {
+        return this.nativeViewProtected.zoomOut();
+    }
+
+    public zoomBy(zoomFactor: number) {
+        if (androidSDK < 21) {
+            this.writeTrace(
+                `WebViewExt<android>.zoomBy - not supported on this SDK`,
             );
+            return;
         }
+
+        if (zoomFactor >= 0.01 && zoomFactor <= 100) {
+            return (this.nativeViewProtected as any).zoomBy(zoomFactor);
+        }
+
+        throw new Error(
+            `ZoomBy only accepts values between 0.01 and 100 both inclusive`,
+        );
+    }
+
+    [debugModeProperty.getDefault]() {
+        return false;
+    }
+
+    [debugModeProperty.setNative](enabled: boolean) {
+        (android.webkit.WebView as any).setWebContentsDebuggingEnabled(
+            !!enabled,
+        );
     }
 
     [builtInZoomControlsProperty.getDefault]() {
@@ -618,7 +651,7 @@ export class WebViewExt extends WebViewExtBase {
 
     [builtInZoomControlsProperty.setNative](enabled: boolean) {
         const settings = this.nativeViewProtected.getSettings();
-        settings.setBuiltInZoomControls(enabled);
+        settings.setBuiltInZoomControls(!!enabled);
     }
 
     [displayZoomControlsProperty.getDefault]() {
@@ -628,7 +661,7 @@ export class WebViewExt extends WebViewExtBase {
 
     [displayZoomControlsProperty.setNative](enabled: boolean) {
         const settings = this.nativeViewProtected.getSettings();
-        settings.setDisplayZoomControls(enabled);
+        settings.setDisplayZoomControls(!!enabled);
     }
 
     [cacheModeProperty.getDefault](): CacheMode {
@@ -645,9 +678,9 @@ export class WebViewExt extends WebViewExtBase {
 
     [cacheModeProperty.setNative](cacheMode: CacheMode) {
         const settings = this.nativeViewProtected.getSettings();
-        for (const [key, value] of Array.from(cacheModeMap)) {
+        for (const [key, nativeValue] of Array.from(cacheModeMap)) {
             if (key === cacheMode) {
-                settings.setCacheMode(value);
+                settings.setCacheMode(nativeValue);
                 return;
             }
         }
@@ -660,7 +693,7 @@ export class WebViewExt extends WebViewExtBase {
 
     [databaseStorageProperty.setNative](enabled: boolean) {
         const settings = this.nativeViewProtected.getSettings();
-        settings.setDatabaseEnabled(enabled);
+        settings.setDatabaseEnabled(!!enabled);
     }
 
     [domStorageProperty.getDefault]() {
@@ -670,7 +703,7 @@ export class WebViewExt extends WebViewExtBase {
 
     [domStorageProperty.setNative](enabled: boolean) {
         const settings = this.nativeViewProtected.getSettings();
-        settings.setDomStorageEnabled(enabled);
+        settings.setDomStorageEnabled(!!enabled);
     }
 
     [supportZoomProperty.getDefault]() {
@@ -680,6 +713,6 @@ export class WebViewExt extends WebViewExtBase {
 
     [supportZoomProperty.setNative](enabled: boolean) {
         const settings = this.nativeViewProtected.getSettings();
-        settings.setSupportZoom(enabled);
+        settings.setSupportZoom(!!enabled);
     }
 }
