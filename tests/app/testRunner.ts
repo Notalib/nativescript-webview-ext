@@ -1,5 +1,5 @@
 ﻿/* tslint:disable:prefer-template */
-import { exit } from 'nativescript-exit';
+import { exit } from "nativescript-exit";
 import { _resetRootView, getRootView } from "tns-core-modules/application";
 import * as fs from "tns-core-modules/file-system";
 import * as platform from "tns-core-modules/platform";
@@ -26,12 +26,9 @@ import "./ui-test";
 //    trace.categories.VisualTreeEvents
 // ));
 
-const env = require('./environment.json');
+const env = require("./environment.json");
 
-const traceCategories = [
-    trace.categories.Test,
-    trace.categories.Error,
-];
+const traceCategories = [trace.categories.Test, trace.categories.Error];
 
 if (!env.ci) {
     traceCategories.push("NOTA");
@@ -46,17 +43,19 @@ export function isRunningOnEmulator(): boolean {
     // This checks are not good enough to be added to modules but keeps unittests green.
 
     if (platform.device.os === platform.platformNames.android) {
-        return android.os.Build.FINGERPRINT.indexOf("generic") > -1 ||
+        return (
+            android.os.Build.FINGERPRINT.indexOf("generic") > -1 ||
             android.os.Build.HARDWARE.toLowerCase() === "goldfish" ||
             android.os.Build.HARDWARE.toLowerCase() === "donatello" || // VS Emulator
             android.os.Build.PRODUCT.toLocaleLowerCase().indexOf("sdk") > -1 ||
-            android.os.Build.PRODUCT.toLocaleLowerCase().indexOf("emulator") > -1; // VS Emulator
-    }
-    else if (platform.device.os === platform.platformNames.ios) {
+            android.os.Build.PRODUCT.toLocaleLowerCase().indexOf("emulator") >
+                -1
+        ); // VS Emulator
+    } else if (platform.device.os === platform.platformNames.ios) {
         // return platform.device.model === "iPhone Simulator";
-        return (__dirname.search("Simulator") > -1);
+        return __dirname.search("Simulator") > -1;
     } else {
-        throw new Error('Unsupported platform');
+        throw new Error("Unsupported platform");
     }
 }
 
@@ -91,13 +90,15 @@ function printRunTestStats() {
     const failedTestInfo = [];
     const slowTests = new Array<string>();
 
-    let allTests = testsQueue.filter(t => t.isTest);
+    let allTests = testsQueue.filter((t) => t.isTest);
 
     allTests.forEach((testCase, i, arr) => {
         let testName = testCase.testName;
         if (!testCase.isPassed) {
             failedTestCount++;
-            failedTestInfo.push(testCase.testName + " FAILED: " + testCase.errorMessage);
+            failedTestInfo.push(
+                testCase.testName + " FAILED: " + testCase.errorMessage,
+            );
         }
 
         let duration = (testCase.duration / 1000).toFixed(2);
@@ -108,17 +109,18 @@ function printRunTestStats() {
 
     const totalTime = (TKUnit.time() - startTime).toFixed(2);
 
-    let finalMessage = `\n` +
-        `=== ALL TESTS COMPLETE ===\n` +
-        `${(allTests.length - failedTestCount)} OK, ${failedTestCount} failed\n` +
-        `DURATION: ${totalTime} ms\n` +
-        `=== END OF TESTS ===\n`;
+    const finalMessage = [
+        `=== ALL TESTS COMPLETE ===`,
+        `${allTests.length - failedTestCount} OK, ${failedTestCount} failed`,
+        `DURATION: ${totalTime} ms`,
+        `=== END OF TESTS ===`,
+    ];
 
     TKUnit.write(finalMessage, messageType.info);
 
     failedTestInfo.forEach((message, i, arr) => {
         TKUnit.write(message, messageType.error);
-        finalMessage += "\n" + message;
+        finalMessage.push(message);
     });
 
     // console.log("test-result.xml:\n" + generateTestFile(allTests));
@@ -127,9 +129,9 @@ function printRunTestStats() {
     TKUnit.write(`Tests EOF!`, messageType.info);
 
     if (env.ci) {
-        exit();
+        setTimeout(exit(), 100);
     } else {
-        showReportPage(finalMessage);
+        showReportPage(finalMessage.join(`\n`));
     }
 }
 
@@ -141,10 +143,18 @@ function generateTestFile(allTests: TestInfo[]) {
         let testName = testCase.testName;
         let duration = (testCase.duration / 1000).toFixed(2);
 
-        testCases.push(`<testcase classname="${platform.device.os}" name="${testName}" time="${duration}">`);
+        testCases.push(
+            `<testcase classname="${
+                platform.device.os
+            }" name="${testName}" time="${duration}">`,
+        );
         if (!testCase.isPassed) {
             failedTestCount++;
-            testCases.push(`<failure type="exceptions.AssertionError"><![CDATA[${testCase.errorMessage}]]></failure>`);
+            testCases.push(
+                `<failure type="exceptions.AssertionError"><![CDATA[${
+                    testCase.errorMessage
+                }]]></failure>`,
+            );
         }
         testCases.push(`</testcase>`);
     });
@@ -153,10 +163,12 @@ function generateTestFile(allTests: TestInfo[]) {
 
     const result = [
         "<testsuites>",
-        `<testsuite name="NativeScript Tests" timestamp="${new Date()}" hostname="hostname" time="${totalTime}" errors="0" tests="${allTests.length}" skipped="0" failures="${failedTestCount}">`,
+        `<testsuite name="NativeScript Tests" timestamp="${new Date()}" hostname="hostname" time="${totalTime}" errors="0" tests="${
+            allTests.length
+        }" skipped="0" failures="${failedTestCount}">`,
         ...testCases,
         "</testsuite>",
-        "</testsuites>"
+        "</testsuites>",
     ].join("");
 
     return result;
@@ -181,7 +193,7 @@ function showReportPage(finalMessage: string) {
             messageContainer.focus();
             page.style.fontSize = 11;
             if (platform.isAndroid) {
-                page.on('navigatedTo', () => {
+                page.on("navigatedTo", () => {
                     messageContainer.focus();
                     setTimeout(() => messageContainer.dismissSoftInput());
                 });
@@ -189,7 +201,7 @@ function showReportPage(finalMessage: string) {
 
             return page;
         },
-        clearHistory: true
+        clearHistory: true,
     });
 }
 
@@ -202,7 +214,14 @@ function startLog(): void {
 function log(): void {
     let testsName: string = this.name;
     let duration = TKUnit.time() - this.start;
-    TKUnit.write(testsName + " COMPLETED for " + duration.toFixed(2) + " BACKSTACK DEPTH: " + topmost().backStack.length, messageType.info);
+    TKUnit.write(
+        testsName +
+            " COMPLETED for " +
+            duration.toFixed(2) +
+            " BACKSTACK DEPTH: " +
+            topmost().backStack.length,
+        messageType.info,
+    );
 }
 
 let testsSelector: string;
@@ -235,19 +254,26 @@ export function runAll(testSelector?: string) {
         }
     }
 
-    TKUnit.write(`TESTS: ${singleModuleName || ''} ${singleTestName || ''}`);
+    TKUnit.write(`TESTS: ${singleModuleName || ""} ${singleTestName || ""}`);
 
     const totalSuccess = 0;
     const totalFailed: Array<TKUnit.TestFailure> = [];
-    testsQueue.push(new TestInfo(() => { running = true; startTime = TKUnit.time(); }));
+    testsQueue.push(
+        new TestInfo(() => {
+            running = true;
+            startTime = TKUnit.time();
+        }),
+    );
     for (const name in allTests) {
-        if (singleModuleName && (singleModuleName !== name.toLowerCase())) {
+        if (singleModuleName && singleModuleName !== name.toLowerCase()) {
             continue;
         }
 
         const testModule = allTests[name];
 
-        const test = testModule.createTestCase ? testModule.createTestCase() : testModule;
+        const test = testModule.createTestCase
+            ? testModule.createTestCase()
+            : testModule;
         test.name = name;
 
         testsQueue.push(new TestInfo(startLog, test));
@@ -257,17 +283,32 @@ export function runAll(testSelector?: string) {
         }
 
         for (const testName in test) {
-            if (singleTestName && (singleTestName !== testName.toLowerCase())) {
+            if (singleTestName && singleTestName !== testName.toLowerCase()) {
                 continue;
             }
 
             const testFunction = test[testName];
-            if ((typeof (testFunction) === "function") && (testName.substring(0, 4) === "test")) {
+            if (
+                typeof testFunction === "function" &&
+                testName.substring(0, 4) === "test"
+            ) {
                 if (test.setUp) {
                     testsQueue.push(new TestInfo(test.setUp, test));
                 }
-                const testTimeout = testsWithLongDelay[testName] || testsSuitesWithLongDelay[name];
-                testsQueue.push(new TestInfo(testFunction, test, true, name + "." + testName, false, null, testTimeout));
+                const testTimeout =
+                    testsWithLongDelay[testName] ||
+                    testsSuitesWithLongDelay[name];
+                testsQueue.push(
+                    new TestInfo(
+                        testFunction,
+                        test,
+                        true,
+                        name + "." + testName,
+                        false,
+                        null,
+                        testTimeout,
+                    ),
+                );
                 if (test.tearDown) {
                     testsQueue.push(new TestInfo(test.tearDown, test));
                 }
@@ -280,7 +321,12 @@ export function runAll(testSelector?: string) {
     }
 
     testsQueue.push(new TestInfo(printRunTestStats));
-    testsQueue.push(new TestInfo(function () { testsQueue = []; running = false; }));
+    testsQueue.push(
+        new TestInfo(function() {
+            testsQueue = [];
+            running = false;
+        }),
+    );
 
     TKUnit.runTests(testsQueue, 0);
 }
@@ -295,7 +341,16 @@ class TestInfo implements TKUnit.TestInfoEntry {
     testTimeout: number;
     duration: number;
 
-    constructor(testFunc, testInstance?: any, isTest?, testName?, isPassed?, errorMessage?, testTimeout?, duration?) {
+    constructor(
+        testFunc,
+        testInstance?: any,
+        isTest?,
+        testName?,
+        isPassed?,
+        errorMessage?,
+        testTimeout?,
+        duration?,
+    ) {
         this.testFunc = testFunc;
         this.instance = testInstance || null;
         this.isTest = isTest || false;
