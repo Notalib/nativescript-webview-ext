@@ -1,4 +1,4 @@
-/// <reference path="./node_modules/tns-platform-declarations/android.d.ts" />
+/// <reference path="./platforms/android/webviewinterface.d.ts" />
 
 import * as fs from 'tns-core-modules/file-system';
 import * as platform from "tns-core-modules/platform";
@@ -20,13 +20,12 @@ export * from "./webview-ext-common";
 
 const androidSDK = Number(platform.device.sdkVersion);
 
-export declare namespace dk {
+// Minor extention of the Native interface to allow for owner
+declare namespace dk {
     namespace nota {
         namespace webviewinterface {
             class WebViewBridgeInterface extends java.lang.Object {
                 public owner?: WebViewExt;
-
-                public emitEventToNativeScript(eventName: string, data: string): void;
             }
         }
     }
