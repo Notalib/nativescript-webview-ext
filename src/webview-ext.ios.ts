@@ -6,24 +6,16 @@ import { profile } from "tns-core-modules/profiling";
 import { traceMessageType } from "tns-core-modules/ui/core/view";
 
 import { webViewBridgeJsCodePromise } from "./nativescript-webview-bridge-loader";
-import {
-    autoInjectJSBridgeProperty,
-    WebViewExtBase,
-} from "./webview-ext-common";
+import { autoInjectJSBridgeProperty, WebViewExtBase } from "./webview-ext-common";
 import { UIWebViewDelegateImpl } from "./webview-ext.uiwebview";
-import {
-    WKNavigationDelegateImpl,
-    WKScriptMessageHandlerImpl,
-} from "./webview-ext.wkwebview";
+import { WKNavigationDelegateImpl, WKScriptMessageHandlerImpl } from "./webview-ext.wkwebview";
 
 export * from "./webview-ext-common";
 
 let registeredCustomNSURLProtocol = false;
 
 let webViewBridgeJsCode: string;
-webViewBridgeJsCodePromise.then(
-    (scriptCode) => (webViewBridgeJsCode = scriptCode),
-);
+webViewBridgeJsCodePromise.then((scriptCode) => (webViewBridgeJsCode = scriptCode));
 
 export class WebViewExt extends WebViewExtBase {
     private _ios: WKWebView | UIWebView;
@@ -68,17 +60,13 @@ export class WebViewExt extends WebViewExtBase {
         this.isWKWebView = true;
 
         const configuration = (this._wkWebViewConfiguration = WKWebViewConfiguration.new());
-        this._wkNavigationDelegate = WKNavigationDelegateImpl.initWithOwner(
-            new WeakRef(this),
-        );
+        this._wkNavigationDelegate = WKNavigationDelegateImpl.initWithOwner(new WeakRef(this));
 
         const jsBridgeScript = `
             ${webViewBridgeJsCode.trim()};
         `;
 
-        this._wkUserScriptInjectWebViewBrigde = this.createWkUserScript(
-            jsBridgeScript,
-        );
+        this._wkUserScriptInjectWebViewBrigde = this.createWkUserScript(jsBridgeScript);
 
         this._wkUserScriptViewPortCode = this.createWkUserScript(
             `
@@ -96,22 +84,14 @@ export class WebViewExt extends WebViewExtBase {
         })();
         `.trim(),
         );
-        const messageHandler = WKScriptMessageHandlerImpl.initWithOwner(
-            new WeakRef(this),
-        );
+        const messageHandler = WKScriptMessageHandlerImpl.initWithOwner(new WeakRef(this));
         const wkUController = (this._wkUserContentController = WKUserContentController.new());
         wkUController.addScriptMessageHandlerName(messageHandler, "nsBridge");
         configuration.userContentController = wkUController;
-        configuration.preferences.setValueForKey(
-            true,
-            "allowFileAccessFromFileURLs",
-        );
+        configuration.preferences.setValueForKey(true, "allowFileAccessFromFileURLs");
 
         this._wkCustomUrlSchemeHandler = new CustomUrlSchemeHandler();
-        this._wkWebViewConfiguration.setURLSchemeHandlerForURLScheme(
-            this._wkCustomUrlSchemeHandler,
-            this.interceptScheme,
-        );
+        this._wkWebViewConfiguration.setURLSchemeHandlerForURLScheme(this._wkCustomUrlSchemeHandler, this.interceptScheme);
 
         this.nativeViewProtected = this._ios = new WKWebView({
             frame: CGRectZero,
@@ -134,9 +114,7 @@ export class WebViewExt extends WebViewExtBase {
 
         const uiWebView = UIWebView.new();
         this.nativeViewProtected = this._ios = uiWebView;
-        this._uiWebViewDelegate = UIWebViewDelegateImpl.initWithOwner(
-            new WeakRef(this),
-        );
+        this._uiWebViewDelegate = UIWebViewDelegateImpl.initWithOwner(new WeakRef(this));
 
         uiWebView.scrollView.bounces = false;
         uiWebView.scrollView.scrollEnabled = false;
@@ -152,10 +130,7 @@ export class WebViewExt extends WebViewExtBase {
         return super.injectWebViewBridge();
     }
 
-    public executeJavaScript<T>(
-        scriptCode: string,
-        stringifyResult = true,
-    ): Promise<T> {
+    public executeJavaScript<T>(scriptCode: string, stringifyResult = true): Promise<T> {
         scriptCode = scriptCode.trim();
 
         if (stringifyResult) {
@@ -184,21 +159,16 @@ export class WebViewExt extends WebViewExtBase {
 
         return new Promise((resolve, reject) => {
             if (this._wkWebView) {
-                this._wkWebView.evaluateJavaScriptCompletionHandler(
-                    scriptCode,
-                    (result, error) => {
-                        if (error) {
-                            reject(error);
-                            return;
-                        }
-                        resolve(result);
-                    },
-                );
+                this._wkWebView.evaluateJavaScriptCompletionHandler(scriptCode, (result, error) => {
+                    if (error) {
+                        reject(error);
+                        return;
+                    }
+                    resolve(result);
+                });
             } else if (this._uiWebView) {
                 try {
-                    const result = this._uiWebView.stringByEvaluatingJavaScriptFromString(
-                        scriptCode,
-                    );
+                    const result = this._uiWebView.stringByEvaluatingJavaScriptFromString(scriptCode);
                     resolve(result);
                 } catch (error) {
                     reject(error);
@@ -250,42 +220,27 @@ export class WebViewExt extends WebViewExtBase {
         if (this._wkWebView) {
             if (src.startsWith("file:///")) {
                 const nsReadAccessUrl = NSURL.URLWithString(src);
-                this.writeTrace(
-                    `WebViewExt<ios>._loadUrl("${src}") -> this._wkWebView.loadFileURLAllowingReadAccessToURL("${nsURL}", "${nsReadAccessUrl}"`,
-                );
-                this._wkWebView.loadFileURLAllowingReadAccessToURL(
-                    nsURL,
-                    nsReadAccessUrl,
-                );
+                this.writeTrace(`WebViewExt<ios>._loadUrl("${src}") -> this._wkWebView.loadFileURLAllowingReadAccessToURL("${nsURL}", "${nsReadAccessUrl}"`);
+                this._wkWebView.loadFileURLAllowingReadAccessToURL(nsURL, nsReadAccessUrl);
             } else {
                 const nsRequestWithUrl = NSURLRequest.requestWithURL(nsURL);
-                this.writeTrace(
-                    `WebViewExt<ios>._loadUrl("${src}") -> this._wkWebView.loadRequest("${nsRequestWithUrl}"`,
-                );
+                this.writeTrace(`WebViewExt<ios>._loadUrl("${src}") -> this._wkWebView.loadRequest("${nsRequestWithUrl}"`);
                 this._wkWebView.loadRequest(nsRequestWithUrl);
             }
         } else if (this._uiWebView) {
             const nsRequestWithUrl = NSURLRequest.requestWithURL(nsURL);
-            this.writeTrace(
-                `WebViewExt<ios>._loadUrl("${src}") -> this._uiWebView.loadRequest("${nsRequestWithUrl}"`,
-            );
+            this.writeTrace(`WebViewExt<ios>._loadUrl("${src}") -> this._uiWebView.loadRequest("${nsRequestWithUrl}"`);
             this._uiWebView.loadRequest(nsRequestWithUrl);
         }
     }
 
     public _loadData(content: string) {
-        const nsURL = NSURL.alloc().initWithString(
-            `file:///${fs.knownFolders.currentApp().path}/`,
-        );
+        const nsURL = NSURL.alloc().initWithString(`file:///${fs.knownFolders.currentApp().path}/`);
         if (this._wkWebView) {
-            this.writeTrace(
-                `WebViewExt<ios>._loadUrl(content) -> this._wkWebView.loadHTMLStringBaseURL("${nsURL}")`,
-            );
+            this.writeTrace(`WebViewExt<ios>._loadUrl(content) -> this._wkWebView.loadHTMLStringBaseURL("${nsURL}")`);
             this._wkWebView.loadHTMLStringBaseURL(content, nsURL);
         } else if (this._uiWebView) {
-            this.writeTrace(
-                `WebViewExt<ios>._loadUrl(content) -> this._uiWebView.loadHTMLStringBaseURL("${nsURL}")`,
-            );
+            this.writeTrace(`WebViewExt<ios>._loadUrl(content) -> this._uiWebView.loadHTMLStringBaseURL("${nsURL}")`);
             this._uiWebView.loadHTMLStringBaseURL(content, nsURL);
         }
     }
@@ -339,41 +294,26 @@ export class WebViewExt extends WebViewExtBase {
 
         const filepath = this.resolveLocalResourceFilePath(path);
         if (!filepath) {
-            this.writeTrace(
-                `WebViewExt<ios>.registerLocalResource("${resourceName}", "${path}") -> file doesn't exist`,
-                traceMessageType.error,
-            );
+            this.writeTrace(`WebViewExt<ios>.registerLocalResource("${resourceName}", "${path}") -> file doesn't exist`, traceMessageType.error);
             return;
         }
 
-        this.writeTrace(
-            `WebViewExt<ios>.registerLocalResource("${resourceName}", "${path}") -> file: "${filepath}"`,
-        );
+        this.writeTrace(`WebViewExt<ios>.registerLocalResource("${resourceName}", "${path}") -> file: "${filepath}"`);
 
         if (this._wkWebView) {
-            this._wkCustomUrlSchemeHandler.registerLocalResourceForKeyFilepath(
-                resourceName,
-                filepath,
-            );
+            this._wkCustomUrlSchemeHandler.registerLocalResourceForKeyFilepath(resourceName, filepath);
         } else if (this._uiWebView) {
-            CustomNSURLProtocol.registerLocalResourceForKeyFilepath(
-                resourceName,
-                filepath,
-            );
+            CustomNSURLProtocol.registerLocalResourceForKeyFilepath(resourceName, filepath);
         }
     }
 
     public unregisterLocalResource(resourceName: string) {
-        this.writeTrace(
-            `WebViewExt<ios>.unregisterLocalResource("${resourceName}")`,
-        );
+        this.writeTrace(`WebViewExt<ios>.unregisterLocalResource("${resourceName}")`);
 
         resourceName = this.fixLocalResourceName(resourceName);
 
         if (this._wkWebView) {
-            this._wkCustomUrlSchemeHandler.unregisterLocalResourceForKey(
-                resourceName,
-            );
+            this._wkCustomUrlSchemeHandler.unregisterLocalResourceForKey(resourceName);
         } else if (this._uiWebView) {
             CustomNSURLProtocol.unregisterLocalResourceForKey(resourceName);
         }
@@ -384,62 +324,40 @@ export class WebViewExt extends WebViewExtBase {
 
         let result: string;
         if (this._wkWebView) {
-            result = this._wkCustomUrlSchemeHandler.getRegisteredLocalResourceForKey(
-                resourceName,
-            );
+            result = this._wkCustomUrlSchemeHandler.getRegisteredLocalResourceForKey(resourceName);
         } else if (this._uiWebView) {
-            result = CustomNSURLProtocol.getRegisteredLocalResourceForKey(
-                resourceName,
-            );
+            result = CustomNSURLProtocol.getRegisteredLocalResourceForKey(resourceName);
         } else {
             throw new Error("Not implemented for UIWebView");
         }
 
-        this.writeTrace(
-            `WebViewExt<android>.getRegistretLocalResource("${resourceName}") -> "${result}"`,
-        );
+        this.writeTrace(`WebViewExt<android>.getRegistretLocalResource("${resourceName}") -> "${result}"`);
         return result;
     }
 
     public onUIWebViewEvent(url: string) {
         if (!this.isUIWebView) {
-            this.writeTrace(
-                `WebViewExt.onUIWebViewEvent("${url}") - only works for UIWebView`,
-                traceMessageType.error,
-            );
+            this.writeTrace(`WebViewExt.onUIWebViewEvent("${url}") - only works for UIWebView`, traceMessageType.error);
             return;
         }
 
         if (!url.startsWith("js2ios")) {
-            this.writeTrace(
-                `WebViewExt.onUIWebViewEvent("${url}") - only supports js2ios-scheme`,
-                traceMessageType.error,
-            );
+            this.writeTrace(`WebViewExt.onUIWebViewEvent("${url}") - only supports js2ios-scheme`, traceMessageType.error);
             return;
         }
 
         try {
             const message = decodeURIComponent(url.replace(/^js2ios:/, ""));
             const { eventName, resId } = JSON.parse(message);
-            this.executeJavaScript<any>(
-                `window.nsWebViewBridge.getUIWebViewResponse(${JSON.stringify(
-                    resId,
-                )})`,
-            )
+            this.executeJavaScript<any>(`window.nsWebViewBridge.getUIWebViewResponse(${JSON.stringify(resId)})`)
                 .then((data) => {
                     this.onWebViewEvent(eventName, data);
                 })
                 .catch((err) => {
-                    this.writeTrace(
-                        `WebViewExt.onUIWebViewEvent("${url}") - getUIWebViewResponse - ${err}`,
-                        traceMessageType.error,
-                    );
+                    this.writeTrace(`WebViewExt.onUIWebViewEvent("${url}") - getUIWebViewResponse - ${err}`, traceMessageType.error);
                 });
         } catch (err) {
-            this.writeTrace(
-                `WebViewExt.onUIWebViewEvent("${url})" - "${err}"`,
-                traceMessageType.error,
-            );
+            this.writeTrace(`WebViewExt.onUIWebViewEvent("${url})" - "${err}"`, traceMessageType.error);
         }
     }
 
@@ -447,32 +365,18 @@ export class WebViewExt extends WebViewExtBase {
         return this.executeJavaScript<string>("document.title");
     }
 
-    public autoLoadStyleSheetFile(
-        resourceName: string,
-        filepath: string,
-        insertBefore?: boolean,
-    ) {
+    public autoLoadStyleSheetFile(resourceName: string, filepath: string, insertBefore?: boolean) {
         if (this._wkWebView) {
             resourceName = this.fixLocalResourceName(resourceName);
             if (filepath) {
                 this.registerLocalResource(resourceName, filepath);
             }
             const href = `${this.interceptScheme}://${resourceName}`;
-            const scriptCode = this.generaateLoadCSSFileScriptCode(
-                href,
-                insertBefore,
-            );
+            const scriptCode = this.generaateLoadCSSFileScriptCode(href, insertBefore);
 
-            this.addNamedUserScript(
-                `auto-load-css-${resourceName}`,
-                scriptCode,
-            );
+            this.addNamedUserScript(`auto-load-css-${resourceName}`, scriptCode);
         } else {
-            return super.autoLoadStyleSheetFile(
-                resourceName,
-                filepath,
-                insertBefore,
-            );
+            return super.autoLoadStyleSheetFile(resourceName, filepath, insertBefore);
         }
     }
 
@@ -520,11 +424,7 @@ export class WebViewExt extends WebViewExtBase {
     }
 
     private createWkUserScript(scriptCode: string) {
-        return WKUserScript.alloc().initWithSourceInjectionTimeForMainFrameOnly(
-            scriptCode,
-            WKUserScriptInjectionTime.AtDocumentEnd,
-            true,
-        );
+        return WKUserScript.alloc().initWithSourceInjectionTimeForMainFrameOnly(scriptCode, WKUserScriptInjectionTime.AtDocumentEnd, true);
     }
 
     private removeNamedUserScript(name: string) {
@@ -532,9 +432,7 @@ export class WebViewExt extends WebViewExtBase {
             return;
         }
 
-        const idx = this._wkNamedUserScripts.findIndex(
-            (val) => val.name === name,
-        );
+        const idx = this._wkNamedUserScripts.findIndex((val) => val.name === name);
         if (idx === -1) {
             return;
         }
@@ -552,18 +450,12 @@ export class WebViewExt extends WebViewExtBase {
         this._wkUserContentController.removeAllUserScripts();
 
         if (!autoInjectJSBridge) {
-            this._wkUserContentController.addUserScript(
-                this._wkUserScriptViewPortCode,
-            );
+            this._wkUserContentController.addUserScript(this._wkUserScriptViewPortCode);
             return;
         }
 
-        this._wkUserContentController.addUserScript(
-            this._wkUserScriptInjectWebViewBrigde,
-        );
-        this._wkUserContentController.addUserScript(
-            this._wkUserScriptViewPortCode,
-        );
+        this._wkUserContentController.addUserScript(this._wkUserScriptInjectWebViewBrigde);
+        this._wkUserContentController.addUserScript(this._wkUserScriptViewPortCode);
 
         for (const { wkUserScript } of this._wkNamedUserScripts) {
             this._wkUserContentController.addUserScript(wkUserScript);

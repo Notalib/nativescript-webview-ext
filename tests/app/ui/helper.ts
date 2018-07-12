@@ -10,17 +10,14 @@ import { ActionBar } from "tns-core-modules/ui/action-bar";
 import { Color } from "tns-core-modules/color";
 
 import { LayoutBase } from "tns-core-modules/ui/layouts/layout-base";
-import { FlexboxLayout } from "tns-core-modules/ui/layouts/flexbox-layout";
 import { FormattedString, Span } from "tns-core-modules/text/formatted-string";
 import * as properties from "tns-core-modules/ui/core/properties";
-import { device } from "tns-core-modules/platform";
 // TODO: Remove this and get it from global to decouple builder for angular
 import { createViewFromEntry } from "tns-core-modules/ui/builder";
 
 const { _getProperties, _getStyleProperties } = properties as any;
 
 const DELTA = 0.1;
-const sdkVersion = parseInt(device.sdkVersion);
 
 export let ASYNC = 0.2;
 export let MEMORY_ASYNC = 2;
@@ -114,7 +111,7 @@ export function buildUIWithWeakRefAndInteract<T extends View>(createFunc: () => 
     utils.GC();
 
     try {
-        TKUnit.assert(!weakRef.get(), weakRef.get() + " leaked!");
+        TKUnit.assert(!weakRef.get(), `${weakRef.get()} leaked!`);
         done(null);
     }
     catch (ex) {
@@ -378,7 +375,7 @@ function compareUsingReflection(recycledNativeView: View, newNativeView: View): 
 
             const defValue = method.invoke(newer, null);
             const currValue = method.invoke(recycled, null);
-            if ((currValue + '') !== (defValue + '')) {
+            if (`${currValue}` !== `${defValue}`) {
                 throw new Error(`Actual: ${currValue}, Expected: ${defValue}, for method: ${method.getName()}`);
             }
         }
