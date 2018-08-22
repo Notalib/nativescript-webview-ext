@@ -377,6 +377,7 @@ export class WebViewExt extends WebViewExtBase {
         const settings = nativeView.getSettings();
         settings.setJavaScriptEnabled(true);
         settings.setBuiltInZoomControls(true);
+        settings.setDomStorageEnabled(true);
 
         const client = new WebViewExtClient();
         nativeView.setWebViewClient(client);
