@@ -7,7 +7,7 @@
   "nativescript": {
     "id": "dk.nota.WebViewUnitTest",
     "tns-android": {
-      "version": "4.1.3"
+      "version": "4.2.0"
     }
   },
   "dependencies": {
@@ -28,7 +28,7 @@
     "lazy": "1.0.11",
     "nativescript-app-environment": "^1.0.0",
     "nativescript-dev-typescript": "^0.7.1",
-    "tns-platform-declarations": "~4.1.0",
+    "tns-platform-declarations": "~4.2.0",
     "ts-node": "^6.0.3",
     "tslib": "^1.9.1",
     "tslint": "^5.10.0",
