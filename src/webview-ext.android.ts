@@ -216,7 +216,7 @@ function initializeWebViewClient(): void {
         }
 
         private onReceivedErrorAPI23(view: android.webkit.WebView, request: any, error: any) {
-            super.onReceivedError(view, request, error);
+            android.webkit.WebViewClient.prototype.onReceivedError.call(this, view, request, error);
             const owner = this.owner;
             if (!owner) {
                 return;

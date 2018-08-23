@@ -14,7 +14,7 @@
     "@nota/nativescript-webview-ext": "file:../src",
     "nativescript-exit": "~1.0.1",
     "nativescript-tslib": "~1.9.1-r1",
-    "tns-core-modules": "~4.1.0",
+    "tns-core-modules": "~4.2.0",
     "url": "^0.11.0"
   },
   "devDependencies": {
