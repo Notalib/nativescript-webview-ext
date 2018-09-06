@@ -6,7 +6,7 @@ interface EventListenerMap {
     [eventName: string]: EventListener[];
 }
 
-interface IOSUIWebViewResponseMap {
+interface UIWebViewResponseMap {
     [id: string]: any;
 }
 
@@ -52,7 +52,7 @@ class NSWebViewBridge {
     /**
      * Mapping of JS Call responseId and result for iOS
      */
-    private iosUIWebViewResponseMap: IOSUIWebViewResponseMap = {};
+    private iosUIWebViewResponseMap: UIWebViewResponseMap = {};
 
     /**
      * Counter of iOS JS Call responseId
@@ -75,9 +75,9 @@ class NSWebViewBridge {
         }
 
         for (const listener of events) {
-            const retnVal = listener && listener(data);
+            const res = listener && listener(data);
             // if any handler return false, not executing any further handlers for that event.
-            if (retnVal === false) {
+            if (res === false) {
                 break;
             }
         }
@@ -127,9 +127,7 @@ class NSWebViewBridge {
     private emitEventToAndroid(eventName: any, data: any) {
         const androidWebViewBridge = this.androidWebViewBridge;
         if (!androidWebViewBridge) {
-            console.error(
-                `Tried to emit to android without the androidWebViewBridge`,
-            );
+            console.error(`Tried to emit to android without the androidWebViewBridge`);
             return;
         }
 
@@ -160,22 +158,40 @@ class NSWebViewBridge {
     }
 
     /**
-     * Remove an event listener for event from native-layer.
-     * If callback is undefiend all events for the eventName will be removed.
+     * Add an event listener for event from native-layer
      */
-    public off(eventName: string, callback?: EventListener) {
+    public addEventListener(eventName: string, callback: EventListener) {
+        this.on(eventName, callback);
+    }
+
+    /**
+     * Remove an event listener for event from native-layer.
+     * If callback is undefined all events for the eventName will be removed.
+     */
+    public off(eventName?: string, callback?: EventListener) {
+        if (!eventName) {
+            this.eventListenerMap = {};
+            return;
+        }
+
         if (!callback) {
             delete this.eventListenerMap[eventName];
             return;
         }
 
-        this.eventListenerMap[eventName] = this.eventListenerMap[
-            eventName
-        ].filter((oldCallback) => oldCallback !== callback);
+        this.eventListenerMap[eventName] = this.eventListenerMap[eventName].filter((oldCallback) => oldCallback !== callback);
 
         if (this.eventListenerMap[eventName].length === 0) {
             delete this.eventListenerMap[eventName];
         }
+    }
+
+    /**
+     * Remove an event listener for event from native-layer.
+     * If callback is undefined all events for the eventName will be removed.
+     */
+    public removeEventListener(eventName?: string, callback?: EventListener) {
+        return this.off(eventName, callback);
     }
 
     /**
@@ -229,10 +245,7 @@ class NSWebViewBridge {
      * Injects a StyleSheet file.
      * This is usually called from WebViewExt.loadStyleSheetFiles(...)
      */
-    public injectStyleSheetFile(
-        href: string,
-        insertBefore?: boolean,
-    ): Promise<void> {
+    public injectStyleSheetFile(href: string, insertBefore?: boolean): Promise<void> {
         const elId = this.elementIdFromHref(href);
 
         if (document.getElementById(elId)) {
@@ -257,10 +270,7 @@ class NSWebViewBridge {
             linkElement.setAttribute("type", "text/css");
             linkElement.setAttribute("href", href);
             if (insertBefore && document.head.childElementCount > 0) {
-                document.head.insertBefore(
-                    linkElement,
-                    document.head.firstElementChild,
-                );
+                document.head.insertBefore(linkElement, document.head.firstElementChild);
             } else {
                 document.head.appendChild(linkElement);
             }
@@ -296,7 +306,7 @@ class NSWebViewBridge {
             });
         } else {
             this.emit(eventName, {
-                err: err,
+                err,
             });
         }
     }
