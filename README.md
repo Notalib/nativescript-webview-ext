@@ -53,7 +53,7 @@ The custom `NSURLProtocol` used with UIWebView is shared with all instances of t
 
 | Function | Description |
 | --- | --- |
-| loadUrl(src: string): Promise<LoadFinishedEventData> | Open a URL and returns a promise once it has finished loading. |
+| loadUrl(src: string): Promise<LoadFinishedEventData> | Open a URL and resolves a promise once it has finished loading. |
 | registerLocalResource(resourceName: string, path: string): void; | Map the "x-local://{resourceName}" => "{path}". |
 | unregisterLocalResource(resourceName: string): void; | Removes the mapping from "x-local://{resourceName}" => "{path}" |
 | getRegisteredLocalResource(resourceName: string): void; | Get the mapping from "x-local://{resourceName}" => "{path}" |
@@ -64,9 +64,9 @@ The custom `NSURLProtocol` used with UIWebView is shared with all instances of t
 | autoLoadJavaScriptFile(resourceName: string, filepath: string) | Register a JavaScript-file to be injected on `loadFinishedEvent`. If a page is already loaded, the script will be injected into the current page. |
 | autoLoadStyleSheetFile(resourceName: string, filepath: string, insertBefore?: boolean) | Register a CSS-file to be injected on `loadFinishedEvent`. If a page is already loaded, the CSS-file will be injected into the current page. |
 | autoExecuteJavaScript(scriptCode: string, name: string) | Execute a script on `loadFinishedEvent`. The script can be a promise |
-| executeJavaScript(scriptCode: string) | Execute JavaScript in the webpage. *Note:* scriptCode should be ES5 compatible, or it might not work on iOS < 11. |
+| executeJavaScript(scriptCode: string) | Execute JavaScript in the webpage. *Note:* scriptCode should be ES5 compatible, or it might not work on 'iOS < 11' |
 | executePromise(scriptCode: string, timeout: number = 500) | Run a promise inside the webview. *Note:* Executing scriptCode must return a promise. |
-| emitToWebView(eventName: string, data: any) | Emit an event to the webview. |
+| emitToWebView(eventName: string, data: any) | Emit an event to the webview. Note: data must be stringify'able with JSON.stringify or this throws an exception. |
 | getTitle() | Returns a promise with the current document title. |
 
 ## Events
@@ -78,6 +78,9 @@ The custom `NSURLProtocol` used with UIWebView is shared with all instances of t
 | Events emitted from the webview | Raised when nsWebViewBridge.emit(...) is called inside the webview. args in an `WebViewEventData` |
 
 ### WebView
+
+Inside the WebView we have the nsWebViewBridge for sending events between the NativeScript-layer and the WebView.
+Note: The bridge will only be available `DOMContentLoaded` or `onload` inside the WebView.
 
 | Function | Description |
 | --- | --- |
