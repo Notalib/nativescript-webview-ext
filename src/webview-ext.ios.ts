@@ -281,7 +281,7 @@ export class WebViewExt extends WebViewExtBase {
         }
     }
 
-    public getRegistretLocalResource(resourceName: string) {
+    public getRegisteredLocalResource(resourceName: string) {
         resourceName = this.fixLocalResourceName(resourceName);
 
         let result: string;
@@ -293,7 +293,7 @@ export class WebViewExt extends WebViewExtBase {
             throw new Error('Not implemented for UIWebView');
         }
 
-        this.writeTrace(`WebViewExt<android>.getRegistretLocalResource("${resourceName}") -> "${result}"`);
+        this.writeTrace(`WebViewExt<android>.getRegisteredLocalResource("${resourceName}") -> "${result}"`);
         return result;
     }
 

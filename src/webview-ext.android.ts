@@ -129,7 +129,7 @@ function initializeWebViewClient(): void {
                 return super.shouldInterceptRequest(view, request);
             }
 
-            const filepath = owner.getRegistretLocalResource(url);
+            const filepath = owner.getRegisteredLocalResource(url);
             if (!filepath) {
                 owner.writeTrace(`WebViewClientClass.shouldInterceptRequest("${url}") - no matching file`);
                 return super.shouldInterceptRequest(view, request);
@@ -395,12 +395,12 @@ export class WebViewExt extends WebViewExtBase {
         this.localResourceMap.delete(resourceName);
     }
 
-    public getRegistretLocalResource(resourceName: string) {
+    public getRegisteredLocalResource(resourceName: string) {
         resourceName = this.fixLocalResourceName(resourceName);
 
         const result = this.localResourceMap.get(resourceName);
 
-        this.writeTrace(`WebViewExt<android>.getRegistretLocalResource("${resourceName}") => "${result}"`);
+        this.writeTrace(`WebViewExt<android>.getRegisteredLocalResource("${resourceName}") => "${result}"`);
 
         return result;
     }

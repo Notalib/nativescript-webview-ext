@@ -144,6 +144,9 @@ export class WebViewExtBase extends View {
      */
     public autoInjectJSBridge = true;
 
+    /**
+     * Enable/disable debug-mode on android.
+     */
     public debugMode: boolean;
 
     /**
@@ -156,14 +159,23 @@ export class WebViewExtBase extends View {
      */
     protected autoInjectStyleSheetFiles = [] as LoadStyleSheetResource[];
 
-    /** List of code blocks to be executed after JS-files and CSS-files have been loaded. */
+    /**
+     * List of code blocks to be executed after JS-files and CSS-files have been loaded.
+     */
     protected autoInjectJavaScriptBlocks = [] as InjectExecuteJavaScript[];
 
-    /** Prevent this.src loading changes from the webview's onLoadFinished-event */
+    /**
+     * Prevent this.src loading changes from the webview's onLoadFinished-event
+     */
     protected tempSuspendSrcLoading = false;
 
+    /**
+     * Callback for the loadFinished-event. Called from the native-webview
+     */
     public _onLoadFinished(url: string, error?: string): Promise<LoadFinishedEventData> {
         if (!error) {
+            // When this is called without an error, update with this.src value without loading the url.
+            // This is needed to keep src up-to-date when linked are clicked inside the webview.
             try {
                 this.tempSuspendSrcLoading = true;
                 this.src = url;
@@ -194,7 +206,7 @@ export class WebViewExtBase extends View {
             return this.injectWebViewBridge()
                 .then(() => args)
                 .catch((error) => {
-                    return Object.assign({}, args, {error});
+                    return Object.assign({}, args, { error });
                 })
                 .then((args) => {
                     this.notify(args);
@@ -203,6 +215,12 @@ export class WebViewExtBase extends View {
         }
     }
 
+    /**
+     * Callback for onLoadStarted-event from the native webview
+     *
+     * @param url URL being loaded
+     * @param navigationType Type of navigation (iOS-only)
+     */
     public _onLoadStarted(url: string, navigationType?: NavigationType) {
         const args = {
             eventName: WebViewExtBase.loadStartedEvent,
@@ -214,6 +232,14 @@ export class WebViewExtBase extends View {
         this.notify(args);
     }
 
+    /**
+     * Callback for should override url loading.
+     * Called from the native-webview
+     * 
+     * @param url 
+     * @param httpMethod GET, POST etc
+     * @param navigationType Type of navigation (iOS-only)
+     */
     public _onShouldOverrideUrlLoading(url: string, httpMethod: string, navigationType?: NavigationType) {
         const args = {
             eventName: WebViewExtBase.shouldOverrideUrlLoadingEvent,
@@ -228,10 +254,16 @@ export class WebViewExtBase extends View {
         return args.cancel;
     }
 
+    /**
+     * Platform specific loadURL-implementation.
+     */
     public _loadUrl(src: string): void {
         throw new Error("Method not implemented.");
     }
 
+    /**
+     * Platform specific loadData-implementation.
+     */
     public _loadData(src: string): void {
         throw new Error("Method not implemented.");
     }
@@ -292,7 +324,7 @@ export class WebViewExtBase extends View {
 
         if (src.startsWith(this.interceptScheme)) {
             this.writeTrace(`WebViewExt.src = "${originSrc}" resolve x-local file`);
-            const fileparh = this.getRegistretLocalResource(src);
+            const fileparh = this.getRegisteredLocalResource(src);
             if (fileparh) {
                 src = `file://${fileparh}`;
                 this.writeTrace(`WebViewExt.src = "${originSrc}" x-local resolved to "${src}"`);
@@ -377,7 +409,10 @@ export class WebViewExtBase extends View {
         throw new Error("Method not implemented.");
     }
 
-    public getRegistretLocalResource(name: string) {
+    /**
+     * Resolve a "x-local://{name}" to file-path.
+     */
+    public getRegisteredLocalResource(name: string) {
         throw new Error("Method not implemented.");
     }
 
@@ -391,6 +426,7 @@ export class WebViewExtBase extends View {
         if (!src) {
             return this._onLoadFinished(src, 'empty src');
         }
+
         return new Promise<LoadFinishedEventData>((resolve, reject) => {
             const loadFinishedEvent = (args: LoadFinishedEventData) => {
                 this.off(WebViewExtBase.loadFinishedEvent, loadFinishedEvent);

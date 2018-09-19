@@ -24,3 +24,4 @@ demo/report/stats.json
 package-lock.json
 typings
 tests/test-runner/index.d.ts
+tests/tsconfig.tns.json
