@@ -1,13 +1,13 @@
 {
     "name": "@nota/nativescript-webview-ext",
-    "version": "0.4.3",
+    "version": "0.5.0",
     "description": "Extended WebView for NativeScript which adds 'x-local' scheme for local-files. events between WebView and native-layer, javascript execution, injecting CSS and JS-files.",
     "main": "webview-ext",
     "typings": "webview-ext.d.ts",
     "nativescript": {
         "platforms": {
-            "android": "4.1.0",
-            "ios": "4.1.0"
+            "android": "4.2.0",
+            "ios": "4.2.0"
         },
         "plugin": {
             "nan": "true",
@@ -32,8 +32,8 @@
         "run.http-server": "cd ../demo/www && npx hs -p 8080",
         "run.demo.android": "cd ../demo && tns run android --syncAllFiles",
         "run.demo.ios": "cd ../demo && tns run ios --syncAllFiles",
-        "run.test.android": "cd ../tests && tns run android --syncAllFiles --bundle",
-        "run.test.ios": "cd ../tests && tns run ios --syncAllFiles --bundle",
+        "run.test.android": "cd ../tests && tns run android --syncAllFiles",
+        "run.test.ios": "cd ../tests && tns run ios --syncAllFiles",
         "demo.ios": "npm run build && npm-run-all --parallel build:webview-bridge:watch plugin.tscwatch run.demo.ios run.http-server",
         "demo.android": "npm run build && npm-run-all --parallel build:webview-bridge:watch plugin.tscwatch run.demo.android run.http-server",
         "demo.reset": "git clean -d -x -f ../demo && npm install",
@@ -88,16 +88,16 @@
         "@angular/router": "~6.1.0",
         "nativescript-angular": "~6.1.0",
         "npm-run-all": "^4.1.2",
-        "prettier": "^1.12.1",
+        "prettier": "^1.14.3",
         "prettier-check": "^2.0.0",
         "promise-polyfill": "^7.1.2",
         "prompt": "^1.0.0",
         "rimraf": "^2.6.2",
-        "rxjs": "~6.0.0",
-        "tns-core-modules": "^4.2.0",
+        "rxjs": "^6.0.0",
+        "tns-core-modules": "^4.2.1",
         "tns-platform-declarations": "^4.2.0",
-        "tslint": "^5.0.0",
-        "typescript": "~2.7.0",
+        "tslint": "^5.11.0",
+        "typescript": "~2.7.2",
         "zone.js": "^0.8.26"
     },
     "dependencies": {},

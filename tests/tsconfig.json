@@ -11,8 +11,6 @@
             "es6",
             "dom"
         ],
-        "inlineSourceMap": true,
-        "inlineSources": true,
         "pretty": false,
         "allowUnreachableCode": false,
         "allowUnusedLabels": false,

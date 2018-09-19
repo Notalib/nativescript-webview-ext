@@ -1,6 +1,7 @@
 {
   "[typescript]": {
-    "editor.formatOnSave": true
+    "editor.formatOnSave": true,
+    "files.trimTrailingWhitespace": true
   },
   "files.watcherExclude": {
     "**/.git/objects/**": true,
@@ -35,5 +36,5 @@
       "when": "$(basename).ts"
     },
     "**/*.metadata.json": true
-  }
+  },
 }

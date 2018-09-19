@@ -66,6 +66,7 @@ The custom `NSURLProtocol` used with UIWebView is shared with all instances of t
 | autoExecuteJavaScript(scriptCode: string, name: string) | Execute a script on `loadFinishedEvent`. The script can be a promise |
 | executeJavaScript(scriptCode: string) | Execute JavaScript in the webpage. *Note:* scriptCode should be ES5 compatible, or it might not work on iOS < 11. |
 | executePromise(scriptCode: string, timeout: number = 500) | Run a promise inside the webview. *Note:* Executing scriptCode must return a promise. |
+| emitToWebView(eventName: string, data: any) | Emit an event to the webview. |
 | getTitle() | Returns a promise with the current document title. |
 
 ## Events
@@ -74,6 +75,7 @@ The custom `NSURLProtocol` used with UIWebView is shared with all instances of t
 | 'shouldOverideUrlLoading' | Raised before the webview requests an URL. Can cancelled by setting args.cancel = true in the `ShouldOverideUrlLoadEventData` |
 | 'loadStarted' | Raised when a loadStarted event occurs. args is an `LoadStartedEventData` |
 | 'loadFinished' | Raised when a loadFinished event occurs. args is an `LoadFinishedEventData` |
+| Events emitted from the webview | Raised when nsWebViewBridge.emit(...) is called inside the webview. args in an `WebViewEventData` |
 
 ### WebView
 

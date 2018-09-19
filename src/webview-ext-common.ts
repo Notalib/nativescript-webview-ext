@@ -168,18 +168,34 @@ export class WebViewExtBase extends View {
     public autoInjectJSBridge = true;
 
     /**
-     * Enable/disable debug-mode on android.
+     * Android: Enable/disable debug-mode
      */
     public debugMode: boolean;
 
+    /**
+     * Android: Is the built-in zoom mechanisms being used
+     */
     public builtInZoomControls: boolean;
 
+    /**
+     * Android: displays on-screen zoom controls when using the built-in zoom mechanisms
+     */
     public displayZoomControls: boolean;
 
+    /**
+     * Android: Enaable/Disabled database storage API.
+     * Note: It affects all webviews in the process.
+     */
     public databaseStorage: boolean;
 
+    /**
+     * Android: Enaable/Disabled DOM Storage API. E.g localStorage
+     */
     public domStorage: boolean;
 
+    /**
+     * Android: should the webview support zoom
+     */
     public supportZoom: boolean;
 
     /**
@@ -229,26 +245,26 @@ export class WebViewExtBase extends View {
         if (error) {
             this.notify(args);
             return Promise.reject(args);
-        } else {
-            this.writeTrace(`WebViewExt._onLoadFinished("${url}", ${error || void 0}) - > Injecting webview-bridge JS code`);
-
-            if (!this.autoInjectJSBridge) {
-                return Promise.resolve(args);
-            }
-
-            return this.injectWebViewBridge()
-                .then(() => this.loadJavaScriptFiles(this.autoInjectScriptFiles))
-                .then(() => this.loadStyleSheetFiles(this.autoInjectStyleSheetFiles))
-                .then(() => this.executePromises(this.autoInjectJavaScriptBlocks.map((data) => data.scriptCode), -1))
-                .then(() => args)
-                .catch((error) => {
-                    return Object.assign({}, args, { error });
-                })
-                .then((args) => {
-                    this.notify(args);
-                    return args;
-                });
         }
+
+        this.writeTrace(`WebViewExt._onLoadFinished("${url}", ${error || void 0}) - > Injecting webview-bridge JS code`);
+
+        if (!this.autoInjectJSBridge) {
+            return Promise.resolve(args);
+        }
+
+        return this.injectWebViewBridge()
+            .then(() => this.loadJavaScriptFiles(this.autoInjectScriptFiles))
+            .then(() => this.loadStyleSheetFiles(this.autoInjectStyleSheetFiles))
+            .then(() => this.executePromises(this.autoInjectJavaScriptBlocks.map((data) => data.scriptCode), -1))
+            .then(() => args)
+            .catch((error) => {
+                return Object.assign({}, args, { error });
+            })
+            .then((args) => {
+                this.notify(args);
+                return args;
+            });
     }
 
     /**
@@ -271,8 +287,8 @@ export class WebViewExtBase extends View {
     /**
      * Callback for should override url loading.
      * Called from the native-webview
-     * 
-     * @param url 
+     *
+     * @param url
      * @param httpMethod GET, POST etc
      * @param navigationType Type of navigation (iOS-only)
      */
