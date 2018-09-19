@@ -6,8 +6,8 @@
     "typings": "webview-ext.d.ts",
     "nativescript": {
         "platforms": {
-            "android": "4.0.0",
-            "ios": "4.0.0"
+            "android": "4.1.0",
+            "ios": "4.1.0"
         },
         "plugin": {
             "nan": "true",
@@ -18,12 +18,15 @@
     },
     "scripts": {
         "tsc": "npx tsc -skipLibCheck",
-        "build": "npm i && npm-run-all build:webview-bridge build:polyfill tsc",
+        "ngc": "ngc --project tsconfig.aot.json",
+        "build": "npm i && npm-run-all build:webview-bridge build:polyfill ngc tsc",
         "build:polyfill": "cp ./node_modules/promise-polyfill/dist/polyfill.min.js ./www/promise-polyfill.js",
         "build:webview-bridge": "export WWW_OUTDIR=$PWD/www; cd $(git rev-parse --show-toplevel)/www-src && npm i && npm run build -- --outDir ${WWW_OUTDIR}",
         "build:webview-bridge:watch": "npm run build:webview-bridge -- -w",
         "build:typings": "npm run build && (cd ../demo && TNS_TYPESCRIPT_DECLARATIONS_PATH=\"$PWD/../typings\" tns build ios) && cp ../typings/i386/*NotaWebViewExt.d.ts platforms/ios/NotaWebViewExt.d.ts",
+        "prettier-check": "prettier-check -c ../.prettierrc.json angular/**/*.ts *.ts",
         "tslint": "cd .. && tslint \"**/*.ts\" --config tslint.json --exclude \"**/node_modules/**\" --exclude \"**/*.d.ts\" --exclude \"**/platforms/**\"",
+        "lint": "npm-run-all prettier-check tslint",
         "plugin.link": "npm link && cd ../demo && npm link nativescript-webview-ext && cd ../src",
         "plugin.tscwatch": "npm run build:webview-bridge && npm run tsc -- -w",
         "run.http-server": "cd ../demo/www && npx hs -p 8080",
@@ -74,15 +77,28 @@
     "license": "Apache-2.0",
     "homepage": "https://github.com/Notalib/nativescript-webview-ext#readme",
     "devDependencies": {
+        "@angular/common": "~6.1.0",
+        "@angular/compiler": "~6.1.0",
+        "@angular/compiler-cli": "~6.1.0",
+        "@angular/core": "~6.1.0",
+        "@angular/forms": "~6.1.0",
+        "@angular/http": "~6.1.0",
+        "@angular/platform-browser": "~6.1.0",
+        "@angular/platform-browser-dynamic": "~6.1.0",
+        "@angular/router": "~6.1.0",
+        "nativescript-angular": "~6.1.0",
         "npm-run-all": "^4.1.2",
         "prettier": "^1.12.1",
+        "prettier-check": "^2.0.0",
         "promise-polyfill": "^7.1.2",
         "prompt": "^1.0.0",
         "rimraf": "^2.6.2",
-        "tns-core-modules": "^4.1.0",
-        "tns-platform-declarations": "^4.1.0",
+        "rxjs": "~6.0.0",
+        "tns-core-modules": "^4.2.0",
+        "tns-platform-declarations": "^4.2.0",
         "tslint": "^5.0.0",
-        "typescript": "~2.7.0"
+        "typescript": "~2.7.0",
+        "zone.js": "^0.8.26"
     },
     "dependencies": {},
     "bootstrapper": "nativescript-plugin-seed"

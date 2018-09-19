@@ -1,27 +1,35 @@
 /// <reference path="./node_modules/tns-platform-declarations/ios.d.ts" />
 
-import * as fs from 'tns-core-modules/file-system';
+import * as fs from "tns-core-modules/file-system";
 import * as platform from "tns-core-modules/platform";
 import { profile } from "tns-core-modules/profiling";
 import { traceMessageType } from "tns-core-modules/ui/core/view";
-import { WebViewExtBase } from "./webview-ext-common";
-import { UIWebViewDelegateImpl } from './webview-ext.uiwebview';
-import { WKNavigationDelegateImpl, WKScriptMessageHandlerImpl } from './webview-ext.wkwebview';
+
+import { webViewBridgeJsCodePromise } from "./nativescript-webview-bridge-loader";
+import { autoInjectJSBridgeProperty, WebViewExtBase } from "./webview-ext-common";
+import { UIWebViewDelegateImpl } from "./webview-ext.uiwebview";
+import { WKNavigationDelegateImpl, WKScriptMessageHandlerImpl } from "./webview-ext.wkwebview";
 
 export * from "./webview-ext-common";
 
 let registeredCustomNSURLProtocol = false;
 
-export class WebViewExt extends WebViewExtBase {
-    public get ios() {
-        return this._ios;
-    }
+let webViewBridgeJsCode: string;
+webViewBridgeJsCodePromise.then((scriptCode) => (webViewBridgeJsCode = scriptCode));
 
+export class WebViewExt extends WebViewExtBase {
     private _ios: WKWebView | UIWebView;
 
     private _wkWebViewConfiguration: WKWebViewConfiguration;
     private _wkNavigationDelegate: WKNavigationDelegateImpl;
     private _wkCustomUrlSchemeHandler: CustomUrlSchemeHandler;
+    private _wkUserContentController: WKUserContentController;
+    private _wkUserScriptInjectWebViewBrigde: WKUserScript;
+    private _wkUserScriptViewPortCode: WKUserScript;
+    private _wkNamedUserScripts: Array<{
+        name: string;
+        wkUserScript: WKUserScript;
+    }>;
 
     private _uiWebViewDelegate: UIWebViewDelegateImpl;
 
@@ -51,27 +59,48 @@ export class WebViewExt extends WebViewExtBase {
         this.isUIWebView = false;
         this.isWKWebView = true;
 
-        const configuration = this._wkWebViewConfiguration = WKWebViewConfiguration.new();
+        const configuration = (this._wkWebViewConfiguration = WKWebViewConfiguration.new());
         this._wkNavigationDelegate = WKNavigationDelegateImpl.initWithOwner(new WeakRef(this));
-        const jScript = "var meta = document.createElement('meta'); meta.setAttribute('name', 'viewport'); meta.setAttribute('content', 'initial-scale=1.0'); document.getElementsByTagName('head')[0].appendChild(meta);";
-        const wkUScript = WKUserScript.alloc().initWithSourceInjectionTimeForMainFrameOnly(jScript, WKUserScriptInjectionTime.AtDocumentEnd, true);
-        const messageHandler = WKScriptMessageHandlerImpl.initWithOwner(new WeakRef(this));
-        const wkUController = WKUserContentController.new();
-        wkUController.addUserScript(wkUScript);
-        wkUController.addScriptMessageHandlerName(messageHandler, 'nsBridge');
-        configuration.userContentController = wkUController;
-        configuration.preferences.setValueForKey(
-            true,
-            'allowFileAccessFromFileURLs'
+
+        const jsBridgeScript = `
+            ${webViewBridgeJsCode.trim()};
+        `;
+
+        this._wkUserScriptInjectWebViewBrigde = this.createWkUserScript(jsBridgeScript);
+
+        this._wkUserScriptViewPortCode = this.createWkUserScript(
+            `
+        (function() {
+            let meta = document.querySelector(
+                'head meta[name="viewport"]',
+            );
+            if (!meta) {
+                meta = document.createElement("meta");
+                document.head.appendChild(meta);
+            }
+
+            meta.setAttribute("name", "viewport");
+            meta.setAttribute("content", "initial-scale=1.0");
+        })();
+        `.trim(),
         );
+        const messageHandler = WKScriptMessageHandlerImpl.initWithOwner(new WeakRef(this));
+        const wkUController = (this._wkUserContentController = WKUserContentController.new());
+        wkUController.addScriptMessageHandlerName(messageHandler, "nsBridge");
+        configuration.userContentController = wkUController;
+        configuration.preferences.setValueForKey(true, "allowFileAccessFromFileURLs");
 
         this._wkCustomUrlSchemeHandler = new CustomUrlSchemeHandler();
         this._wkWebViewConfiguration.setURLSchemeHandlerForURLScheme(this._wkCustomUrlSchemeHandler, this.interceptScheme);
 
         this.nativeViewProtected = this._ios = new WKWebView({
             frame: CGRectZero,
-            configuration: configuration
+            configuration: configuration,
         });
+
+        this._wkNamedUserScripts = [];
+
+        this.loadWKUserScripts();
     }
 
     private initIOS9and10() {
@@ -90,6 +119,15 @@ export class WebViewExt extends WebViewExtBase {
         uiWebView.scrollView.bounces = false;
         uiWebView.scrollView.scrollEnabled = false;
         uiWebView.scalesPageToFit = false;
+    }
+
+    protected injectWebViewBridge() {
+        if (this._wkWebView) {
+            // Loaded via WkUserScripts
+            return Promise.resolve();
+        }
+
+        return super.injectWebViewBridge();
     }
 
     public executeJavaScript<T>(scriptCode: string, stringifyResult = true): Promise<T> {
@@ -137,17 +175,17 @@ export class WebViewExt extends WebViewExtBase {
                 }
             }
         })
-        .then((result): T => this.parseWebViewJavascriptResult(result))
-        .then((result) => {
-            const r = result as any;
-            if (r && typeof r === 'object' && r.error) {
-                const error = new Error(r.message);
-                (error as any).webStack = r.stack;
-                return Promise.reject(error);
-            }
+            .then((result): T => this.parseWebViewJavascriptResult(result))
+            .then((result) => {
+                const r = result as any;
+                if (r && typeof r === "object" && r.error) {
+                    const error = new Error(r.message);
+                    (error as any).webStack = r.stack;
+                    return Promise.reject(error);
+                }
 
-            return Promise.resolve(result);
-        });
+                return Promise.resolve(result);
+            });
     }
 
     @profile
@@ -180,7 +218,7 @@ export class WebViewExt extends WebViewExtBase {
     public _loadUrl(src: string) {
         const nsURL = NSURL.URLWithString(src);
         if (this._wkWebView) {
-            if (src.startsWith('file:///')) {
+            if (src.startsWith("file:///")) {
                 const nsReadAccessUrl = NSURL.URLWithString(src);
                 this.writeTrace(`WebViewExt<ios>._loadUrl("${src}") -> this._wkWebView.loadFileURLAllowingReadAccessToURL("${nsURL}", "${nsReadAccessUrl}"`);
                 this._wkWebView.loadFileURLAllowingReadAccessToURL(nsURL, nsReadAccessUrl);
@@ -290,7 +328,7 @@ export class WebViewExt extends WebViewExtBase {
         } else if (this._uiWebView) {
             result = CustomNSURLProtocol.getRegisteredLocalResourceForKey(resourceName);
         } else {
-            throw new Error('Not implemented for UIWebView');
+            throw new Error("Not implemented for UIWebView");
         }
 
         this.writeTrace(`WebViewExt<android>.getRegisteredLocalResource("${resourceName}") -> "${result}"`);
@@ -303,13 +341,13 @@ export class WebViewExt extends WebViewExtBase {
             return;
         }
 
-        if (!url.startsWith('js2ios')) {
+        if (!url.startsWith("js2ios")) {
             this.writeTrace(`WebViewExt.onUIWebViewEvent("${url}") - only supports js2ios-scheme`, traceMessageType.error);
             return;
         }
 
         try {
-            const message = decodeURIComponent(url.replace(/^js2ios:/, ''));
+            const message = decodeURIComponent(url.replace(/^js2ios:/, ""));
             const { eventName, resId } = JSON.parse(message);
             this.executeJavaScript<any>(`window.nsWebViewBridge.getUIWebViewResponse(${JSON.stringify(resId)})`)
                 .then((data) => {
@@ -324,6 +362,109 @@ export class WebViewExt extends WebViewExtBase {
     }
 
     public getTitle() {
-        return this.executeJavaScript<string>('document.title');
+        return this.executeJavaScript<string>("document.title");
+    }
+
+    public autoLoadStyleSheetFile(resourceName: string, filepath: string, insertBefore?: boolean) {
+        if (this._wkWebView) {
+            resourceName = this.fixLocalResourceName(resourceName);
+            if (filepath) {
+                this.registerLocalResource(resourceName, filepath);
+            }
+            const href = `${this.interceptScheme}://${resourceName}`;
+            const scriptCode = this.generaateLoadCSSFileScriptCode(href, insertBefore);
+
+            this.addNamedUserScript(`auto-load-css-${resourceName}`, scriptCode);
+        } else {
+            return super.autoLoadStyleSheetFile(resourceName, filepath, insertBefore);
+        }
+    }
+
+    public removeAutoLoadStyleSheetFile(resourceName: string) {
+        resourceName = this.fixLocalResourceName(resourceName);
+        this.removeNamedUserScript(`auto-load-css-${resourceName}`);
+    }
+
+    public autoLoadJavaScriptFile(resourceName: string, filepath: string) {
+        if (this._wkWebView) {
+            const fixedResourceName = this.fixLocalResourceName(resourceName);
+            if (filepath) {
+                this.registerLocalResource(fixedResourceName, filepath);
+            }
+            const href = `${this.interceptScheme}://${fixedResourceName}`;
+            const scriptCode = this.generateLoadJavaScriptFileScriptCode(href);
+            this.addNamedUserScript(href, scriptCode);
+        } else {
+            super.autoLoadJavaScriptFile(resourceName, filepath);
+        }
+    }
+
+    public removeAutoLoadJavaScriptFile(resourceName: string) {
+        if (this._wkWebView) {
+            const fixedResourceName = this.fixLocalResourceName(resourceName);
+            const href = `${this.interceptScheme}://${fixedResourceName}`;
+            this.removeNamedUserScript(href);
+        } else {
+            super.removeAutoLoadJavaScriptFile(resourceName);
+        }
+    }
+
+    private addNamedUserScript(name: string, scriptCode: string) {
+        if (!this._wkWebView) {
+            return;
+        }
+
+        this.removeNamedUserScript(name);
+
+        const wkUserScript = this.createWkUserScript(scriptCode);
+
+        this._wkNamedUserScripts.push({ name, wkUserScript });
+
+        this._wkUserContentController.addUserScript(wkUserScript);
+    }
+
+    private createWkUserScript(scriptCode: string) {
+        return WKUserScript.alloc().initWithSourceInjectionTimeForMainFrameOnly(scriptCode, WKUserScriptInjectionTime.AtDocumentEnd, true);
+    }
+
+    private removeNamedUserScript(name: string) {
+        if (!this._wkWebView) {
+            return;
+        }
+
+        const idx = this._wkNamedUserScripts.findIndex((val) => val.name === name);
+        if (idx === -1) {
+            return;
+        }
+
+        this._wkNamedUserScripts.splice(idx, 1);
+
+        this.loadWKUserScripts(this.autoInjectJSBridge);
+    }
+
+    private loadWKUserScripts(autoInjectJSBridge = this.autoInjectJSBridge) {
+        if (!this._wkWebView) {
+            return;
+        }
+
+        this._wkUserContentController.removeAllUserScripts();
+
+        if (!autoInjectJSBridge) {
+            this._wkUserContentController.addUserScript(this._wkUserScriptViewPortCode);
+            return;
+        }
+
+        this._wkUserContentController.addUserScript(this._wkUserScriptInjectWebViewBrigde);
+        this._wkUserContentController.addUserScript(this._wkUserScriptViewPortCode);
+
+        for (const { wkUserScript } of this._wkNamedUserScripts) {
+            this._wkUserContentController.addUserScript(wkUserScript);
+        }
+    }
+
+    [autoInjectJSBridgeProperty.setNative](enabled: boolean) {
+        if (this._wkWebView) {
+            this.loadWKUserScripts(enabled);
+        }
     }
 }

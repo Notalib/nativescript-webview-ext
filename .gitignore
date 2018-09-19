@@ -25,3 +25,5 @@ package-lock.json
 typings
 tests/test-runner/index.d.ts
 tests/tsconfig.tns.json
+**/*.metadata.json
+src/angular/index.d.ts

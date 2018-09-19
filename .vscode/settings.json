@@ -1,4 +1,13 @@
 {
+  "[typescript]": {
+    "editor.formatOnSave": true
+  },
+  "files.watcherExclude": {
+    "**/.git/objects/**": true,
+    "**/.git/subtree-cache/**": true,
+    "**/node_modules/**": true,
+    "**/platforms": true,
+  },
   "files.exclude": {
     "**/.git": true,
     "**/.svn": true,
@@ -6,6 +15,7 @@
     "**/CVS": true,
     "**/.DS_Store": true,
     "**/node_modules": true,
+    "**/platforms": true,
     "**/tests/*.d.ts": {
       "when": "$(basename).ts"
     },
@@ -18,8 +28,12 @@
     "**/src/webview-ext{-common,.android,.ios,.*webview}.d.ts": {
       "when": "$(basename).ts"
     },
+    "**/src/**/*.d.ts": {
+      "when": "$(basename).ts"
+    },
     "**/*.js": {
       "when": "$(basename).ts"
     },
+    "**/*.metadata.json": true
   }
 }

@@ -46,9 +46,15 @@ export function time(): number {
     }
 }
 
-export function write(message: string, type?: number) {
+export function write(messages: string | string[], type?: number) {
     //console.log(message);
-    trace.write(`${env.testUUID || ''} ${message}`.trim(), trace.categories.Test, type);
+    if (!Array.isArray(messages)) {
+        messages = [messages];
+    }
+
+    for (const message of messages) {
+        trace.write(`${env.testUUID || ''} ${message}`.trim(), trace.categories.Test, type);
+    }
 }
 
 function runTest(testInfo: TestInfoEntry) {

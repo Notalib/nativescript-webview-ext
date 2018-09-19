@@ -1,52 +1,59 @@
-/// <reference path="./node_modules/tns-platform-declarations/android.d.ts" />
+/// <reference path="./platforms/android/webviewinterface.d.ts" />
 
-import * as fs from 'tns-core-modules/file-system';
+import * as fs from "tns-core-modules/file-system";
 import * as platform from "tns-core-modules/platform";
-import { promisePolyfillJsCodePromise } from './nativescript-webview-bridge-loader';
-import { debugModeProperty, traceMessageType, UnsupportSDKError, WebViewExtBase } from "./webview-ext-common";
+import { promisePolyfillJsCodePromise } from "./nativescript-webview-bridge-loader";
+import {
+    builtInZoomControlsProperty,
+    cacheModeProperty,
+    databaseStorageProperty,
+    debugModeProperty,
+    displayZoomControlsProperty,
+    domStorageProperty,
+    supportZoomProperty,
+    traceMessageType,
+    UnsupportSDKError,
+    WebViewExtBase,
+} from "./webview-ext-common";
 
 export * from "./webview-ext-common";
 
 const androidSDK = Number(platform.device.sdkVersion);
 
+const extToMimeType = new Map<string, string>([
+    ["html", "text/html"],
+    ["htm", "text/html"],
+    ["xhtml", "text/html"],
+    ["xhtm", "text/html"],
+    ["css", "text/css"],
+    ["gif", "image/gif"],
+    ["jpeg", "image/jpeg"],
+    ["jpg", "image/jpeg"],
+    ["js", "text/javascript"],
+    ["otf", "application/vnd.ms-opentype"],
+    ["png", "image/png"],
+    ["svg", "image/svg+xml"],
+    ["ttf", "application/x-font-ttf"],
+]);
+
+const extToBinaryEncoding = new Set<string>(["gif", "jpeg", "jpg", "otf", "png", "ttf"]);
+
+type CacheMode = "default" | "cache_first" | "no_cache" | "cache_only";
+
+//#region android_native_classes
+let cacheModeMap: Map<CacheMode, number>;
+
+// Minor extention of the Native interface to allow for owner
 export declare namespace dk {
     namespace nota {
         namespace webviewinterface {
             class WebViewBridgeInterface extends java.lang.Object {
                 public owner?: WebViewExt;
-
-                public emitEventToNativeScript(eventName: string, data: string): void;
             }
         }
     }
 }
 
-const extToMimeType = new Map<string, string>([
-    ['html', 'text/html'],
-    ['htm', 'text/html'],
-    ['xhtml', 'text/html'],
-    ['xhtm', 'text/html'],
-    ['css', 'text/css'],
-    ['gif', 'image/gif'],
-    ['jpeg', 'image/jpeg'],
-    ['jpg', 'image/jpeg'],
-    ['js', 'text/javascript'],
-    ['otf', 'application/vnd.ms-opentype'],
-    ['png', 'image/png'],
-    ['svg', 'image/svg+xml'],
-    ['ttf', 'application/x-font-ttf'],
-]);
-
-const extToBinaryEncoding = new Set<string>([
-    "gif",
-    "jpeg",
-    "jpg",
-    "otf",
-    "png",
-    "ttf",
-]);
-
-//#region android_native_classes
 export interface AndroidWebViewClient extends android.webkit.WebViewClient {
     owner?: WebViewExt;
 }
@@ -63,6 +70,13 @@ function initializeWebViewClient(): void {
         return;
     }
 
+    cacheModeMap = new Map<CacheMode, number>([
+        ["cache_first", android.webkit.WebSettings.LOAD_CACHE_ELSE_NETWORK],
+        ["cache_only", android.webkit.WebSettings.LOAD_CACHE_ONLY],
+        ["default", android.webkit.WebSettings.LOAD_DEFAULT],
+        ["no_cache", android.webkit.WebSettings.LOAD_NO_CACHE],
+    ]);
+
     class WebViewExtClientImpl extends android.webkit.WebViewClient {
         public owner: WebViewExt;
 
@@ -78,12 +92,12 @@ function initializeWebViewClient(): void {
             }
 
             let url = request as string;
-            let httpMethod = 'GET';
+            let httpMethod = "GET";
             let isRedirect = false;
             let hasGesture = false;
             let isForMainFrame = false;
             let requestHeaders: java.util.Map<string, string> | null = null;
-            if (typeof request === 'object') {
+            if (typeof request === "object") {
                 httpMethod = request.getMethod();
                 isRedirect = request.isRedirect();
                 hasGesture = request.hasGesture();
@@ -93,7 +107,9 @@ function initializeWebViewClient(): void {
                 url = request.getUrl().toString();
             }
 
-            owner.writeTrace(`WebViewClientClass.shouldOverrideUrlLoading("${url}") - method:${httpMethod} isRedirect:${isRedirect} hasGesture:${hasGesture} isForMainFrame:${isForMainFrame} headers:${requestHeaders}`);
+            owner.writeTrace(
+                `WebViewClientClass.shouldOverrideUrlLoading("${url}") - method:${httpMethod} isRedirect:${isRedirect} hasGesture:${hasGesture} isForMainFrame:${isForMainFrame} headers:${requestHeaders}`,
+            );
 
             if (url.startsWith(owner.interceptScheme)) {
                 owner.writeTrace(`WebViewClientClass.shouldOverrideUrlLoading("${url}") - "${owner.interceptScheme}" - cancel`);
@@ -116,11 +132,11 @@ function initializeWebViewClient(): void {
             }
 
             let url = request as string;
-            if (typeof request === 'object') {
+            if (typeof request === "object") {
                 url = request.getUrl().toString();
             }
 
-            if (typeof url !== 'string') {
+            if (typeof url !== "string") {
                 owner.writeTrace(`WebViewClientClass.shouldInterceptRequest("${url}") - is not a string`);
                 return super.shouldInterceptRequest(view, request);
             }
@@ -145,8 +161,8 @@ function initializeWebViewClient(): void {
             const javaFile = new java.io.File(tnsFile.path);
             const stream = new java.io.FileInputStream(javaFile);
             const ext = tnsFile.extension.substr(1).toLowerCase();
-            const mimeType = extToMimeType.get(ext) || 'application/octet-stream';
-            const encoding = extToBinaryEncoding.has(ext) || mimeType === 'application/octet-stream' ? 'binary' : 'UTF-8';
+            const mimeType = extToMimeType.get(ext) || "application/octet-stream";
+            const encoding = extToBinaryEncoding.has(ext) || mimeType === "application/octet-stream" ? "binary" : "UTF-8";
 
             owner.writeTrace(`WebViewClientClass.shouldInterceptRequest("${url}") - file: "${filepath}" mimeType:${mimeType} encoding:${encoding}`);
 
@@ -160,8 +176,8 @@ function initializeWebViewClient(): void {
                 return response;
             }
 
-            const responseHeaders = r.getResponseHeaders() as java.util.HashMap<string, string> || new java.util.HashMap<string, string>();
-            responseHeaders.put('Access-Control-Allow-Origin', '*');
+            const responseHeaders = (r.getResponseHeaders() as java.util.HashMap<string, string>) || new java.util.HashMap<string, string>();
+            responseHeaders.put("Access-Control-Allow-Origin", "*");
             r.setResponseHeaders(responseHeaders);
 
             return response;
@@ -200,14 +216,14 @@ function initializeWebViewClient(): void {
         }
 
         private onReceivedErrorAPI23(view: android.webkit.WebView, request: any, error: any) {
-            super.onReceivedError(view, request, error);
+            android.webkit.WebViewClient.prototype.onReceivedError.call(this, view, request, error);
             const owner = this.owner;
             if (!owner) {
                 return;
             }
 
             let url = error.getUrl && error.getUrl();
-            if (!url && typeof request === 'object') {
+            if (!url && typeof request === "object") {
                 url = request.getUrl().toString();
             }
 
@@ -246,8 +262,7 @@ function initializeWebViewClient(): void {
             try {
                 owner.onWebViewEvent(eventName, JSON.parse(data));
                 return;
-            } catch {
-            }
+            } catch {}
             owner.onWebViewEvent(eventName, data);
         }
     }
@@ -287,7 +302,7 @@ export class WebViewExt extends WebViewExtBase {
         nativeView.client = client;
 
         const bridgeInterface = new WebViewBridgeInterface();
-        nativeView.addJavascriptInterface(bridgeInterface, 'androidWebViewBridge');
+        nativeView.addJavascriptInterface(bridgeInterface, "androidWebViewBridge");
         nativeView.bridgeInterface = bridgeInterface;
         return nativeView;
     }
@@ -414,15 +429,18 @@ export class WebViewExt extends WebViewExtBase {
         return new Promise((resolve, reject) => {
             if (!this.android) {
                 this.writeTrace(`WebViewExt<android>.executeJavaScript() -> no nativeview?`, traceMessageType.error);
-                reject(new Error('Native Android not inited, cannot call executeJavaScript'));
+                reject(new Error("Native Android not inited, cannot call executeJavaScript"));
                 return;
             }
 
-            this.android.evaluateJavascript(scriptCode, new android.webkit.ValueCallback({
-                onReceiveValue(result) {
-                    resolve(result);
-                },
-            }));
+            this.android.evaluateJavascript(
+                scriptCode,
+                new android.webkit.ValueCallback({
+                    onReceiveValue(result) {
+                        resolve(result);
+                    },
+                }),
+            );
         }).then((result): T => this.parseWebViewJavascriptResult(result));
     }
 
@@ -435,40 +453,137 @@ export class WebViewExt extends WebViewExtBase {
             return Promise.resolve();
         }
 
-        if (typeof WebViewExt.isPromiseSupported === 'undefined') {
-            this.writeTrace('WebViewExt<android>.ensurePromiseSupport() - need to check for promise support.');
+        if (typeof WebViewExt.isPromiseSupported === "undefined") {
+            this.writeTrace("WebViewExt<android>.ensurePromiseSupport() - need to check for promise support.");
 
-            return this.executeJavaScript('typeof Promise')
-                .then((v) => v !== 'undefined')
+            return this.executeJavaScript("typeof Promise")
+                .then((v) => v !== "undefined")
                 .then((v) => {
                     WebViewExt.isPromiseSupported = v;
                     if (v) {
-                        this.writeTrace('WebViewExt<android>.ensurePromiseSupport() - promise is supported - polyfill not needed.');
+                        this.writeTrace("WebViewExt<android>.ensurePromiseSupport() - promise is supported - polyfill not needed.");
                         return Promise.resolve();
                     }
 
-                    this.writeTrace('WebViewExt<android>.ensurePromiseSupport() - promise is not supported - polyfill needed.');
+                    this.writeTrace("WebViewExt<android>.ensurePromiseSupport() - promise is not supported - polyfill needed.");
                     return this.loadPromisePolyfill();
                 });
         }
 
-        this.writeTrace('WebViewExt<android>.ensurePromiseSupport() - promise is not supported - polyfill needed.');
+        this.writeTrace("WebViewExt<android>.ensurePromiseSupport() - promise is not supported - polyfill needed.");
         return this.loadPromisePolyfill();
     }
 
     protected loadPromisePolyfill() {
-        return promisePolyfillJsCodePromise
-            .then((scriptCode) => this.executeJavaScript(scriptCode))
-            .then(() => void 0);
+        return promisePolyfillJsCodePromise.then((scriptCode) => this.executeJavaScript(scriptCode)).then(() => void 0);
+    }
+
+    protected injectWebViewBridge() {
+        return super.injectWebViewBridge().then(() => this.ensurePromiseSupport());
     }
 
     public getTitle() {
         return Promise.resolve(this.nativeViewProtected.getTitle());
     }
 
-    [debugModeProperty.setNative](value: boolean) {
-        if (androidSDK >= 19) {
-            (android.webkit.WebView as any).setWebContentsDebuggingEnabled(!!value);
+    public zoomIn() {
+        return this.nativeViewProtected.zoomIn();
+    }
+
+    public zoomOut() {
+        return this.nativeViewProtected.zoomOut();
+    }
+
+    public zoomBy(zoomFactor: number) {
+        if (androidSDK < 21) {
+            this.writeTrace(`WebViewExt<android>.zoomBy - not supported on this SDK`);
+            return;
         }
+
+        if (zoomFactor >= 0.01 && zoomFactor <= 100) {
+            return (this.nativeViewProtected as any).zoomBy(zoomFactor);
+        }
+
+        throw new Error(`ZoomBy only accepts values between 0.01 and 100 both inclusive`);
+    }
+
+    [debugModeProperty.getDefault]() {
+        return false;
+    }
+
+    [debugModeProperty.setNative](enabled: boolean) {
+        (android.webkit.WebView as any).setWebContentsDebuggingEnabled(!!enabled);
+    }
+
+    [builtInZoomControlsProperty.getDefault]() {
+        const settings = this.nativeViewProtected.getSettings();
+        return settings.getBuiltInZoomControls();
+    }
+
+    [builtInZoomControlsProperty.setNative](enabled: boolean) {
+        const settings = this.nativeViewProtected.getSettings();
+        settings.setBuiltInZoomControls(!!enabled);
+    }
+
+    [displayZoomControlsProperty.getDefault]() {
+        const settings = this.nativeViewProtected.getSettings();
+        return settings.getDisplayZoomControls();
+    }
+
+    [displayZoomControlsProperty.setNative](enabled: boolean) {
+        const settings = this.nativeViewProtected.getSettings();
+        settings.setDisplayZoomControls(!!enabled);
+    }
+
+    [cacheModeProperty.getDefault](): CacheMode {
+        const settings = this.nativeViewProtected.getSettings();
+        const cacheModeInt = settings.getCacheMode();
+        for (const [key, value] of Array.from(cacheModeMap)) {
+            if (value === cacheModeInt) {
+                return key;
+            }
+        }
+
+        return null;
+    }
+
+    [cacheModeProperty.setNative](cacheMode: CacheMode) {
+        const settings = this.nativeViewProtected.getSettings();
+        for (const [key, nativeValue] of Array.from(cacheModeMap)) {
+            if (key === cacheMode) {
+                settings.setCacheMode(nativeValue);
+                return;
+            }
+        }
+    }
+
+    [databaseStorageProperty.getDefault]() {
+        const settings = this.nativeViewProtected.getSettings();
+        return settings.getDatabaseEnabled();
+    }
+
+    [databaseStorageProperty.setNative](enabled: boolean) {
+        const settings = this.nativeViewProtected.getSettings();
+        settings.setDatabaseEnabled(!!enabled);
+    }
+
+    [domStorageProperty.getDefault]() {
+        const settings = this.nativeViewProtected.getSettings();
+        return settings.getDomStorageEnabled();
+    }
+
+    [domStorageProperty.setNative](enabled: boolean) {
+        const settings = this.nativeViewProtected.getSettings();
+        settings.setDomStorageEnabled(!!enabled);
+    }
+
+    [supportZoomProperty.getDefault]() {
+        const settings = this.nativeViewProtected.getSettings();
+        return settings.supportZoom();
+    }
+
+    [supportZoomProperty.setNative](enabled: boolean) {
+        const settings = this.nativeViewProtected.getSettings();
+        settings.setSupportZoom(!!enabled);
     }
 }

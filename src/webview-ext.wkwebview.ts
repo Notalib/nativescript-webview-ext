@@ -59,13 +59,21 @@ export class WKNavigationDelegateImpl extends NSObject implements WKNavigationDe
 
         const shouldOverrideUrlLoading = owner._onShouldOverrideUrlLoading(url, httpMethod, navType);
         if (shouldOverrideUrlLoading === true) {
-            owner.writeTrace(`WKNavigationDelegateClass.webViewDecidePolicyForNavigationActionDecisionHandler("${url}", "${navigationAction.navigationType}") -> method:${httpMethod} "${navType}" -> cancel`);
+            owner.writeTrace(
+                `WKNavigationDelegateClass.webViewDecidePolicyForNavigationActionDecisionHandler("${url}", "${
+                    navigationAction.navigationType
+                }") -> method:${httpMethod} "${navType}" -> cancel`,
+            );
             decisionHandler(WKNavigationActionPolicy.Cancel);
             return;
         }
         decisionHandler(WKNavigationActionPolicy.Allow);
 
-        owner.writeTrace(`WKNavigationDelegateClass.webViewDecidePolicyForNavigationActionDecisionHandler("${url}", "${navigationAction.navigationType}") -> method:${httpMethod} "${navType}"`);
+        owner.writeTrace(
+            `WKNavigationDelegateClass.webViewDecidePolicyForNavigationActionDecisionHandler("${url}", "${
+                navigationAction.navigationType
+            }") -> method:${httpMethod} "${navType}"`,
+        );
         owner._onLoadStarted(url, navType);
     }
 
@@ -128,7 +136,10 @@ export class WKScriptMessageHandlerImpl extends NSObject implements WKScriptMess
             const message = JSON.parse(webViewMessage.body as string);
             owner.onWebViewEvent(message.eventName, message.data);
         } catch (err) {
-            owner.writeTrace(`userContentControllerDidReceiveScriptMessage(${userContentController}, ${webViewMessage}) - bad message: ${webViewMessage.body}`, traceMessageType.error);
+            owner.writeTrace(
+                `userContentControllerDidReceiveScriptMessage(${userContentController}, ${webViewMessage}) - bad message: ${webViewMessage.body}`,
+                traceMessageType.error,
+            );
         }
     }
 }
