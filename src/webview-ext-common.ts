@@ -461,7 +461,7 @@ export class WebViewExtBase extends View {
     /**
      * Resolve a "x-local://{name}" to file-path.
      */
-    public getRegisteredLocalResource(name: string) {
+    public getRegisteredLocalResource(name: string): string {
         throw new Error("Method not implemented.");
     }
 
