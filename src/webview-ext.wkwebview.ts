@@ -23,6 +23,7 @@ export class WKNavigationDelegateImpl extends NSObject implements WKNavigationDe
         const request = navigationAction.request;
         const httpMethod = request.HTTPMethod;
         const url = request.URL && request.URL.absoluteString;
+
         owner.writeTrace(`webViewDecidePolicyForNavigationActionDecisionHandler: "${url}"`);
         if (!url) {
             return;

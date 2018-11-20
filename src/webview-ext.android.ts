@@ -297,6 +297,9 @@ export class WebViewExt extends WebViewExtBase {
         settings.setJavaScriptEnabled(true);
         settings.setBuiltInZoomControls(true);
 
+        // Needed for XHRRequests
+        settings.setAllowUniversalAccessFromFileURLs(true);
+
         const client = new WebViewExtClient();
         nativeView.setWebViewClient(client);
         nativeView.client = client;

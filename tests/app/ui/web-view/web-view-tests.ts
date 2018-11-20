@@ -5,8 +5,9 @@ import * as testModule from "../../ui-test";
 import * as webViewModule from "@nota/nativescript-webview-ext";
 // << webview-require
 
-import { Color } from 'tns-core-modules/color';
-import * as url from 'url';
+import { Color } from "tns-core-modules/color";
+import * as fs from "tns-core-modules/file-system";
+import * as url from "url";
 
 // >> declare-webview-xml
 //  <Page>
@@ -19,18 +20,18 @@ function timeoutPromise(delay = 100) {
 }
 
 // HTML test files
-const emptyHTMLFile = '~/ui/web-view/assets/html/empty.html';
-const javascriptCallsFile = '~/ui/web-view/assets/html/javascript-calls.html';
-const javascriptCallsXLocalFile = '~/ui/web-view/assets/html/javascript-calls-x-local.html';
-const cssNotPredefinedFile = '~/ui/web-view/assets/html/css-not-predefined.html';
-const cssPreDefinedlinkFile = '~/ui/web-view/assets/html/css-predefined-link-tags.html';
+const emptyHTMLFile = "~/ui/web-view/assets/html/empty.html";
+const javascriptCallsFile = "~/ui/web-view/assets/html/javascript-calls.html";
+const javascriptCallsXLocalFile = "~/ui/web-view/assets/html/javascript-calls-x-local.html";
+const cssNotPredefinedFile = "~/ui/web-view/assets/html/css-not-predefined.html";
+const cssPreDefinedlinkFile = "~/ui/web-view/assets/html/css-predefined-link-tags.html";
 
 // Resource loads
-const localStyleSheetCssNAME = 'local-stylesheet.css';
-const localStyleSheetCssFile = '~/ui/web-view/assets/css/local-stylesheet.css';
+const localStyleSheetCssNAME = "local-stylesheet.css";
+const localStyleSheetCssFile = "~/ui/web-view/assets/css/local-stylesheet.css";
 
-const localJavaScriptName = 'local-javascript.js';
-const localJavaScriptFile = '~/ui/web-view/assets/js/local-javascript.js';
+const localJavaScriptName = "local-javascript.js";
+const localJavaScriptFile = "~/ui/web-view/assets/js/local-javascript.js";
 
 const jsGetElementStyleSheet = `
 (function() {
@@ -57,7 +58,6 @@ const jsGetElementStyleSheet = `
 `;
 
 export class WebViewTest extends testModule.UITest<webViewModule.WebViewExt> {
-
     public create(): webViewModule.WebViewExt {
         // >> declare-webview
         const webView = new webViewModule.WebViewExt();
@@ -77,8 +77,7 @@ export class WebViewTest extends testModule.UITest<webViewModule.WebViewExt> {
                 TKUnit.assertNull(args.error, args.error);
                 TKUnit.assertDeepEqual(url.parse(args.url), url.parse(targetSrc), "args.url");
                 done(null);
-            }
-            catch (e) {
+            } catch (e) {
                 done(e);
             }
 
@@ -101,8 +100,7 @@ export class WebViewTest extends testModule.UITest<webViewModule.WebViewExt> {
                 TKUnit.assertNull(args.error, args.error);
                 TKUnit.assertDeepEqual(url.parse(args.url), url.parse(targetSrc), "args.url");
                 done(null);
-            }
-            catch (e) {
+            } catch (e) {
                 done(e);
             }
 
@@ -116,20 +114,19 @@ export class WebViewTest extends testModule.UITest<webViewModule.WebViewExt> {
     public testLoadLocalFile(done) {
         const webView = this.testView;
 
-        const targetSrc = '~/ui/web-view/test.html';
+        const targetSrc = "~/ui/web-view/test.html";
 
         // >> webview-localfile
         webView.on(webViewModule.WebViewExt.loadFinishedEvent, async (args: webViewModule.LoadEventData) => {
             // >> (hide)
             const actualTitle = await webView.getTitle();
-            const expectedTitle = 'MyTitle';
+            const expectedTitle = "MyTitle";
 
             try {
                 TKUnit.assertNull(args.error, args.error);
                 TKUnit.assertEqual(actualTitle, expectedTitle, `File "${targetSrc}" not loaded properly.`);
                 done(null);
-            }
-            catch (e) {
+            } catch (e) {
                 done(e);
             }
             // << (hide)
@@ -144,14 +141,13 @@ export class WebViewTest extends testModule.UITest<webViewModule.WebViewExt> {
         const targetSrc = "~/ui/web-view/test with spaces.html";
         webview.on(webViewModule.WebViewExt.loadFinishedEvent, async (args: webViewModule.LoadEventData) => {
             const actualTitle = await webview.getTitle();
-            const expectedTitle = 'MyTitle';
+            const expectedTitle = "MyTitle";
 
             try {
                 TKUnit.assertNull(args.error, args.error);
                 TKUnit.assertEqual(actualTitle, expectedTitle, `File "${targetSrc}" not loaded properly.`);
                 done(null);
-            }
-            catch (e) {
+            } catch (e) {
                 done(e);
             }
         });
@@ -166,19 +162,19 @@ export class WebViewTest extends testModule.UITest<webViewModule.WebViewExt> {
         webview.on(webViewModule.WebViewExt.loadFinishedEvent, async (args: webViewModule.LoadEventData) => {
             // >> (hide)
             const actualTitle = await webview.getTitle();
-            const expectedTitle = 'MyTitle';
+            const expectedTitle = "MyTitle";
 
             try {
                 TKUnit.assertNull(args.error, args.error);
                 TKUnit.assertEqual(actualTitle, expectedTitle, "HTML string not loaded properly. Actual: ");
                 done(null);
-            }
-            catch (e) {
+            } catch (e) {
                 done(e);
             }
             // << (hide)
         });
-        webview.src = '<!DOCTYPE html><html><head><title>MyTitle</title><meta charset="utf-8" /></head><body><span style="color:red">TestÖ</span></body></html>';
+        webview.src =
+            '<!DOCTYPE html><html><head><title>MyTitle</title><meta charset="utf-8" /></head><body><span style="color:red">TestÖ</span></body></html>';
         // << webview-string
     }
 
@@ -191,14 +187,13 @@ export class WebViewTest extends testModule.UITest<webViewModule.WebViewExt> {
             const args = await webview.loadUrl(html);
             // >> (hide)
             const actualTitle = await webview.getTitle();
-            const expectedTitle = 'MyTitle';
+            const expectedTitle = "MyTitle";
 
             try {
                 TKUnit.assertNull(args.error, args.error);
                 TKUnit.assertEqual(actualTitle, expectedTitle, "HTML string not loaded properly. Actual: ");
                 done(null);
-            }
-            catch (e) {
+            } catch (e) {
                 done(e);
             }
             // << (hide)
@@ -211,22 +206,21 @@ export class WebViewTest extends testModule.UITest<webViewModule.WebViewExt> {
     public testLoadSingleXLocalFile(done) {
         const webview = this.testView;
 
-        const emptyHTMLXLocalSource = 'x-local://empty.html';
+        const emptyHTMLXLocalSource = "x-local://empty.html";
 
-        webview.registerLocalResource('empty.html', emptyHTMLFile);
+        webview.registerLocalResource("empty.html", emptyHTMLFile);
 
         // >> webview-x-localfile
         webview.on(webViewModule.WebViewExt.loadFinishedEvent, async (args: webViewModule.LoadEventData) => {
             // >> (hide)
-            const expectedTitle = 'Blank';
+            const expectedTitle = "Blank";
             const actualTitle = await webview.getTitle();
 
             try {
                 TKUnit.assertNull(args.error, args.error);
                 TKUnit.assertEqual(actualTitle, expectedTitle, `File "${emptyHTMLXLocalSource}" not loaded properly.`);
                 done(null);
-            }
-            catch (e) {
+            } catch (e) {
                 done(e);
             }
             // << (hide)
@@ -238,22 +232,21 @@ export class WebViewTest extends testModule.UITest<webViewModule.WebViewExt> {
     public async testLoadSingleXLocalFilePromise(done) {
         const webview = this.testView;
 
-        const emptyHTMLXLocalSource = 'x-local://empty.html';
+        const emptyHTMLXLocalSource = "x-local://empty.html";
 
         try {
-            webview.registerLocalResource('empty.html', emptyHTMLFile);
+            webview.registerLocalResource("empty.html", emptyHTMLFile);
 
             const args = await webview.loadUrl(emptyHTMLXLocalSource);
             // >> (hide)
-            const expectedTitle = 'Blank';
+            const expectedTitle = "Blank";
             const actualTitle = await webview.getTitle();
 
             try {
                 TKUnit.assertNull(args.error, args.error);
                 TKUnit.assertEqual(actualTitle, expectedTitle, `File "${emptyHTMLXLocalSource}" not loaded properly.`);
                 done(null);
-            }
-            catch (e) {
+            } catch (e) {
                 done(e);
             }
             // << (hide)
@@ -266,14 +259,14 @@ export class WebViewTest extends testModule.UITest<webViewModule.WebViewExt> {
     public testInjectFilesPredefinedStyleSheetLink(done) {
         const webview = this.testView;
 
-        const expectedRedColor = new Color('rgb(0, 128, 0)');
+        const expectedRedColor = new Color("rgb(0, 128, 0)");
 
         webview.registerLocalResource(localStyleSheetCssNAME, localStyleSheetCssFile);
 
         // >> webview-x-local-predefined-link
         webview.on(webViewModule.WebViewExt.loadFinishedEvent, async (args: webViewModule.LoadEventData) => {
             // >> (hide)
-            const expectedTitle = 'Load predefined x-local stylesheet';
+            const expectedTitle = "Load predefined x-local stylesheet";
 
             try {
                 TKUnit.assertNull(args.error, args.error);
@@ -285,8 +278,7 @@ export class WebViewTest extends testModule.UITest<webViewModule.WebViewExt> {
                 TKUnit.assertNotNull(styles, `Couldn't load styles`);
                 TKUnit.assertEqual(new Color(styles.color).hex, expectedRedColor.hex, `div.red isn't red`);
                 done(null);
-            }
-            catch (e) {
+            } catch (e) {
                 done(e);
             }
             // << (hide)
@@ -298,14 +290,14 @@ export class WebViewTest extends testModule.UITest<webViewModule.WebViewExt> {
     public testInjectFilesStyleSheetLink(done) {
         const webview = this.testView;
 
-        const expectedRedColor = new Color('rgb(0, 128, 0)');
+        const expectedRedColor = new Color("rgb(0, 128, 0)");
 
         webview.registerLocalResource(localStyleSheetCssNAME, localStyleSheetCssFile);
 
         // >> webview-x-local-inject-once
         webview.on(webViewModule.WebViewExt.loadFinishedEvent, async (args: webViewModule.LoadEventData) => {
             // >> (hide)
-            const expectedTitle = 'Inject stylesheet via x-local';
+            const expectedTitle = "Inject stylesheet via x-local";
 
             try {
                 const actualTitle = await webview.getTitle();
@@ -319,8 +311,7 @@ export class WebViewTest extends testModule.UITest<webViewModule.WebViewExt> {
                 TKUnit.assertNotNull(styles, `Couldn't load styles`);
                 TKUnit.assertEqual(new Color(styles.color).hex, expectedRedColor.hex, `div.red isn't red`);
                 done(null);
-            }
-            catch (e) {
+            } catch (e) {
                 done(e);
             }
             // << (hide)
@@ -337,7 +328,7 @@ export class WebViewTest extends testModule.UITest<webViewModule.WebViewExt> {
         // >> webview-x-local-inject-once
         webview.on(webViewModule.WebViewExt.loadFinishedEvent, async (args: webViewModule.LoadEventData) => {
             // >> (hide)
-            const expectedTitle = 'Blank';
+            const expectedTitle = "Blank";
 
             try {
                 const actualTitle = await webview.getTitle();
@@ -349,8 +340,7 @@ export class WebViewTest extends testModule.UITest<webViewModule.WebViewExt> {
 
                 TKUnit.assertEqual(await webview.executeJavaScript(`getNumber()`), 42);
                 done(null);
-            }
-            catch (e) {
+            } catch (e) {
                 done(e);
             }
             // << (hide)
@@ -383,8 +373,7 @@ export class WebViewTest extends testModule.UITest<webViewModule.WebViewExt> {
                 } else {
                     done(null);
                 }
-            }
-            catch (e) {
+            } catch (e) {
                 done(e);
             }
             // << (hide)
@@ -403,10 +392,10 @@ export class WebViewTest extends testModule.UITest<webViewModule.WebViewExt> {
         const webview = this.testView;
 
         const expected = {
-            huba: 'hop',
+            huba: "hop",
         };
 
-        webview.on('web-message', (args: any) => {
+        webview.on("web-message", (args: any) => {
             try {
                 const data = args.data;
                 TKUnit.assertDeepEqual(data, expected);
@@ -415,7 +404,7 @@ export class WebViewTest extends testModule.UITest<webViewModule.WebViewExt> {
                 done(err);
             }
 
-            webview.off('web-message');
+            webview.off("web-message");
         });
 
         // >> webview-x-local-inject-once
@@ -427,9 +416,8 @@ export class WebViewTest extends testModule.UITest<webViewModule.WebViewExt> {
 
                 await webview.executeJavaScript(`setupEventListener()`);
                 await timeoutPromise();
-                webview.emitToWebView('tns-message', expected);
-            }
-            catch (e) {
+                webview.emitToWebView("tns-message", expected);
+            } catch (e) {
                 done(e);
             }
             // << (hide)
@@ -443,49 +431,49 @@ export class WebViewTest extends testModule.UITest<webViewModule.WebViewExt> {
      * Test calling a function that returns an integer
      */
     public testWebViewJavaScriptGetNumber(done) {
-        this.runWebViewJavaScriptInterfaceTest(done, 'getNumber()', 42, 'The answer to the ultimate question of life, the universe and everything');
+        this.runWebViewJavaScriptInterfaceTest(done, "getNumber()", 42, "The answer to the ultimate question of life, the universe and everything");
     }
 
     /**
      * Test calling a function that returns a floating number
      */
     public testWebViewJavaScriptGetNumberFloat(done) {
-        this.runWebViewJavaScriptInterfaceTest(done, 'getNumberFloat()', 3.14, 'Get pi');
+        this.runWebViewJavaScriptInterfaceTest(done, "getNumberFloat()", 3.14, "Get pi");
     }
 
     /**
      * Test calling a function that returns a boolean - true
      */
     public testWebViewJavaScriptGetBoeleanTrue(done) {
-        this.runWebViewJavaScriptInterfaceTest(done, 'getTruth()', true, 'Get boolean - true');
+        this.runWebViewJavaScriptInterfaceTest(done, "getTruth()", true, "Get boolean - true");
     }
 
     /**
      * Test calling a function that returns a boolean - false
      */
     public testWebViewJavaScriptGetBoeleanFalse(done) {
-        this.runWebViewJavaScriptInterfaceTest(done, 'getFalse()', false, 'Get boolean - false');
+        this.runWebViewJavaScriptInterfaceTest(done, "getFalse()", false, "Get boolean - false");
     }
 
     /**
      * Test calling a function that returns a string
      */
     public testWebViewJavaScriptGetString(done) {
-        this.runWebViewJavaScriptInterfaceTest(done, 'getString()', 'string result from webview JS function', 'string result from webview JS function');
+        this.runWebViewJavaScriptInterfaceTest(done, "getString()", "string result from webview JS function", "string result from webview JS function");
     }
 
     /**
      * Test calling a function that returns an array
      */
     public testWebViewJavaScriptGetArray(done) {
-        this.runWebViewJavaScriptInterfaceTest(done, 'getArray()', [1.5, true, "hello"], 'getArray()');
+        this.runWebViewJavaScriptInterfaceTest(done, "getArray()", [1.5, true, "hello"], "getArray()");
     }
 
     /**
      * Test calling a function that returns an object
      */
     public testWebViewJavaScriptGetObject(done) {
-        this.runWebViewJavaScriptInterfaceTest(done, 'getObject()', { prop: "test", name: "object-test", values: [42, 3.14] }, 'getObject()');
+        this.runWebViewJavaScriptInterfaceTest(done, "getObject()", { prop: "test", name: "object-test", values: [42, 3.14] }, "getObject()");
     }
 
     /**
@@ -503,8 +491,7 @@ export class WebViewTest extends testModule.UITest<webViewModule.WebViewExt> {
 
                 TKUnit.assertDeepEqual(await webview.executeJavaScript(scriptCode), expected, msg);
                 done(null);
-            }
-            catch (e) {
+            } catch (e) {
                 done(e);
             }
             // << (hide)
@@ -527,9 +514,8 @@ export class WebViewTest extends testModule.UITest<webViewModule.WebViewExt> {
             try {
                 TKUnit.assertNull(args.error, args.error);
 
-                TKUnit.assertDeepEqual(await webview.executePromise(`testPromiseResolve()`), 42, 'Resolve promise');
-            }
-            catch (e) {
+                TKUnit.assertDeepEqual(await webview.executePromise(`testPromiseResolve()`), 42, "Resolve promise");
+            } catch (e) {
                 done(e);
                 return;
             }
@@ -544,7 +530,7 @@ export class WebViewTest extends testModule.UITest<webViewModule.WebViewExt> {
             try {
                 TKUnit.assertNotNull(rejectErr);
 
-                TKUnit.assertEqual(rejectErr.message, 'The Cake is a Lie');
+                TKUnit.assertEqual(rejectErr.message, "The Cake is a Lie");
                 done(null);
             } catch (err) {
                 done(err);
@@ -562,7 +548,7 @@ export class WebViewTest extends testModule.UITest<webViewModule.WebViewExt> {
 
         const expectedMessage = `${new Date()}`;
         let gotMessage = false;
-        webview.on('tns-message', (args) => {
+        webview.on("tns-message", (args) => {
             const actualMessage = args.data;
             TKUnit.assertEqual(actualMessage, expectedMessage, `Message on load`);
             gotMessage = true;
@@ -570,16 +556,20 @@ export class WebViewTest extends testModule.UITest<webViewModule.WebViewExt> {
 
         // >> webview-x-localfile
         try {
-            webview.autoExecuteJavaScript(`new Promise(function(resolve) {
+            webview.autoExecuteJavaScript(
+                `new Promise(function(resolve) {
                 // console.log('FIRST_PROMISE');
                 window.nsWebViewBridge.emit("tns-message", ${JSON.stringify(expectedMessage)});
 
                 setTimeout(resolve, 50);
             }).then(function() {
                 window.firstPromiseResolved = true;
-            });`, 'tns-message');
+            });`,
+                "tns-message",
+            );
 
-            webview.autoExecuteJavaScript(`new Promise(function(resolve, reject) {
+            webview.autoExecuteJavaScript(
+                `new Promise(function(resolve, reject) {
                 // console.log('SECOND_PROMISE: ' + !!window.firstPromiseResolved);
                 if (!window.firstPromiseResolved) {
                     reject(new Error('First promise not resolved'));
@@ -588,21 +578,26 @@ export class WebViewTest extends testModule.UITest<webViewModule.WebViewExt> {
                 resolve();
             }).then(function() {
                 window.secondPromiseResolved = true;
-            });`, 'tns-message-2');
+            });`,
+                "tns-message-2",
+            );
 
-            webview.autoExecuteJavaScript(`new Promise(function(resolve, reject) {
+            webview.autoExecuteJavaScript(
+                `new Promise(function(resolve, reject) {
                 // console.log('THIRD_PROMISE: ' + !!window.secondPromiseResolved);
                 if (!window.secondPromiseResolved) {
                     reject(new Error('Second promise not resolved'));
                     return;
                 }
                 resolve();
-            });`, 'tns-message-3');
+            });`,
+                "tns-message-3",
+            );
 
             const args = await webview.loadUrl(emptyHTMLFile);
 
             // >> (hide)
-            const expectedTitle = 'Blank';
+            const expectedTitle = "Blank";
             const actualTitle = await webview.getTitle();
 
             TKUnit.assertNull(args.error, args.error);
@@ -626,13 +621,74 @@ export class WebViewTest extends testModule.UITest<webViewModule.WebViewExt> {
                 TKUnit.assertNull(args.error, args.error);
                 TKUnit.assertDeepEqual(url.parse(args.url), url.parse(targetSrc), "args.url");
                 done(null);
-            }
-            catch (e) {
+            } catch (e) {
                 done(e);
             }
         });
 
         webview.src = targetSrc;
+    }
+
+    public async testXlocalXHR(done) {
+        const webview = this.testView;
+
+        // >> webview-x-localfile-xhr
+        try {
+            webview.registerLocalResource(localStyleSheetCssNAME, localStyleSheetCssFile);
+            let filepath = localStyleSheetCssFile;
+
+            if (filepath.startsWith("~")) {
+                filepath = fs.path.normalize(fs.knownFolders.currentApp().path + filepath.substr(1));
+            }
+
+            if (filepath.startsWith("file://")) {
+                filepath = filepath.replace(/^file:\/\//, "");
+            }
+
+            const expectedData = (await fs.File.fromPath(filepath).readText()).trim();
+
+            webview.autoExecuteJavaScript(
+                `window.makeRequestPromise = function(obj) {
+                    return new Promise(function(resolve, reject) {
+                        let xhr = new XMLHttpRequest();
+                        xhr.open(obj.method || "GET", obj.url);
+                        xhr.onload = function() {
+                            if (xhr.status >= 200 && xhr.status < 300) {
+                                resolve(xhr.response);
+                            } else {
+                                reject(xhr.statusText);
+                            }
+                        };
+                        xhr.onerror = function() {
+                            reject(xhr.statusText);
+                        };
+                        xhr.send(obj.body);
+                    });
+            };`,
+                "make-request-fn",
+            );
+
+            const args = await webview.loadUrl(emptyHTMLFile);
+
+            // >> (hide)
+            const expectedTitle = "Blank";
+            const actualTitle = await webview.getTitle();
+
+            TKUnit.assertNull(args.error, args.error);
+            TKUnit.assertEqual(actualTitle, expectedTitle, `File "${emptyHTMLFile}" not loaded properly.`);
+
+            const actualData = (await webview.executePromise<string>(`makeRequestPromise({
+                url: 'x-local://${localStyleSheetCssNAME}'
+            })`)).trim();
+
+            TKUnit.assertEqual(expectedData, actualData, `Ajax filecontent not the same`);
+            // << (hide)
+
+            done(null);
+        } catch (err) {
+            done(err);
+        }
+        // << webview-x-localfile-xhr
     }
 }
 

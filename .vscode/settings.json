@@ -17,19 +17,7 @@
     "**/.DS_Store": true,
     "**/node_modules": true,
     "**/platforms": true,
-    "**/tests/*.d.ts": {
-      "when": "$(basename).ts"
-    },
-    "**/demo/*.d.ts": {
-      "when": "$(basename).ts"
-    },
-    "**/src/native*.d.ts": {
-      "when": "$(basename).ts"
-    },
-    "**/src/webview-ext{-common,.android,.ios,.*webview}.d.ts": {
-      "when": "$(basename).ts"
-    },
-    "**/src/**/*.d.ts": {
+    "**/*.d.ts": {
       "when": "$(basename).ts"
     },
     "**/*.js": {

@@ -1,5 +1,5 @@
 import * as fs from "tns-core-modules/file-system";
-import { EventData, Property, traceEnabled, traceMessageType, traceWrite, View } from "tns-core-modules/ui/core/view";
+import { CSSType, EventData, Property, traceEnabled, traceMessageType, traceWrite, View } from "tns-core-modules/ui/core/view";
 import { webViewBridgeJsCodePromise } from "./nativescript-webview-bridge-loader";
 
 export * from "tns-core-modules/ui//core/view";
@@ -112,6 +112,7 @@ export class UnsupportSDKError extends Error {
     }
 }
 
+@CSSType("WebView")
 export class WebViewExtBase extends View {
     /**
      * Gets the native [android widget](http://developer.android.com/reference/android/webkit/WebView.html) that represents the user interface for this component. Valid only when running on Android OS.
@@ -376,9 +377,9 @@ export class WebViewExtBase extends View {
 
         if (src.startsWith(this.interceptScheme)) {
             this.writeTrace(`WebViewExt.src = "${originSrc}" resolve x-local file`);
-            const fileparh = this.getRegisteredLocalResource(src);
-            if (fileparh) {
-                src = `file://${fileparh}`;
+            const filepath = this.getRegisteredLocalResource(src);
+            if (filepath) {
+                src = `file://${filepath}`;
                 this.writeTrace(`WebViewExt.src = "${originSrc}" x-local resolved to "${src}"`);
             } else {
                 this.writeTrace(`WebViewExt.src = "${originSrc}" x-local couldn't resolve to file`, traceMessageType.error);
@@ -447,21 +448,21 @@ export class WebViewExtBase extends View {
      * Register a local resource.
      * This resource can be loaded via "x-local://{name}" inside the webview
      */
-    public registerLocalResource(name: string, filepath: string) {
+    public registerLocalResource(name: string, filepath: string): void {
         throw new Error("Method not implemented.");
     }
 
     /**
      * Unregister a local resource.
      */
-    public unregisterLocalResource(name: string) {
+    public unregisterLocalResource(name: string): void {
         throw new Error("Method not implemented.");
     }
 
     /**
      * Resolve a "x-local://{name}" to file-path.
      */
-    public getRegisteredLocalResource(name: string) {
+    public getRegisteredLocalResource(name: string): string {
         throw new Error("Method not implemented.");
     }
 

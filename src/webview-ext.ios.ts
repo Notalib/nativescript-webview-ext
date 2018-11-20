@@ -18,28 +18,28 @@ let webViewBridgeJsCode: string;
 webViewBridgeJsCodePromise.then((scriptCode) => (webViewBridgeJsCode = scriptCode));
 
 export class WebViewExt extends WebViewExtBase {
-    private _ios: WKWebView | UIWebView;
+    protected _ios: WKWebView | UIWebView;
 
-    private _wkWebViewConfiguration: WKWebViewConfiguration;
-    private _wkNavigationDelegate: WKNavigationDelegateImpl;
-    private _wkCustomUrlSchemeHandler: CustomUrlSchemeHandler;
-    private _wkUserContentController: WKUserContentController;
-    private _wkUserScriptInjectWebViewBrigde: WKUserScript;
-    private _wkUserScriptViewPortCode: WKUserScript;
-    private _wkNamedUserScripts: Array<{
+    protected _wkWebViewConfiguration: WKWebViewConfiguration;
+    protected _wkNavigationDelegate: WKNavigationDelegateImpl;
+    protected _wkCustomUrlSchemeHandler: CustomUrlSchemeHandler;
+    protected _wkUserContentController: WKUserContentController;
+    protected _wkUserScriptInjectWebViewBrigde: WKUserScript;
+    protected _wkUserScriptViewPortCode: WKUserScript;
+    protected _wkNamedUserScripts: Array<{
         name: string;
         wkUserScript: WKUserScript;
     }>;
 
-    private _uiWebViewDelegate: UIWebViewDelegateImpl;
+    protected _uiWebViewDelegate: UIWebViewDelegateImpl;
 
-    private get _uiWebView(): UIWebView | void {
+    protected get _uiWebView(): UIWebView | void {
         if (this.isUIWebView) {
             return this._ios as UIWebView;
         }
     }
 
-    private get _wkWebView(): WKWebView | void {
+    protected get _wkWebView(): WKWebView | void {
         if (this.isWKWebView) {
             return this._ios as WKWebView;
         }
@@ -55,7 +55,7 @@ export class WebViewExt extends WebViewExtBase {
         }
     }
 
-    private initIOS11Plus() {
+    protected initIOS11Plus() {
         this.isUIWebView = false;
         this.isWKWebView = true;
 
@@ -63,7 +63,7 @@ export class WebViewExt extends WebViewExtBase {
         this._wkNavigationDelegate = WKNavigationDelegateImpl.initWithOwner(new WeakRef(this));
 
         const jsBridgeScript = `
-            ${webViewBridgeJsCode.trim()};
+            ${webViewBridgeJsCode};
         `;
 
         this._wkUserScriptInjectWebViewBrigde = this.createWkUserScript(jsBridgeScript);
@@ -82,13 +82,14 @@ export class WebViewExt extends WebViewExtBase {
             meta.setAttribute("name", "viewport");
             meta.setAttribute("content", "initial-scale=1.0");
         })();
-        `.trim(),
+        `,
         );
         const messageHandler = WKScriptMessageHandlerImpl.initWithOwner(new WeakRef(this));
         const wkUController = (this._wkUserContentController = WKUserContentController.new());
         wkUController.addScriptMessageHandlerName(messageHandler, "nsBridge");
         configuration.userContentController = wkUController;
         configuration.preferences.setValueForKey(true, "allowFileAccessFromFileURLs");
+        configuration.preferences.setValueForKey(true, "allowUniversalAccessFromFileURLs");
 
         this._wkCustomUrlSchemeHandler = new CustomUrlSchemeHandler();
         this._wkWebViewConfiguration.setURLSchemeHandlerForURLScheme(this._wkCustomUrlSchemeHandler, this.interceptScheme);
@@ -103,7 +104,7 @@ export class WebViewExt extends WebViewExtBase {
         this.loadWKUserScripts();
     }
 
-    private initIOS9and10() {
+    protected initIOS9and10() {
         this.isUIWebView = true;
         this.isWKWebView = false;
 
@@ -131,8 +132,6 @@ export class WebViewExt extends WebViewExtBase {
     }
 
     public executeJavaScript<T>(scriptCode: string, stringifyResult = true): Promise<T> {
-        scriptCode = scriptCode.trim();
-
         if (stringifyResult) {
             scriptCode = `
                 (function(window) {
@@ -154,8 +153,10 @@ export class WebViewExt extends WebViewExtBase {
                         return result;
                     }
                 })(window);
-            `.trim();
+            `;
         }
+
+        scriptCode = scriptCode.trim();
 
         return new Promise((resolve, reject) => {
             if (this._wkWebView) {
@@ -191,6 +192,7 @@ export class WebViewExt extends WebViewExtBase {
     @profile
     public onLoaded() {
         super.onLoaded();
+
         if (this._wkWebView) {
             this._wkWebView.navigationDelegate = this._wkNavigationDelegate;
         } else if (this._uiWebView) {
@@ -204,6 +206,7 @@ export class WebViewExt extends WebViewExtBase {
         } else if (this._uiWebView) {
             this._uiWebView.delegate = null;
         }
+
         super.onUnloaded();
     }
 
@@ -247,9 +250,9 @@ export class WebViewExt extends WebViewExtBase {
 
     public get canGoBack(): boolean {
         if (this._wkWebView) {
-            return this._wkWebView.canGoBack;
+            return !!this._wkWebView.canGoBack;
         } else if (this._uiWebView) {
-            return this._uiWebView.canGoBack;
+            return !!this._uiWebView.canGoBack;
         } else {
             return false;
         }
@@ -257,9 +260,9 @@ export class WebViewExt extends WebViewExtBase {
 
     public get canGoForward(): boolean {
         if (this._wkWebView) {
-            return this._wkWebView.canGoForward;
+            return !!this._wkWebView.canGoForward;
         } else if (this._uiWebView) {
-            return this._uiWebView.canGoForward;
+            return !!this._uiWebView.canGoForward;
         } else {
             return false;
         }
@@ -409,7 +412,7 @@ export class WebViewExt extends WebViewExtBase {
         }
     }
 
-    private addNamedUserScript(name: string, scriptCode: string) {
+    protected addNamedUserScript(name: string, scriptCode: string) {
         if (!this._wkWebView) {
             return;
         }
@@ -423,11 +426,11 @@ export class WebViewExt extends WebViewExtBase {
         this._wkUserContentController.addUserScript(wkUserScript);
     }
 
-    private createWkUserScript(scriptCode: string) {
-        return WKUserScript.alloc().initWithSourceInjectionTimeForMainFrameOnly(scriptCode, WKUserScriptInjectionTime.AtDocumentEnd, true);
+    protected createWkUserScript(scriptCode: string) {
+        return WKUserScript.alloc().initWithSourceInjectionTimeForMainFrameOnly(`${scriptCode}`.trim(), WKUserScriptInjectionTime.AtDocumentEnd, true);
     }
 
-    private removeNamedUserScript(name: string) {
+    protected removeNamedUserScript(name: string) {
         if (!this._wkWebView) {
             return;
         }
@@ -442,7 +445,7 @@ export class WebViewExt extends WebViewExtBase {
         this.loadWKUserScripts(this.autoInjectJSBridge);
     }
 
-    private loadWKUserScripts(autoInjectJSBridge = this.autoInjectJSBridge) {
+    protected loadWKUserScripts(autoInjectJSBridge = this.autoInjectJSBridge) {
         if (!this._wkWebView) {
             return;
         }
