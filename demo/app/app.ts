@@ -1,6 +1,4 @@
-﻿import "nativescript-tslib";
-
-import "./bundle-config";
+﻿import "./bundle-config";
 
 import * as application from "tns-core-modules/application";
 

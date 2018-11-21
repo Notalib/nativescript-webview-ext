@@ -63,7 +63,7 @@ export interface AndroidWebView extends android.webkit.WebView {
     bridgeInterface?: dk.nota.webviewinterface.WebViewBridgeInterface;
 }
 
-let WebViewExtClient: new () => AndroidWebViewClient;
+let WebViewExtClient: new (owner: WebViewExt) => AndroidWebViewClient;
 let WebViewBridgeInterface: new () => dk.nota.webviewinterface.WebViewBridgeInterface;
 function initializeWebViewClient(): void {
     if (WebViewExtClient) {
@@ -216,7 +216,8 @@ function initializeWebViewClient(): void {
         }
 
         private onReceivedErrorAPI23(view: android.webkit.WebView, request: any, error: any) {
-            android.webkit.WebViewClient.prototype.onReceivedError.call(this, view, request, error);
+            super.onReceivedError(view, request, error);
+
             const owner = this.owner;
             if (!owner) {
                 return;
@@ -289,9 +290,9 @@ export class WebViewExt extends WebViewExtBase {
 
     public readonly instance = ++instanceNo;
 
-    public createNativeView() {
-        initializeWebViewClient();
+    public android: android.webkit.WebView;
 
+    public createNativeView() {
         const nativeView = new android.webkit.WebView(this._context) as AndroidWebView;
         const settings = nativeView.getSettings();
         settings.setJavaScriptEnabled(true);
@@ -299,20 +300,22 @@ export class WebViewExt extends WebViewExtBase {
 
         // Needed for XHRRequests
         settings.setAllowUniversalAccessFromFileURLs(true);
+        return nativeView;
+    }
 
-        const client = new WebViewExtClient();
+    public initNativeView() {
+        super.initNativeView();
+        initializeWebViewClient();
+        const nativeView = this.nativeViewProtected;
+
+        const client = new WebViewExtClient(this);
         nativeView.setWebViewClient(client);
         nativeView.client = client;
 
         const bridgeInterface = new WebViewBridgeInterface();
         nativeView.addJavascriptInterface(bridgeInterface, "androidWebViewBridge");
         nativeView.bridgeInterface = bridgeInterface;
-        return nativeView;
-    }
 
-    public initNativeView() {
-        super.initNativeView();
-        this.nativeViewProtected.client.owner = this;
         this.nativeViewProtected.bridgeInterface.owner = this;
     }
 
@@ -423,13 +426,13 @@ export class WebViewExt extends WebViewExtBase {
         return result;
     }
 
-    public executeJavaScript<T>(scriptCode: string): Promise<T> {
+    public async executeJavaScript<T>(scriptCode: string): Promise<T> {
         if (androidSDK < 19) {
             this.writeTrace(`WebViewExt<android>.executeJavaScript() -> SDK:${androidSDK} not supported`, traceMessageType.error);
             return Promise.reject(new UnsupportSDKError(19));
         }
 
-        return new Promise((resolve, reject) => {
+        const result = await new Promise<T>((resolve, reject) => {
             if (!this.android) {
                 this.writeTrace(`WebViewExt<android>.executeJavaScript() -> no nativeview?`, traceMessageType.error);
                 reject(new Error("Native Android not inited, cannot call executeJavaScript"));
@@ -439,42 +442,40 @@ export class WebViewExt extends WebViewExtBase {
             this.android.evaluateJavascript(
                 scriptCode,
                 new android.webkit.ValueCallback({
-                    onReceiveValue(result) {
+                    onReceiveValue(result: any) {
                         resolve(result);
                     },
                 }),
             );
-        }).then((result): T => this.parseWebViewJavascriptResult(result));
+        });
+
+        return await this.parseWebViewJavascriptResult(result);
     }
 
     /**
      * Older Android WebView don't support promises.
      * Inject the promise-polyfill if needed.
      */
-    protected ensurePromiseSupport() {
+    protected async ensurePromiseSupport() {
         if (androidSDK >= 21 || WebViewExt.isPromiseSupported) {
-            return Promise.resolve();
+            return;
         }
 
         if (typeof WebViewExt.isPromiseSupported === "undefined") {
             this.writeTrace("WebViewExt<android>.ensurePromiseSupport() - need to check for promise support.");
 
-            return this.executeJavaScript("typeof Promise")
-                .then((v) => v !== "undefined")
-                .then((v) => {
-                    WebViewExt.isPromiseSupported = v;
-                    if (v) {
-                        this.writeTrace("WebViewExt<android>.ensurePromiseSupport() - promise is supported - polyfill not needed.");
-                        return Promise.resolve();
-                    }
+            WebViewExt.isPromiseSupported = (await this.executeJavaScript("typeof Promise")) !== "undefined";
+            if (WebViewExt.isPromiseSupported) {
+                this.writeTrace("WebViewExt<android>.ensurePromiseSupport() - promise is supported - polyfill not needed.");
+                return;
+            }
 
-                    this.writeTrace("WebViewExt<android>.ensurePromiseSupport() - promise is not supported - polyfill needed.");
-                    return this.loadPromisePolyfill();
-                });
+            this.writeTrace("WebViewExt<android>.ensurePromiseSupport() - promise is not supported - polyfill needed.");
+            return await this.loadPromisePolyfill();
         }
 
         this.writeTrace("WebViewExt<android>.ensurePromiseSupport() - promise is not supported - polyfill needed.");
-        return this.loadPromisePolyfill();
+        return await this.loadPromisePolyfill();
     }
 
     protected loadPromisePolyfill() {
@@ -485,8 +486,8 @@ export class WebViewExt extends WebViewExtBase {
         return super.injectWebViewBridge().then(() => this.ensurePromiseSupport());
     }
 
-    public getTitle() {
-        return Promise.resolve(this.nativeViewProtected.getTitle());
+    public async getTitle() {
+        return this.nativeViewProtected.getTitle();
     }
 
     public zoomIn() {

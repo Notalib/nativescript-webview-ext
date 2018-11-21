@@ -18,7 +18,7 @@ let webViewBridgeJsCode: string;
 webViewBridgeJsCodePromise.then((scriptCode) => (webViewBridgeJsCode = scriptCode));
 
 export class WebViewExt extends WebViewExtBase {
-    protected _ios: WKWebView | UIWebView;
+    nativeViewProtected: WKWebView | UIWebView;
 
     protected _wkWebViewConfiguration: WKWebViewConfiguration;
     protected _wkNavigationDelegate: WKNavigationDelegateImpl;
@@ -35,32 +35,48 @@ export class WebViewExt extends WebViewExtBase {
 
     protected get _uiWebView(): UIWebView | void {
         if (this.isUIWebView) {
-            return this._ios as UIWebView;
+            return this.nativeViewProtected as UIWebView;
         }
     }
 
     protected get _wkWebView(): WKWebView | void {
         if (this.isWKWebView) {
-            return this._ios as WKWebView;
+            return this.nativeViewProtected as WKWebView;
         }
     }
 
-    constructor() {
-        super();
-
+    public createNativeView(): WKWebView | UIWebView {
         if (Number(platform.device.sdkVersion) >= 11) {
-            this.initIOS11Plus();
+            return this.createNativeViewIOS11Plus();
         } else {
-            this.initIOS9and10();
+            return this.createNativeViewIOS9and10();
         }
     }
 
-    protected initIOS11Plus() {
+    public initNativeView() {
+        super.initNativeView();
+        if (this._wkWebView) {
+            this.initNativeViewIOS11Plus();
+        } else if (this._uiWebView) {
+            this.initNativeViewIOS9and10();
+        }
+    }
+
+    public disposeNativeView() {
+        if (this._wkWebView) {
+            this.disposeNativeViewIOS11Plus();
+        } else if (this._uiWebView) {
+            this.disposeNativeViewIOS9and10();
+        }
+
+        super.disposeNativeView();
+    }
+
+    protected createNativeViewIOS11Plus() {
         this.isUIWebView = false;
         this.isWKWebView = true;
 
         const configuration = (this._wkWebViewConfiguration = WKWebViewConfiguration.new());
-        this._wkNavigationDelegate = WKNavigationDelegateImpl.initWithOwner(new WeakRef(this));
 
         const jsBridgeScript = `
             ${webViewBridgeJsCode};
@@ -94,17 +110,27 @@ export class WebViewExt extends WebViewExtBase {
         this._wkCustomUrlSchemeHandler = new CustomUrlSchemeHandler();
         this._wkWebViewConfiguration.setURLSchemeHandlerForURLScheme(this._wkCustomUrlSchemeHandler, this.interceptScheme);
 
-        this.nativeViewProtected = this._ios = new WKWebView({
+        const webview = new WKWebView({
             frame: CGRectZero,
             configuration: configuration,
         });
 
         this._wkNamedUserScripts = [];
 
+        return webview;
+    }
+
+    protected initNativeViewIOS11Plus() {
+        this._wkNavigationDelegate = WKNavigationDelegateImpl.initWithOwner(new WeakRef(this));
+
         this.loadWKUserScripts();
     }
 
-    protected initIOS9and10() {
+    protected disposeNativeViewIOS11Plus() {
+        this._wkNavigationDelegate = null;
+    }
+
+    protected createNativeViewIOS9and10() {
         this.isUIWebView = true;
         this.isWKWebView = false;
 
@@ -114,24 +140,32 @@ export class WebViewExt extends WebViewExtBase {
         }
 
         const uiWebView = UIWebView.new();
-        this.nativeViewProtected = this._ios = uiWebView;
-        this._uiWebViewDelegate = UIWebViewDelegateImpl.initWithOwner(new WeakRef(this));
 
         uiWebView.scrollView.bounces = false;
         uiWebView.scrollView.scrollEnabled = false;
         uiWebView.scalesPageToFit = false;
+
+        return uiWebView;
     }
 
-    protected injectWebViewBridge() {
+    protected initNativeViewIOS9and10() {
+        this._uiWebViewDelegate = UIWebViewDelegateImpl.initWithOwner(new WeakRef(this));
+    }
+
+    protected disposeNativeViewIOS9and10() {
+        this._uiWebViewDelegate = null;
+    }
+
+    protected async injectWebViewBridge() {
         if (this._wkWebView) {
             // Loaded via WkUserScripts
-            return Promise.resolve();
+            return;
         }
 
-        return super.injectWebViewBridge();
+        return await super.injectWebViewBridge();
     }
 
-    public executeJavaScript<T>(scriptCode: string, stringifyResult = true): Promise<T> {
+    public async executeJavaScript<T>(scriptCode: string, stringifyResult = true): Promise<T> {
         if (stringifyResult) {
             scriptCode = `
                 (function(window) {
@@ -158,7 +192,7 @@ export class WebViewExt extends WebViewExtBase {
 
         scriptCode = scriptCode.trim();
 
-        return new Promise((resolve, reject) => {
+        let result = await new Promise<T>((resolve, reject) => {
             if (this._wkWebView) {
                 this._wkWebView.evaluateJavaScriptCompletionHandler(scriptCode, (result, error) => {
                     if (error) {
@@ -170,23 +204,23 @@ export class WebViewExt extends WebViewExtBase {
             } else if (this._uiWebView) {
                 try {
                     const result = this._uiWebView.stringByEvaluatingJavaScriptFromString(scriptCode);
-                    resolve(result);
+                    resolve(result as any);
                 } catch (error) {
                     reject(error);
                 }
             }
-        })
-            .then((result): T => this.parseWebViewJavascriptResult(result))
-            .then((result) => {
-                const r = result as any;
-                if (r && typeof r === "object" && r.error) {
-                    const error = new Error(r.message);
-                    (error as any).webStack = r.stack;
-                    return Promise.reject(error);
-                }
+        });
 
-                return Promise.resolve(result);
-            });
+        result = await this.parseWebViewJavascriptResult(result);
+
+        const r = result as any;
+        if (r && typeof r === "object" && r.error) {
+            const error = new Error(r.message);
+            (error as any).webStack = r.stack;
+            throw error;
+        }
+
+        return result;
     }
 
     @profile

@@ -1,106 +1,106 @@
 {
-    "name": "@nota/nativescript-webview-ext",
-    "version": "0.5.0",
-    "description": "Extended WebView for NativeScript which adds 'x-local' scheme for local-files. events between WebView and native-layer, javascript execution, injecting CSS and JS-files.",
-    "main": "webview-ext",
-    "typings": "webview-ext.d.ts",
-    "nativescript": {
-        "platforms": {
-            "android": "4.2.0",
-            "ios": "4.2.0"
-        },
-        "plugin": {
-            "nan": "true",
-            "pan": "true",
-            "core4": "true",
-            "category": "Interface"
-        }
+  "name": "@nota/nativescript-webview-ext",
+  "version": "0.5.0",
+  "description": "Extended WebView for NativeScript which adds 'x-local' scheme for local-files. events between WebView and native-layer, javascript execution, injecting CSS and JS-files.",
+  "main": "webview-ext",
+  "typings": "webview-ext.d.ts",
+  "nativescript": {
+    "platforms": {
+      "android": "5.0.0",
+      "ios": "5.0.0"
     },
-    "scripts": {
-        "format": "prettier --write --config ../.prettierrc.json angular/index.ts *.ts",
-        "tsc": "npx tsc -skipLibCheck",
-        "ngc": "ngc --project tsconfig.aot.json",
-        "build": "npm i && npm-run-all build:webview-bridge build:polyfill ngc tsc",
-        "build:polyfill": "cp ./node_modules/promise-polyfill/dist/polyfill.min.js ./www/promise-polyfill.js",
-        "build:webview-bridge": "export WWW_OUTDIR=$PWD/www; cd $(git rev-parse --show-toplevel)/www-src && npm i && npm run build -- --outDir ${WWW_OUTDIR}",
-        "build:webview-bridge:watch": "npm run build:webview-bridge -- -w",
-        "build:typings": "npm run build && (cd ../demo && TNS_TYPESCRIPT_DECLARATIONS_PATH=\"$PWD/../typings\" tns build ios) && cp ../typings/i386/*NotaWebViewExt.d.ts platforms/ios/NotaWebViewExt.d.ts",
-        "format:check": "prettier-check --config ../.prettierrc.json angular/index.ts *.ts",
-        "tslint": "cd .. && tslint \"**/*.ts\" --config tslint.json --exclude \"**/node_modules/**\" --exclude \"**/*.d.ts\" --exclude \"**/platforms/**\"",
-        "lint": "npm-run-all format:check tslint",
-        "plugin.link": "npm link && cd ../demo && npm link nativescript-webview-ext && cd ../src",
-        "plugin.tscwatch": "npm run build:webview-bridge && npm run tsc -- -w",
-        "run.http-server": "cd ../demo/www && npx hs -p 8080",
-        "run.demo.android": "cd ../demo && tns run android --syncAllFiles",
-        "run.demo.ios": "cd ../demo && tns run ios --syncAllFiles",
-        "run.test.android": "cd ../tests && tns run android --syncAllFiles",
-        "run.test.ios": "cd ../tests && tns run ios --syncAllFiles",
-        "demo.ios": "npm run build && npm-run-all --parallel build:webview-bridge:watch plugin.tscwatch run.demo.ios run.http-server",
-        "demo.android": "npm run build && npm-run-all --parallel build:webview-bridge:watch plugin.tscwatch run.demo.android run.http-server",
-        "demo.reset": "git clean -d -x -f ../demo && npm install",
-        "test.ios": "npm run build && npm-run-all --parallel build:webview-bridge:watch plugin.tscwatch run.test.ios",
-        "test.android": "npm run build && npm-run-all --parallel build:webview-bridge:watch plugin.tscwatch run.test.android",
-        "test.reset": "git clean -d -x -f ../tests && npm install",
-        "plugin.prepare": "npm run tsc && cd ../demo && tns plugin remove nativescript-webview-ext && tns plugin add ../src",
-        "clean": "cd ../demo && rimraf hooks node_modules platforms && cd ../src && rimraf node_modules && npm run plugin.link",
-        "ci.tslint": "npm i && tslint '**/*.ts' --config '../tslint.json' --exclude '**/node_modules/**'"
+    "plugin": {
+      "nan": "true",
+      "pan": "true",
+      "core4": "true",
+      "category": "Interface"
+    }
+  },
+  "scripts": {
+    "format": "prettier --write --config ../.prettierrc.json angular/index.ts *.ts",
+    "tsc": "npx tsc -skipLibCheck",
+    "ngc": "ngc --project tsconfig.aot.json",
+    "build": "npm i && npm-run-all build:webview-bridge build:polyfill ngc tsc",
+    "build:polyfill": "cp ./node_modules/promise-polyfill/dist/polyfill.min.js ./www/promise-polyfill.js",
+    "build:webview-bridge": "export WWW_OUTDIR=$PWD/www; cd $(git rev-parse --show-toplevel)/www-src && npm i && npm run build -- --outDir ${WWW_OUTDIR}",
+    "build:webview-bridge:watch": "npm run build:webview-bridge -- -w",
+    "build:typings": "npm run build && (cd ../demo && TNS_TYPESCRIPT_DECLARATIONS_PATH=\"$PWD/../typings\" tns build ios) && cp ../typings/i386/*NotaWebViewExt.d.ts platforms/ios/NotaWebViewExt.d.ts",
+    "format:check": "prettier-check --config ../.prettierrc.json angular/index.ts *.ts",
+    "tslint": "cd .. && tslint \"**/*.ts\" --config tslint.json --exclude \"**/node_modules/**\" --exclude \"**/*.d.ts\" --exclude \"**/platforms/**\"",
+    "lint": "npm-run-all format:check tslint",
+    "plugin.link": "npm link && cd ../demo && npm link nativescript-webview-ext && cd ../src",
+    "plugin.tscwatch": "npm run build:webview-bridge && npm run tsc -- -w",
+    "run.http-server": "cd ../demo/www && npx hs -p 8080",
+    "run.demo.android": "cd ../demo && tns run android --syncAllFiles",
+    "run.demo.ios": "cd ../demo && tns run ios --syncAllFiles",
+    "run.test.android": "cd ../tests && tns run android --syncAllFiles",
+    "run.test.ios": "cd ../tests && tns run ios --syncAllFiles",
+    "demo.ios": "npm run build && npm-run-all --parallel build:webview-bridge:watch plugin.tscwatch run.demo.ios run.http-server",
+    "demo.android": "npm run build && npm-run-all --parallel build:webview-bridge:watch plugin.tscwatch run.demo.android run.http-server",
+    "demo.reset": "git clean -d -x -f ../demo && npm install",
+    "test.ios": "npm run build && npm-run-all --parallel build:webview-bridge:watch plugin.tscwatch run.test.ios",
+    "test.android": "npm run build && npm-run-all --parallel build:webview-bridge:watch plugin.tscwatch run.test.android",
+    "test.reset": "git clean -d -x -f ../tests && npm install",
+    "plugin.prepare": "npm run tsc && cd ../demo && tns plugin remove nativescript-webview-ext && tns plugin add ../src",
+    "clean": "cd ../demo && rimraf hooks node_modules platforms && cd ../src && rimraf node_modules && npm run plugin.link",
+    "ci.tslint": "npm i && tslint '**/*.ts' --config '../tslint.json' --exclude '**/node_modules/**'"
+  },
+  "keywords": [
+    "NativeScript",
+    "JavaScript",
+    "Android",
+    "iOS",
+    "WebView"
+  ],
+  "author": {
+    "name": "Nota",
+    "email": "app@nota.dk",
+    "url": "https://nota.dk"
+  },
+  "contributors": [
+    {
+      "name": "Morten Anton Bach Sjøgren",
+      "url": "http://mabs.dk",
+      "email": "mabs@mabs.dk"
     },
-    "keywords": [
-        "NativeScript",
-        "JavaScript",
-        "Android",
-        "iOS",
-        "WebView"
-    ],
-    "author": {
-        "name": "Nota",
-        "email": "app@nota.dk",
-        "url": "https://nota.dk"
-    },
-    "contributors": [
-        {
-            "name": "Morten Anton Bach Sjøgren",
-            "url": "http://mabs.dk",
-            "email": "mabs@mabs.dk"
-        },
-        {
-            "name": "Daniel Dam Freiling",
-            "email": "dfg@nota.dk"
-        }
-    ],
-    "repository": {
-        "type": "git",
-        "url": "https://github.com/Notalib/nativescript-webview-ext.git"
-    },
-    "bugs": {
-        "url": "https://github.com/Notalib/nativescript-webview-ext/issues"
-    },
-    "license": "Apache-2.0",
-    "homepage": "https://github.com/Notalib/nativescript-webview-ext#readme",
-    "devDependencies": {
-        "@angular/common": "^6.1.10",
-        "@angular/compiler": "^6.1.10",
-        "@angular/compiler-cli": "^6.1.10",
-        "@angular/core": "^6.1.10",
-        "@angular/forms": "^6.1.10",
-        "@angular/http": "^6.1.10",
-        "@angular/platform-browser": "^6.1.10",
-        "@angular/platform-browser-dynamic": "^6.1.10",
-        "@angular/router": "^6.1.10",
-        "nativescript-angular": "~6.1.0",
-        "npm-run-all": "^4.1.2",
-        "prettier": "^1.15.2",
-        "prettier-check": "^2.0.0",
-        "promise-polyfill": "^7.1.2",
-        "prompt": "^1.0.0",
-        "rimraf": "^2.6.2",
-        "rxjs": "^6.3.3",
-        "tns-core-modules": "^4.2.1",
-        "tns-platform-declarations": "^4.2.1",
-        "tslint": "^5.11.0",
-        "typescript": "~2.7.2",
-        "zone.js": "^0.8.26"
-    },
-    "dependencies": {},
-    "bootstrapper": "nativescript-plugin-seed"
+    {
+      "name": "Daniel Dam Freiling",
+      "email": "dfg@nota.dk"
+    }
+  ],
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/Notalib/nativescript-webview-ext.git"
+  },
+  "bugs": {
+    "url": "https://github.com/Notalib/nativescript-webview-ext/issues"
+  },
+  "license": "Apache-2.0",
+  "homepage": "https://github.com/Notalib/nativescript-webview-ext#readme",
+  "devDependencies": {
+    "@angular/common": "~7.0.0",
+    "@angular/compiler": "~7.0.0",
+    "@angular/compiler-cli": "~7.0.0",
+    "@angular/core": "~7.0.0",
+    "@angular/forms": "~7.0.0",
+    "@angular/http": "~7.0.0",
+    "@angular/platform-browser": "~7.0.0",
+    "@angular/platform-browser-dynamic": "~7.0.0",
+    "@angular/router": "~7.0.0",
+    "nativescript-angular": "~7.0.0",
+    "npm-run-all": "^4.1.2",
+    "prettier": "^1.15.2",
+    "prettier-check": "^2.0.0",
+    "promise-polyfill": "^7.1.2",
+    "prompt": "^1.0.0",
+    "rimraf": "^2.6.2",
+    "rxjs": "^6.3.3",
+    "tns-core-modules": "^5.0.2",
+    "tns-platform-declarations": "^5.0.2",
+    "tslint": "^5.11.0",
+    "typescript": "~3.1.1",
+    "zone.js": "^0.8.26"
+  },
+  "dependencies": {},
+  "bootstrapper": "nativescript-plugin-seed"
 }

@@ -1,5 +1,5 @@
 import * as fs from "tns-core-modules/file-system";
-import { CSSType, EventData, Property, traceEnabled, traceMessageType, traceWrite, View } from "tns-core-modules/ui/core/view";
+import { ContainerView, CSSType, EventData, Property, traceEnabled, traceMessageType, traceWrite } from "tns-core-modules/ui/core/view";
 import { webViewBridgeJsCodePromise } from "./nativescript-webview-bridge-loader";
 
 export * from "tns-core-modules/ui//core/view";
@@ -113,7 +113,7 @@ export class UnsupportSDKError extends Error {
 }
 
 @CSSType("WebView")
-export class WebViewExtBase extends View {
+export class WebViewExtBase extends ContainerView {
     /**
      * Gets the native [android widget](http://developer.android.com/reference/android/webkit/WebView.html) that represents the user interface for this component. Valid only when running on Android OS.
      */
@@ -222,7 +222,7 @@ export class WebViewExtBase extends View {
     /**
      * Callback for the loadFinished-event. Called from the native-webview
      */
-    public _onLoadFinished(url: string, error?: string): Promise<LoadFinishedEventData> {
+    public async _onLoadFinished(url: string, error?: string): Promise<LoadFinishedEventData> {
         if (!error) {
             // When this is called without an error, update with this.src value without loading the url.
             // This is needed to keep src up-to-date when linked are clicked inside the webview.
@@ -235,7 +235,7 @@ export class WebViewExtBase extends View {
             }
         }
 
-        const args = {
+        let args = {
             error,
             eventName: WebViewExtBase.loadFinishedEvent,
             navigationType: undefined,
@@ -254,18 +254,18 @@ export class WebViewExtBase extends View {
             return Promise.resolve(args);
         }
 
-        return this.injectWebViewBridge()
-            .then(() => this.loadJavaScriptFiles(this.autoInjectScriptFiles))
-            .then(() => this.loadStyleSheetFiles(this.autoInjectStyleSheetFiles))
-            .then(() => this.executePromises(this.autoInjectJavaScriptBlocks.map((data) => data.scriptCode), -1))
-            .then(() => args)
-            .catch((error) => {
-                return Object.assign({}, args, { error });
-            })
-            .then((args) => {
-                this.notify(args);
-                return args;
-            });
+        await this.injectWebViewBridge();
+
+        try {
+            await this.loadJavaScriptFiles(this.autoInjectScriptFiles);
+            await this.loadStyleSheetFiles(this.autoInjectStyleSheetFiles);
+            await this.executePromises(this.autoInjectJavaScriptBlocks.map((data) => data.scriptCode), -1);
+        } catch (error) {
+            args.error = error;
+        }
+
+        this.notify(args);
+        return args;
     }
 
     /**
@@ -508,9 +508,9 @@ export class WebViewExtBase extends View {
     /**
      * Load multiple JavaScript-files on the current page in the webview.
      */
-    public loadJavaScriptFiles(files: LoadStyleSheetResource[]) {
+    public async loadJavaScriptFiles(files: LoadStyleSheetResource[]) {
         if (!files || !files.length) {
-            return Promise.resolve();
+            return;
         }
 
         const promiseScriptCodes = [];
@@ -535,14 +535,14 @@ export class WebViewExtBase extends View {
 
         if (!promiseScriptCodes.length) {
             this.writeTrace("WebViewExt.loadJavaScriptFiles() - > No files");
-            return Promise.resolve();
+            return;
         }
 
         if (!promiseScriptCodes.length) {
-            return Promise.resolve();
+            return;
         }
 
-        return this.executePromises(promiseScriptCodes).then(() => void 0);
+        await this.executePromises(promiseScriptCodes);
     }
 
     /**
@@ -561,9 +561,9 @@ export class WebViewExtBase extends View {
     /**
      * Load multiple stylesheet-files on the current page in the webview
      */
-    public loadStyleSheetFiles(files: LoadStyleSheetResource[]) {
+    public async loadStyleSheetFiles(files: LoadStyleSheetResource[]) {
         if (!files || !files.length) {
-            return Promise.resolve();
+            return;
         }
 
         const promiseScriptCodes = [] as string[];
@@ -590,10 +590,10 @@ export class WebViewExtBase extends View {
 
         if (!promiseScriptCodes.length) {
             this.writeTrace("WebViewExt.loadStyleSheetFiles() - > No files");
-            return Promise.resolve();
+            return;
         }
 
-        return this.executePromises(promiseScriptCodes).then(() => void 0);
+        await this.executePromises(promiseScriptCodes);
     }
 
     /**
@@ -663,14 +663,17 @@ export class WebViewExtBase extends View {
      * Execute a promise inside the webview and wait for it to resolve.
      * Note: The scriptCode must return a promise.
      */
-    public executePromise<T>(scriptCode: string, timeout: number = 500): Promise<T> {
-        return this.executePromises<T>([scriptCode], timeout).then((results) => results && results[0]);
+    public async executePromise<T>(scriptCode: string, timeout: number = 500): Promise<T> {
+        const results = await this.executePromises<T>([scriptCode], timeout);
+
+        return results && results[0];
     }
 
-    public executePromises<T>(scriptCodes: string[], timeout: number = 500): Promise<T | void> {
+    public async executePromises<T>(scriptCodes: string[], timeout: number = 500): Promise<T | void> {
         if (scriptCodes.length === 0) {
-            return Promise.resolve();
+            return;
         }
+
         const reqId = `${Math.round(Math.random() * 1000)}`;
         const eventName = `tmp-promise-event-${reqId}`;
 
@@ -764,8 +767,9 @@ export class WebViewExtBase extends View {
     /**
      * Inject WebView JavaScript Bridge.
      */
-    protected injectWebViewBridge(): Promise<void> {
-        return webViewBridgeJsCodePromise.then((webViewInterfaceJsCode) => this.executeJavaScript(webViewInterfaceJsCode, false)).then(() => void 0);
+    protected async injectWebViewBridge(): Promise<void> {
+        const webViewInterfaceJsCode = await webViewBridgeJsCodePromise;
+        await this.executeJavaScript(webViewInterfaceJsCode, false);
     }
 
     /**

@@ -1,30 +1,23 @@
 {
   "nativescript": {
     "name": "hugo",
-    "id": "dk.nota.webviewdemo",
-    "tns-android": {
-      "version": "4.2.0"
-    },
-    "tns-ios": {
-      "version": "4.2.0"
-    }
+    "id": "dk.nota.webviewdemo"
   },
   "dependencies": {
     "@nota/nativescript-webview-ext": "file://../src",
     "lodash": "^4.17.10",
     "nativescript-theme-core": "^1.0.4",
-    "nativescript-tslib": "~1.9.1-r1",
-    "tns-core-modules": "~4.2.0",
+    "tns-core-modules": "~5.0.0",
     "url": "^0.11.0"
   },
   "devDependencies": {
     "@types/lodash": "^4.14.108",
     "http-server": "^0.11.1",
-    "nativescript-dev-typescript": "^0.7.3",
-    "nativescript-dev-webpack": "^0.15.1",
-    "tns-platform-declarations": "~4.2.0",
-    "tslint": "^5.4.3",
-    "typescript": "~2.7.0"
+    "nativescript-dev-typescript": "^0.7.6",
+    "nativescript-dev-webpack": "^0.18.0",
+    "tns-platform-declarations": "~5.0.0",
+    "tslint": "^5.11.0",
+    "typescript": "~3.1.1"
   },
   "scripts": {
     "build.plugin": "cd ../src && npm run build",

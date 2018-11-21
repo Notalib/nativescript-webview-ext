@@ -1,4 +1,4 @@
-/// <reference path="../../node_modules/tns-platform-declarations/android-21.d.ts" />
+/// <reference path="../../node_modules/tns-platform-declarations/android-27.d.ts" />
 
 declare namespace dk {
     export namespace nota {
