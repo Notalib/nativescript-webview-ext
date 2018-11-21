@@ -635,8 +635,8 @@ export class WebViewTest extends testModule.UITest<webViewModule.WebViewExt> {
         // >> webview-x-localfile-xhr
         try {
             webview.registerLocalResource(localStyleSheetCssNAME, localStyleSheetCssFile);
-            let filepath = localStyleSheetCssFile;
 
+            let filepath = localStyleSheetCssFile;
             if (filepath.startsWith("~")) {
                 filepath = fs.path.normalize(fs.knownFolders.currentApp().path + filepath.substr(1));
             }
@@ -677,9 +677,9 @@ export class WebViewTest extends testModule.UITest<webViewModule.WebViewExt> {
             TKUnit.assertNull(args.error, args.error);
             TKUnit.assertEqual(actualTitle, expectedTitle, `File "${emptyHTMLFile}" not loaded properly.`);
 
-            const actualData = (await webview.executePromise<string>(`makeRequestPromise({
+            const actualData = await webview.executePromise<string>(`makeRequestPromise({
                 url: 'x-local://${localStyleSheetCssNAME}'
-            })`)).trim();
+            })`);
 
             TKUnit.assertEqual(expectedData, actualData, `Ajax filecontent not the same`);
             // << (hide)

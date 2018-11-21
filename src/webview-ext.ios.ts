@@ -89,14 +89,14 @@ export class WebViewExt extends WebViewExtBase {
         wkUController.addScriptMessageHandlerName(messageHandler, "nsBridge");
         configuration.userContentController = wkUController;
         configuration.preferences.setValueForKey(true, "allowFileAccessFromFileURLs");
-        configuration.preferences.setValueForKey(true, "allowUniversalAccessFromFileURLs");
+        configuration.setValueForKey(true, "allowUniversalAccessFromFileURLs");
 
         this._wkCustomUrlSchemeHandler = new CustomUrlSchemeHandler();
         this._wkWebViewConfiguration.setURLSchemeHandlerForURLScheme(this._wkCustomUrlSchemeHandler, this.interceptScheme);
 
         this.nativeViewProtected = this._ios = new WKWebView({
             frame: CGRectZero,
-            configuration: configuration,
+            configuration,
         });
 
         this._wkNamedUserScripts = [];
