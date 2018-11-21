@@ -375,19 +375,6 @@ export class WebViewExtBase extends View {
 
         this.stopLoading();
 
-        if (src.startsWith(this.interceptScheme)) {
-            this.writeTrace(`WebViewExt.src = "${originSrc}" resolve x-local file`);
-            const filepath = this.getRegisteredLocalResource(src);
-            if (filepath) {
-                src = `file://${filepath}`;
-                this.writeTrace(`WebViewExt.src = "${originSrc}" x-local resolved to "${src}"`);
-            } else {
-                this.writeTrace(`WebViewExt.src = "${originSrc}" x-local couldn't resolve to file`, traceMessageType.error);
-                this._onLoadFinished(src, "unknown x-local-resource").catch(() => void 0);
-                return;
-            }
-        }
-
         // Add file:/// prefix for local files.
         // They should be loaded with _loadUrl() method as it handles query params.
         if (src.startsWith("~/")) {
@@ -408,7 +395,7 @@ export class WebViewExtBase extends View {
             }
         }
 
-        if (lcSrc.startsWith("http://") || lcSrc.startsWith("https://") || lcSrc.startsWith("file:///")) {
+        if (lcSrc.startsWith(this.interceptScheme) || lcSrc.startsWith("http://") || lcSrc.startsWith("https://") || lcSrc.startsWith("file:///")) {
             this._loadUrl(src);
 
             this.writeTrace(`WebViewExt.src = "${originSrc}" - LoadUrl("${src}")`);
@@ -424,7 +411,7 @@ export class WebViewExtBase extends View {
 
     protected resolveLocalResourceFilePath(filepath: string): string | void {
         if (!filepath) {
-            console.error("WebViewExt.resolveLocalResourceFilePath() no filepath");
+            this.writeTrace("WebViewExt.resolveLocalResourceFilePath() no filepath", traceMessageType.error);
             return;
         }
 
@@ -437,7 +424,7 @@ export class WebViewExtBase extends View {
         }
 
         if (!fs.File.exists(filepath)) {
-            console.error(`WebViewExt.resolveLocalResourceFilePath("${filepath}") - no such file`);
+            this.writeTrace(`WebViewExt.resolveLocalResourceFilePath("${filepath}") - no such file`, traceMessageType.error);
             return;
         }
 

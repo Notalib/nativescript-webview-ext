@@ -19,7 +19,7 @@ declare const androidWebViewBridge: {
  * to iOS which is necessary to initiate data transfer from webView to iOS
  */
 function createIFrameForUIWebView(src: string): HTMLIFrameElement {
-    const rootElm = document.documentElement;
+    const rootElm = document.documentElement || document.body;
     const newFrameElm = document.createElement("iframe");
     newFrameElm.setAttribute("src", src);
     rootElm.appendChild(newFrameElm);
@@ -269,10 +269,12 @@ class NSWebViewBridge {
             linkElement.setAttribute("rel", "stylesheet");
             linkElement.setAttribute("type", "text/css");
             linkElement.setAttribute("href", href);
-            if (insertBefore && document.head.childElementCount > 0) {
-                document.head.insertBefore(linkElement, document.head.firstElementChild);
-            } else {
-                document.head.appendChild(linkElement);
+            if (document.head) {
+                if (insertBefore && document.head.childElementCount > 0) {
+                    document.head.insertBefore(linkElement, document.head.firstElementChild);
+                } else {
+                    document.head.appendChild(linkElement);
+                }
             }
         });
     }
