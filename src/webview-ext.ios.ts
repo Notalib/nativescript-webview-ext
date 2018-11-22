@@ -92,6 +92,9 @@ export class WebViewExt extends WebViewExtBase {
         configuration.setValueForKey(true, "allowUniversalAccessFromFileURLs");
 
         this._wkCustomUrlSchemeHandler = new CustomUrlSchemeHandler();
+
+        console.log(this._wkCustomUrlSchemeHandler.checkTcpPortForListenWithPort(18000));
+
         this._wkWebViewConfiguration.setURLSchemeHandlerForURLScheme(this._wkCustomUrlSchemeHandler, this.interceptScheme);
 
         this.nativeViewProtected = this._ios = new WKWebView({

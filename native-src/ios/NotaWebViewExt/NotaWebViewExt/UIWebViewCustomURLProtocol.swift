@@ -71,9 +71,9 @@ public class CustomNSURLProtocol: URLProtocol,NSURLConnectionDelegate,URLSession
     @objc
     public func resolveMimeTypeFrom(filepath: String) -> String {
         let ext = URL(fileURLWithPath: filepath).pathExtension;
-        NSLog("CustomUrlSchemeHandler.resolveMimeTypeFrom(%@) - ext(%@)", filepath, ext)
+        NSLog("CustomNSURLProtocol.resolveMimeTypeFrom(%@) - ext(%@)", filepath, ext)
         if let mimetype = Constants.mimeType[ext] {
-            NSLog("CustomUrlSchemeHandler.resolveMimeTypeFrom(%@) - ext(%@) -> mimetype(%@)", filepath, ext, mimetype)
+            NSLog("CustomNSURLProtocol.resolveMimeTypeFrom(%@) - ext(%@) -> mimetype(%@)", filepath, ext, mimetype)
             return mimetype
         }
         
@@ -84,16 +84,16 @@ public class CustomNSURLProtocol: URLProtocol,NSURLConnectionDelegate,URLSession
     override public func startLoading() {
         DispatchQueue.global().async {
             guard let url = self.request.url, url.scheme == Constants.customURLScheme else {
-                NSLog("CustomUrlSchemeHandler.startLoading() - invalid url")
+                NSLog("CustomNSURLProtocol.startLoading() - invalid url")
                 return;
             }
-            NSLog("CustomUrlSchemeHandler.startLoading() - url(%@)", url.absoluteString)
+            NSLog("CustomNSURLProtocol.startLoading() - url(%@)", url.absoluteString)
             guard let filepath = CustomNSURLProtocol.resolveFilePath(url) else {
-                NSLog("CustomUrlSchemeHandler.startLoading() - url(%@) did't resolve to a file", url.absoluteString)
+                NSLog("CustomNSURLProtocol.startLoading() - url(%@) did't resolve to a file", url.absoluteString)
                 return;
             }
             guard let data = NSData.init(contentsOfFile: filepath) else {
-                NSLog("CustomUrlSchemeHandler.startLoading() - url(%@) no data", url.absoluteString)
+                NSLog("CustomNSURLProtocol.startLoading() - url(%@) no data", url.absoluteString)
                 return;
             }
             let mimeType = self.resolveMimeTypeFrom(filepath: filepath);

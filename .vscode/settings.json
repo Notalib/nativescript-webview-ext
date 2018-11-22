@@ -7,7 +7,7 @@
     "**/.git/objects/**": true,
     "**/.git/subtree-cache/**": true,
     "**/node_modules/**": true,
-    "**/platforms": true,
+    "{test,demo}/**/platforms": true,
   },
   "files.exclude": {
     "**/.git": true,
@@ -16,7 +16,7 @@
     "**/CVS": true,
     "**/.DS_Store": true,
     "**/node_modules": true,
-    "**/platforms": true,
+    "{test,demo}/**/platforms": true,
     "**/*.d.ts": {
       "when": "$(basename).ts"
     },

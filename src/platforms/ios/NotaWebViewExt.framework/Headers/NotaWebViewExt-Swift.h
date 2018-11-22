@@ -163,6 +163,7 @@ typedef unsigned int swift_uint4  __attribute__((__ext_vector_type__(4)));
 # define SWIFT_DEPRECATED_OBJC(Msg) SWIFT_DEPRECATED_MSG(Msg)
 #endif
 #if __has_feature(modules)
+@import Darwin;
 @import Foundation;
 @import ObjectiveC;
 @import WebKit;
@@ -219,6 +220,7 @@ SWIFT_CLASS("_TtC14NotaWebViewExt22CustomUrlSchemeHandler") SWIFT_AVAILABILITY(i
 - (void)unregisterLocalResourceForKey:(NSString * _Nonnull)forKey;
 - (NSString * _Nullable)getRegisteredLocalResourceForKey:(NSString * _Nonnull)forKey SWIFT_WARN_UNUSED_RESULT;
 - (void)clearRegisteredLocalResource;
+- (BOOL)checkTcpPortForListenWithPort:(in_port_t)port SWIFT_WARN_UNUSED_RESULT;
 - (nonnull instancetype)init OBJC_DESIGNATED_INITIALIZER SWIFT_AVAILABILITY(ios,introduced=11.0);
 @end
 

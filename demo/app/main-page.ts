@@ -27,7 +27,9 @@ export function webviewLoaded(args: LoadEventData) {
     }
     */
 
-    webview.src = "x-local://index.html";
+    // webview.src = "x-local://index.html";
+
+    webview.src = "http://localhost:18080";
 
     webview.on(WebViewExt.shouldOverrideUrlLoadingEvent, (args: ShouldOverideUrlLoadEventData) => {
         console.log(args.url);

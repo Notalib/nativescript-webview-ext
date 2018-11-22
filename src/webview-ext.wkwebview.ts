@@ -1,5 +1,6 @@
 /// <reference path="./node_modules/tns-platform-declarations/ios.d.ts" />
 /// <reference path="./platforms/ios/NotaWebViewExt.d.ts" />
+/// <reference path="./platforms/ios/GCDWebServer.d.ts" />
 
 import { NavigationType, traceMessageType, WebViewExtBase } from "./webview-ext-common";
 

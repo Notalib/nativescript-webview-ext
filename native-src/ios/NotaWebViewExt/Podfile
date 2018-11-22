@@ -3,5 +3,5 @@ platform :ios, '10.0'
 use_frameworks!
 
 target 'NotaWebViewExt' do
-    pod 'Alamofire', '~> 4.7'
+    pod "GCDWebServer", "~> 3.0"
 end

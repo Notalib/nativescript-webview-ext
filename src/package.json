@@ -30,7 +30,7 @@
         "lint": "npm-run-all format:check tslint",
         "plugin.link": "npm link && cd ../demo && npm link nativescript-webview-ext && cd ../src",
         "plugin.tscwatch": "npm run build:webview-bridge && npm run tsc -- -w",
-        "run.http-server": "cd ../demo/www && npx hs -p 8080",
+        "run.http-server": "cd ../demo/www && npx hs -p 8080 --cors",
         "run.demo.android": "cd ../demo && tns run android --syncAllFiles",
         "run.demo.ios": "cd ../demo && tns run ios --syncAllFiles",
         "run.test.android": "cd ../tests && tns run android --syncAllFiles",
