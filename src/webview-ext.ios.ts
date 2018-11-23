@@ -59,7 +59,9 @@ export class WebViewExt extends WebViewExtBase {
         this.isUIWebView = false;
         this.isWKWebView = true;
 
-        const configuration = (this._wkWebViewConfiguration = WKWebViewConfiguration.new());
+        const configuration = WKWebViewConfiguration.new();
+        this._wkWebViewConfiguration = configuration;
+
         this._wkNavigationDelegate = WKNavigationDelegateImpl.initWithOwner(new WeakRef(this));
 
         const jsBridgeScript = `
