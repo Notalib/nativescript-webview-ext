@@ -92,15 +92,15 @@ function printRunTestStats() {
     let allTests = testsQueue.filter((t) => t.isTest);
 
     allTests.forEach((testCase, i, arr) => {
-        let testName = testCase.testName;
+        const testName = testCase.testName;
         if (!testCase.isPassed) {
             failedTestCount++;
-            failedTestInfo.push(testCase.testName + " FAILED: " + testCase.errorMessage);
+            failedTestInfo.push(testName + " FAILED: " + testCase.errorMessage);
         }
 
-        let duration = (testCase.duration / 1000).toFixed(2);
+        const duration = (testCase.duration / 1000).toFixed(2);
         if (testCase.duration > 500) {
-            slowTests.push(`${testCase.testName}: ${duration}s`);
+            slowTests.push(`${testName}: ${duration}s`);
         }
     });
 

@@ -645,26 +645,29 @@ export class WebViewTest extends testModule.UITest<webViewModule.WebViewExt> {
                 filepath = filepath.replace(/^file:\/\//, "");
             }
 
-            const expectedData = (await fs.File.fromPath(filepath).readText()).trim();
+            const expectedData = await fs.File.fromPath(filepath).readText();
 
             webview.autoExecuteJavaScript(
-                `window.makeRequestPromise = function(obj) {
-                    return new Promise(function(resolve, reject) {
-                        let xhr = new XMLHttpRequest();
-                        xhr.open(obj.method || "GET", obj.url);
-                        xhr.onload = function() {
-                            if (xhr.status >= 200 && xhr.status < 300) {
-                                resolve(xhr.response);
-                            } else {
+                `
+                (function(window) {
+                    window.makeRequestPromise = function(obj) {
+                        return new Promise(function(resolve, reject) {
+                            let xhr = new XMLHttpRequest();
+                            xhr.open(obj.method || "GET", obj.url);
+                            xhr.onload = function() {
+                                if (xhr.status >= 200 && xhr.status < 300) {
+                                    resolve(xhr.response);
+                                } else {
+                                    reject(xhr.statusText);
+                                }
+                            };
+                            xhr.onerror = function() {
                                 reject(xhr.statusText);
-                            }
-                        };
-                        xhr.onerror = function() {
-                            reject(xhr.statusText);
-                        };
-                        xhr.send(obj.body);
-                    });
-            };`,
+                            };
+                            xhr.send(obj.body);
+                        });
+                    };
+                })(window);`,
                 "make-request-fn",
             );
 
@@ -677,11 +680,9 @@ export class WebViewTest extends testModule.UITest<webViewModule.WebViewExt> {
             TKUnit.assertNull(args.error, args.error);
             TKUnit.assertEqual(actualTitle, expectedTitle, `File "${emptyHTMLFile}" not loaded properly.`);
 
-            const actualData = await webview.executePromise<string>(`makeRequestPromise({
-                url: 'x-local://${localStyleSheetCssNAME}'
-            })`);
+            const actualData = (await webview.executePromise<string>(`makeRequestPromise({url: 'x-local://${localStyleSheetCssNAME}'})`)) || "";
 
-            TKUnit.assertEqual(expectedData, actualData, `Ajax filecontent not the same`);
+            TKUnit.assertEqual(actualData.trim(), expectedData.trim(), `Ajax filecontent not the same`);
             // << (hide)
 
             done(null);

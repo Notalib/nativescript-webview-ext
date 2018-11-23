@@ -707,20 +707,33 @@ export class WebViewExtBase extends View {
         return new Promise<T>((resolve, reject) => {
             let timer: any;
             const tmpPromiseEvent = (args: any) => {
+                clearTimeout(timer);
+
                 this.off(eventName);
+
                 const { data, err } = args.data || ({} as any);
-                if (err) {
+                // Was it a success? No 'err' received.
+                if (typeof err === "undefined") {
+                    resolve(data);
+                    return;
+                }
+
+                // Rejected promise.
+                if (err && typeof err === "object") {
+                    // err is an object. Might be a serialized Error-object.
                     const error = new Error(err.message || err);
                     if (err.stack) {
+                        // Add the web stack to the Error object.
                         (error as any).webStack = err.stack;
                     }
+
                     reject(error);
                     return;
                 }
-                resolve(data);
 
-                clearTimeout(timer);
+                reject(new Error(err));
             };
+
             this.on(eventName, tmpPromiseEvent);
 
             this.executeJavaScript(promiseScriptCode, false);
@@ -728,6 +741,7 @@ export class WebViewExtBase extends View {
             if (timeout > 0) {
                 timer = setTimeout(() => {
                     reject(new Error(`Timed out after: ${timeout}`));
+
                     this.off(eventName);
                 }, timeout);
             }
