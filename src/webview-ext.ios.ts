@@ -14,9 +14,6 @@ export * from "./webview-ext-common";
 
 let registeredCustomNSURLProtocol = false;
 
-let webViewBridgeJsCode: string;
-webViewBridgeJsCodePromise.then((scriptCode) => (webViewBridgeJsCode = scriptCode));
-
 export class WebViewExt extends WebViewExtBase {
     protected _ios: WKWebView | UIWebView;
 
@@ -24,7 +21,7 @@ export class WebViewExt extends WebViewExtBase {
     protected _wkNavigationDelegate: WKNavigationDelegateImpl;
     protected _wkCustomUrlSchemeHandler: CustomUrlSchemeHandler;
     protected _wkUserContentController: WKUserContentController;
-    protected _wkUserScriptInjectWebViewBrigde: WKUserScript;
+    protected _wkUserScriptInjectWebViewBrigde: Promise<WKUserScript> | void;
     protected _wkUserScriptViewPortCode: WKUserScript;
     protected _wkNamedUserScripts: Array<{
         name: string;
@@ -64,28 +61,6 @@ export class WebViewExt extends WebViewExtBase {
 
         this._wkNavigationDelegate = WKNavigationDelegateImpl.initWithOwner(new WeakRef(this));
 
-        const jsBridgeScript = `
-            ${webViewBridgeJsCode};
-        `;
-
-        this._wkUserScriptInjectWebViewBrigde = this.createWkUserScript(jsBridgeScript);
-
-        this._wkUserScriptViewPortCode = this.createWkUserScript(
-            `
-        (function() {
-            let meta = document.querySelector(
-                'head meta[name="viewport"]',
-            );
-            if (!meta) {
-                meta = document.createElement("meta");
-                document.head.appendChild(meta);
-            }
-
-            meta.setAttribute("name", "viewport");
-            meta.setAttribute("content", "initial-scale=1.0");
-        })();
-        `,
-        );
         const messageHandler = WKScriptMessageHandlerImpl.initWithOwner(new WeakRef(this));
         const wkUController = (this._wkUserContentController = WKUserContentController.new());
         wkUController.addScriptMessageHandlerName(messageHandler, "nsBridge");
@@ -382,7 +357,7 @@ export class WebViewExt extends WebViewExtBase {
             const href = `${this.interceptScheme}://${resourceName}`;
             const scriptCode = this.generaateLoadCSSFileScriptCode(href, insertBefore);
 
-            this.addNamedUserScript(`auto-load-css-${resourceName}`, scriptCode);
+            this.addNamedWKUserScript(`auto-load-css-${resourceName}`, scriptCode);
         } else {
             return super.autoLoadStyleSheetFile(resourceName, filepath, insertBefore);
         }
@@ -390,7 +365,7 @@ export class WebViewExt extends WebViewExtBase {
 
     public removeAutoLoadStyleSheetFile(resourceName: string) {
         resourceName = this.fixLocalResourceName(resourceName);
-        this.removeNamedUserScript(`auto-load-css-${resourceName}`);
+        this.removeNamedWKUserScript(`auto-load-css-${resourceName}`);
     }
 
     public autoLoadJavaScriptFile(resourceName: string, filepath: string) {
@@ -401,7 +376,7 @@ export class WebViewExt extends WebViewExtBase {
             }
             const href = `${this.interceptScheme}://${fixedResourceName}`;
             const scriptCode = this.generateLoadJavaScriptFileScriptCode(href);
-            this.addNamedUserScript(href, scriptCode);
+            this.addNamedWKUserScript(href, scriptCode);
         } else {
             super.autoLoadJavaScriptFile(resourceName, filepath);
         }
@@ -411,18 +386,24 @@ export class WebViewExt extends WebViewExtBase {
         if (this._wkWebView) {
             const fixedResourceName = this.fixLocalResourceName(resourceName);
             const href = `${this.interceptScheme}://${fixedResourceName}`;
-            this.removeNamedUserScript(href);
+            this.removeNamedWKUserScript(href);
         } else {
             super.removeAutoLoadJavaScriptFile(resourceName);
         }
     }
 
-    protected addNamedUserScript(name: string, scriptCode: string) {
-        if (!this._wkWebView) {
+    /**
+     * iOS11+
+     *
+     * Add/replace a named WKUserScript.
+     * These scripts will be injected when a new documnet is loaded.
+     */
+    protected addNamedWKUserScript(name: string, scriptCode: string) {
+        if (!this._wkWebView || !scriptCode) {
             return;
         }
 
-        this.removeNamedUserScript(name);
+        this.removeNamedWKUserScript(name);
 
         const wkUserScript = this.createWkUserScript(scriptCode);
 
@@ -431,11 +412,12 @@ export class WebViewExt extends WebViewExtBase {
         this._wkUserContentController.addUserScript(wkUserScript);
     }
 
-    protected createWkUserScript(scriptCode: string) {
-        return WKUserScript.alloc().initWithSourceInjectionTimeForMainFrameOnly(`${scriptCode}`.trim(), WKUserScriptInjectionTime.AtDocumentEnd, true);
-    }
-
-    protected removeNamedUserScript(name: string) {
+    /**
+     * iOS11+
+     *
+     * Remove a named WKUserScript
+     */
+    protected removeNamedWKUserScript(name: string) {
         if (!this._wkWebView) {
             return;
         }
@@ -447,27 +429,66 @@ export class WebViewExt extends WebViewExtBase {
 
         this._wkNamedUserScripts.splice(idx, 1);
 
-        this.loadWKUserScripts(this.autoInjectJSBridge);
+        this.loadWKUserScripts();
     }
 
+    /**
+     * iOS11+
+     *
+     * Factory function for creating a WKUserScript instance.
+     */
+    protected createWkUserScript(scriptCode: string) {
+        return WKUserScript.alloc().initWithSourceInjectionTimeForMainFrameOnly(scriptCode.trim(), WKUserScriptInjectionTime.AtDocumentEnd, true);
+    }
+
+    /**
+     * iOS11+
+     *
+     * Sets up loading WKUserScripts
+     *
+     * @param autoInjectJSBridge If true viewport-code, bridge-code and named scripts will be loaded, if false only viewport-code
+     */
     protected loadWKUserScripts(autoInjectJSBridge = this.autoInjectJSBridge) {
         if (!this._wkWebView) {
             return;
         }
 
-        this._wkUserContentController.removeAllUserScripts();
+        if (!this._wkUserScriptViewPortCode) {
+            this._wkUserScriptViewPortCode = this.createWkUserScript(
+                `
+                (function() {
+                    let meta = document.querySelector(
+                        'head meta[name="viewport"]',
+                    );
+                    if (!meta) {
+                        meta = document.createElement("meta");
+                        document.head.appendChild(meta);
+                    }
 
+                    meta.setAttribute("name", "viewport");
+                    meta.setAttribute("content", "initial-scale=1.0");
+                })();
+                `.trim(),
+            );
+        }
+
+        this._wkUserContentController.removeAllUserScripts();
+        this._wkUserContentController.addUserScript(this._wkUserScriptViewPortCode);
         if (!autoInjectJSBridge) {
-            this._wkUserContentController.addUserScript(this._wkUserScriptViewPortCode);
             return;
         }
 
-        this._wkUserContentController.addUserScript(this._wkUserScriptInjectWebViewBrigde);
-        this._wkUserContentController.addUserScript(this._wkUserScriptViewPortCode);
-
-        for (const { wkUserScript } of this._wkNamedUserScripts) {
-            this._wkUserContentController.addUserScript(wkUserScript);
+        if (!this._wkUserScriptInjectWebViewBrigde) {
+            this._wkUserScriptInjectWebViewBrigde = webViewBridgeJsCodePromise.then((jsBridgeScript) => this.createWkUserScript(`${jsBridgeScript}`.trim()));
         }
+
+        this._wkUserScriptInjectWebViewBrigde.then((wkUserScriptInjectWebViewBrigde) => {
+            this._wkUserContentController.addUserScript(wkUserScriptInjectWebViewBrigde);
+
+            for (const { wkUserScript } of this._wkNamedUserScripts) {
+                this._wkUserContentController.addUserScript(wkUserScript);
+            }
+        });
     }
 
     [autoInjectJSBridgeProperty.setNative](enabled: boolean) {
