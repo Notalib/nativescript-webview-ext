@@ -737,14 +737,14 @@ export class WebViewExtBase extends View {
     /**
      * Generate scriptcode for loading javascript-file.
      */
-    protected generateLoadJavaScriptFileScriptCode(scriptHref: string) {
+    public generateLoadJavaScriptFileScriptCode(scriptHref: string) {
         return `window.nsWebViewBridge.injectJavaScriptFile(${JSON.stringify(scriptHref)});`;
     }
 
     /**
      * Generate scriptcode for loading CSS-file.
      */
-    protected generaateLoadCSSFileScriptCode(stylesheetHref: string, insertBefore = false) {
+    public generaateLoadCSSFileScriptCode(stylesheetHref: string, insertBefore = false) {
         return `window.nsWebViewBridge.injectStyleSheetFile(${JSON.stringify(stylesheetHref)}, ${!!insertBefore});`;
     }
 
@@ -833,7 +833,7 @@ export class WebViewExtBase extends View {
     /**
      * Helper function, strips 'x-local://' from a resource name
      */
-    protected fixLocalResourceName(resourceName: string) {
+    public fixLocalResourceName(resourceName: string) {
         if (resourceName.startsWith(this.interceptScheme)) {
             return resourceName.substr(this.interceptScheme.length + 3);
         }
@@ -877,3 +877,34 @@ displayZoomControlsProperty.register(WebViewExtBase);
 domStorageProperty.register(WebViewExtBase);
 srcProperty.register(WebViewExtBase);
 supportZoomProperty.register(WebViewExtBase);
+
+export interface IOSWebViewBridge {
+    owner: WeakRef<WebViewExtBase>;
+
+    createNativeView(): any;
+    initNativeView(): void;
+    disposeNativeView(): void;
+    onLoaded(): void;
+    onUnloaded(): void;
+
+    executeJavaScript(scriptCode: string): Promise<any>;
+    registerLocalResourceForNative(resourceName: string, filepath: string): void;
+    unregisterLocalResourceForNative(resourceName: string): void;
+    getRegisteredLocalResourceFromNative(resourceName: string): string;
+    autoLoadStyleSheetFile(resourceName: string, filepath: string, insertBefore?: boolean): void;
+    removeAutoLoadStyleSheetFile(resourceName: string): void;
+    autoLoadJavaScriptFile(resourceName: string, filepath: string): void;
+    removeAutoLoadJavaScriptFile(resourceName: string): void;
+
+    stopLoading(): void;
+    loadUrl(url: string): void;
+    loadData(content: string): void;
+    readonly canGoBack: boolean;
+    readonly canGoForward: boolean;
+    goBack(): void;
+    goForward(): void;
+    reload(): void;
+
+    readonly shouldInjectWebViewBridge: boolean;
+    enableAutoInject(enable: boolean): void;
+}
