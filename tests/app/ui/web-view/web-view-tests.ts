@@ -654,15 +654,17 @@ export class WebViewTest extends testModule.UITest<webViewModule.WebViewExt> {
                         return new Promise(function(resolve, reject) {
                             let xhr = new XMLHttpRequest();
                             xhr.open(obj.method || "GET", obj.url);
+
                             xhr.onload = function() {
                                 if (xhr.status >= 200 && xhr.status < 300) {
                                     resolve(xhr.response);
                                 } else {
-                                    reject(xhr.statusText);
+                                    reject(new Error('StatusCode: ' + xhr.status));
                                 }
                             };
-                            xhr.onerror = function() {
-                                reject(xhr.statusText);
+
+                            xhr.onerror = function(err) {
+                                reject(err || xhr.status);
                             };
                             xhr.send(obj.body);
                         });
