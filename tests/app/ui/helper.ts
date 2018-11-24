@@ -1,6 +1,6 @@
 ﻿// tslint:disable:ordered-imports
 import * as frame from "tns-core-modules/ui/frame";
-import { unsetValue, isIOS } from "tns-core-modules/ui/core/view";
+import { isIOS } from "tns-core-modules/ui/core/view";
 import { Page } from "tns-core-modules/ui/page";
 import * as TKUnit from "../TKUnit";
 import * as utils from "tns-core-modules/utils/utils";
@@ -25,19 +25,6 @@ export function getColor(uiColor: UIColor): Color {
     let alpha = alphaRef.value * 255;
 
     return new Color(alpha, red, green, blue);
-}
-
-function clearPage(): void {
-    let newPage = getCurrentPage();
-    if (!newPage) {
-        throw new Error("NO CURRENT PAGE!!!!");
-    }
-
-    newPage.style.backgroundColor = unsetValue;
-    newPage.style.color = unsetValue;
-    newPage.bindingContext = unsetValue;
-    newPage.className = unsetValue;
-    newPage.id = unsetValue;
 }
 
 export function navigate(pageFactory: () => Page, navigationContext?: any): Page {

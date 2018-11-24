@@ -15,7 +15,6 @@ import * as timer from "tns-core-modules/timer";
 import * as trace from "tns-core-modules/trace";
 import * as types from "tns-core-modules/utils/types";
 import * as platform from "tns-core-modules/platform";
-import { topmost } from "tns-core-modules/ui/frame";
 
 import * as utils from "tns-core-modules/utils/utils";
 
@@ -102,7 +101,6 @@ const defaultTimeout = 5000;
 function runAsync(testInfo: TestInfoEntry, recursiveIndex: number, testTimeout?: number) {
     let error;
     let isDone = false;
-    let handle;
     const testStartTime = time();
     //write("--- [" + testInfo.testName + "] Started at: " + testStartTime, trace.messageType.info);
     const doneCallback = (e: Error) => {

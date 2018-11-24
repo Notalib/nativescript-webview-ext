@@ -1,17 +1,13 @@
 ﻿/* tslint:disable:prefer-template */
 import { exit } from "nativescript-exit";
-import { _resetRootView, getRootView } from "tns-core-modules/application";
-import * as fs from "tns-core-modules/file-system";
 import * as platform from "tns-core-modules/platform";
 import * as trace from "tns-core-modules/trace";
 import { messageType } from "tns-core-modules/trace";
 import { Button } from "tns-core-modules/ui/button";
-import { unsetValue } from "tns-core-modules/ui/core/properties";
-import { Frame, NavigationEntry, topmost } from "tns-core-modules/ui/frame";
+import { Frame, topmost } from "tns-core-modules/ui/frame";
 import { StackLayout } from "tns-core-modules/ui/layouts/stack-layout";
 import { Page } from "tns-core-modules/ui/page";
 import { TextView } from "tns-core-modules/ui/text-view";
-import { ad } from "tns-core-modules/utils/utils";
 
 import * as TKUnit from "./TKUnit";
 import "./ui-test";
@@ -83,8 +79,6 @@ let running = false;
 let testsQueue = new Array<TestInfo>();
 
 function printRunTestStats() {
-    const testCases = new Array<string>();
-
     let failedTestCount = 0;
     const failedTestInfo = [];
     const slowTests = new Array<string>();
@@ -130,37 +124,6 @@ function printRunTestStats() {
     } else {
         showReportPage(finalMessage.join(`\n`));
     }
-}
-
-function generateTestFile(allTests: TestInfo[]) {
-    let failedTestCount = 0;
-
-    const testCases = new Array<string>();
-    allTests.forEach((testCase, i, arr) => {
-        let testName = testCase.testName;
-        let duration = (testCase.duration / 1000).toFixed(2);
-
-        testCases.push(`<testcase classname="${platform.device.os}" name="${testName}" time="${duration}">`);
-        if (!testCase.isPassed) {
-            failedTestCount++;
-            testCases.push(`<failure type="exceptions.AssertionError"><![CDATA[${testCase.errorMessage}]]></failure>`);
-        }
-        testCases.push(`</testcase>`);
-    });
-
-    const totalTime = (TKUnit.time() - startTime).toFixed(2);
-
-    const result = [
-        "<testsuites>",
-        `<testsuite name="NativeScript Tests" timestamp="${new Date()}" hostname="hostname" time="${totalTime}" errors="0" tests="${
-            allTests.length
-        }" skipped="0" failures="${failedTestCount}">`,
-        ...testCases,
-        "</testsuite>",
-        "</testsuites>",
-    ].join("");
-
-    return result;
 }
 
 function showReportPage(finalMessage: string) {
@@ -238,14 +201,13 @@ export function runAll(testSelector?: string) {
 
     TKUnit.write(`TESTS: ${singleModuleName || ""} ${singleTestName || ""}`);
 
-    const totalSuccess = 0;
-    const totalFailed: Array<TKUnit.TestFailure> = [];
     testsQueue.push(
         new TestInfo(() => {
             running = true;
             startTime = TKUnit.time();
         }),
     );
+
     for (const name in allTests) {
         if (singleModuleName && singleModuleName !== name.toLowerCase()) {
             continue;
