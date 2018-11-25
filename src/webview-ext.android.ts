@@ -481,8 +481,8 @@ export class WebViewExt extends WebViewExtBase {
         return promisePolyfillJsCodePromise.then((scriptCode) => this.executeJavaScript(scriptCode)).then(() => void 0);
     }
 
-    protected injectWebViewBridge() {
-        return super.injectWebViewBridge().then(() => this.ensurePromiseSupport());
+    protected ensurePolyfills() {
+        return Promise.all([this.ensureFetchSupport(), this.ensurePromiseSupport()]).then(() => void 0);
     }
 
     public getTitle() {

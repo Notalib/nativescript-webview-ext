@@ -1,6 +1,6 @@
 import * as fs from "tns-core-modules/file-system";
 import { CSSType, EventData, Property, traceEnabled, traceMessageType, traceWrite, View } from "tns-core-modules/ui/core/view";
-import { webViewBridgeJsCodePromise } from "./nativescript-webview-bridge-loader";
+import { webViewBridgeJsCodePromise, fetchPolyfillJsCodePromise } from "./nativescript-webview-bridge-loader";
 
 export * from "tns-core-modules/ui//core/view";
 
@@ -114,6 +114,8 @@ export class UnsupportSDKError extends Error {
 
 @CSSType("WebView")
 export class WebViewExtBase extends View {
+    public static isFetchSupported: boolean;
+
     /**
      * Gets the native [android widget](http://developer.android.com/reference/android/webkit/WebView.html) that represents the user interface for this component. Valid only when running on Android OS.
      */
@@ -636,6 +638,44 @@ export class WebViewExtBase extends View {
     }
 
     /**
+     * Older Android WebView don't support promises.
+     * Inject the promise-polyfill if needed.
+     */
+    protected ensureFetchSupport() {
+        if (WebViewExtBase.isFetchSupported) {
+            return Promise.resolve();
+        }
+
+        if (typeof WebViewExtBase.isFetchSupported === "undefined") {
+            this.writeTrace("WebViewExtBase.ensureFetchSupport() - need to check for fetch support.");
+
+            return this.executeJavaScript("typeof fetch")
+                .then((v) => v !== "undefined")
+                .then((v) => {
+                    WebViewExtBase.isFetchSupported = v;
+                    if (v) {
+                        this.writeTrace("WebViewExtBase.ensureFetchSupport() - fetch is supported - polyfill not needed.");
+                        return Promise.resolve();
+                    }
+
+                    this.writeTrace("WebViewExtBase.ensureFetchSupport() - fetch is not supported - polyfill needed.");
+                    return this.loadFetchPolyfill();
+                });
+        }
+
+        this.writeTrace("WebViewExtBase.ensureFetchSupport() - promise is not supported - polyfill needed.");
+        return this.loadFetchPolyfill();
+    }
+
+    protected loadFetchPolyfill() {
+        return fetchPolyfillJsCodePromise.then((scriptCode) => this.executeJavaScript(scriptCode)).then(() => void 0);
+    }
+
+    protected ensurePolyfills() {
+        return this.ensureFetchSupport();
+    }
+
+    /**
      * Execute JavaScript inside the webview.
      * The code should be wrapped inside an anonymous-function.
      * Larger scripts should be injected with loadJavaScriptFile.
@@ -766,7 +806,9 @@ export class WebViewExtBase extends View {
      * Inject WebView JavaScript Bridge.
      */
     protected injectWebViewBridge(): Promise<void> {
-        return webViewBridgeJsCodePromise.then((webViewInterfaceJsCode) => this.executeJavaScript(webViewInterfaceJsCode, false)).then(() => void 0);
+        return webViewBridgeJsCodePromise
+            .then((webViewInterfaceJsCode) => this.executeJavaScript(webViewInterfaceJsCode, false))
+            .then(() => this.ensurePolyfills());
     }
 
     /**
