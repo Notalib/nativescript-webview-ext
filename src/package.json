@@ -22,8 +22,8 @@
         "ngc": "ngc --project tsconfig.aot.json",
         "build": "npm i && rimraf www && npm-run-all build:webview-bridge build:polyfill ngc tsc",
         "build:polyfill": "npm-run-all build:polyfill:promise build:polyfill:fetch",
-        "build:polyfill:promise": "cp ./node_modules/promise-polyfill/dist/polyfill.min.js ./www/promise-polyfill.android.js",
-        "build:polyfill:fetch": "cp ./node_modules/whatwg-fetch/fetch.js ./www/fetch-polyfill.js",
+        "build:polyfill:promise": "uglifyjs ./node_modules/promise-polyfill/dist/polyfill.js --mangle --output ./www/promise-polyfill.js",
+        "build:polyfill:fetch": "uglifyjs ./node_modules/whatwg-fetch/dist/fetch.umd.js --mangle --output ./www/fetch-polyfill.js",
         "build:webview-bridge": "export WWW_OUTDIR=$PWD/www; cd $(git rev-parse --show-toplevel)/www-src && npm i && npm run build -- --outDir ${WWW_OUTDIR}",
         "build:webview-bridge:watch": "npm run build:webview-bridge -- -w",
         "build:typings": "npm run build && (cd ../demo && TNS_TYPESCRIPT_DECLARATIONS_PATH=\"$PWD/../typings\" tns build ios) && cp ../typings/i386/*NotaWebViewExt.d.ts platforms/ios/NotaWebViewExt.d.ts",
@@ -101,6 +101,7 @@
         "tns-platform-declarations": "^4.2.1",
         "tslint": "^5.11.0",
         "typescript": "~2.7.2",
+        "uglify-js": "^3.4.9",
         "whatwg-fetch": "^3.0.0",
         "zone.js": "^0.8.26"
     },

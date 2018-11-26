@@ -1,9 +1,8 @@
 /// <reference path="./platforms/android/webviewinterface.d.ts" />
 
 import * as fs from "tns-core-modules/file-system";
-import * as platform from "tns-core-modules/platform";
-import { promisePolyfill } from "./nativescript-webview-bridge-loader";
 import {
+    androidSDK,
     builtInZoomControlsProperty,
     cacheModeProperty,
     databaseStorageProperty,
@@ -17,8 +16,6 @@ import {
 } from "./webview-ext-common";
 
 export * from "./webview-ext-common";
-
-const androidSDK = Number(platform.device.sdkVersion);
 
 const extToMimeType = new Map<string, string>([
     ["html", "text/html"],
@@ -273,8 +270,6 @@ function initializeWebViewClient(): void {
 
 let instanceNo = 0;
 export class WebViewExt extends WebViewExtBase {
-    protected static isPromiseSupported: boolean;
-
     public nativeViewProtected: AndroidWebView;
 
     protected readonly localResourceMap = new Map<string, string>();
@@ -445,44 +440,6 @@ export class WebViewExt extends WebViewExtBase {
                 }),
             );
         }).then((result): T => this.parseWebViewJavascriptResult(result));
-    }
-
-    /**
-     * Older Android WebView don't support promises.
-     * Inject the promise-polyfill if needed.
-     */
-    protected ensurePromiseSupport() {
-        if (androidSDK >= 21 || WebViewExt.isPromiseSupported) {
-            return Promise.resolve();
-        }
-
-        if (typeof WebViewExt.isPromiseSupported === "undefined") {
-            this.writeTrace("WebViewExt<android>.ensurePromiseSupport() - need to check for promise support.");
-
-            return this.executeJavaScript("typeof Promise")
-                .then((v) => v !== "undefined")
-                .then((v) => {
-                    WebViewExt.isPromiseSupported = v;
-                    if (v) {
-                        this.writeTrace("WebViewExt<android>.ensurePromiseSupport() - promise is supported - polyfill not needed.");
-                        return Promise.resolve();
-                    }
-
-                    this.writeTrace("WebViewExt<android>.ensurePromiseSupport() - promise is not supported - polyfill needed.");
-                    return this.loadPromisePolyfill();
-                });
-        }
-
-        this.writeTrace("WebViewExt<android>.ensurePromiseSupport() - promise is not supported - polyfill needed.");
-        return this.loadPromisePolyfill();
-    }
-
-    protected loadPromisePolyfill() {
-        return promisePolyfill.then((scriptCode) => this.executeJavaScript(scriptCode)).then(() => void 0);
-    }
-
-    protected ensurePolyfills() {
-        return Promise.all([this.ensureFetchSupport(), this.ensurePromiseSupport()]).then(() => void 0);
     }
 
     public getTitle() {

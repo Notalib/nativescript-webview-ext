@@ -27,4 +27,5 @@ tests/test-runner/index.d.ts
 tests/tsconfig.tns.json
 **/*.metadata.json
 src/angular/index.d.ts
-native-src/ios/NotaWebViewExt/NotaWebViewExt.xcworkspace/xcuserdata/msn.xcuserdatad/UserInterfaceState.xcuserstate
+UserInterfaceState.xcuserstate
+Podfile.lock

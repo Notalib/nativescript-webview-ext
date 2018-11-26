@@ -19,17 +19,11 @@ export function webviewLoaded(args: LoadEventData) {
 
     webview.registerLocalResource("index.html", "~/assets/test-data/html/javascript-calls.html");
 
-    /*
     if (isAndroid) {
-        webview.src = 'http://10.0.2.2:8080';
+        webview.src = "http://10.0.2.2:8080";
     } else {
-        webview.src = 'http://localhost:8080';
+        webview.src = "http://localhost:8080";
     }
-    */
-
-    // webview.src = "x-local://index.html";
-
-    webview.src = "http://localhost:18080";
 
     webview.on(WebViewExt.shouldOverrideUrlLoadingEvent, (args: ShouldOverideUrlLoadEventData) => {
         console.log(args.url);

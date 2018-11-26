@@ -1,8 +1,14 @@
 import * as fs from "tns-core-modules/file-system";
+import * as platform from "tns-core-modules/platform";
 import { CSSType, EventData, Property, traceEnabled, traceMessageType, traceWrite, View } from "tns-core-modules/ui/core/view";
-import { fetchPolyfill, webViewBridge } from "./nativescript-webview-bridge-loader";
+import { fetchPolyfill, promisePolyfill, webViewBridge } from "./nativescript-webview-bridge-loader";
 
 export * from "tns-core-modules/ui//core/view";
+
+const isAndroid = platform.isAndroid;
+const isIOS = platform.isIOS;
+export const androidSDK = isAndroid && Number(platform.device.sdkVersion);
+export const useWKWebView = isIOS && Number(platform.device.sdkVersion) >= 11;
 
 export const autoInjectJSBridgeProperty = new Property<WebViewExtBase, boolean>({ name: "autoInjectJSBridge", defaultValue: true });
 export const builtInZoomControlsProperty = new Property<WebViewExtBase, boolean>({ name: "builtInZoomControls", defaultValue: false });
@@ -115,6 +121,7 @@ export class UnsupportSDKError extends Error {
 @CSSType("WebView")
 export class WebViewExtBase extends View {
     public static isFetchSupported: boolean;
+    public static isPromiseSupported: boolean;
 
     /**
      * Gets the native [android widget](http://developer.android.com/reference/android/webkit/WebView.html) that represents the user interface for this component. Valid only when running on Android OS.
@@ -638,10 +645,10 @@ export class WebViewExtBase extends View {
     }
 
     /**
-     * Older Android WebView don't support promises.
-     * Inject the promise-polyfill if needed.
+     * Older WebView's don't support fetch-api.
+     * Inject the fetch-polyfill if needed.
      */
-    protected ensureFetchSupport() {
+    protected ensureFetchSupport(): Promise<void> {
         if (WebViewExtBase.isFetchSupported) {
             return Promise.resolve();
         }
@@ -668,11 +675,47 @@ export class WebViewExtBase extends View {
     }
 
     protected loadFetchPolyfill() {
-        return fetchPolyfill.then((scriptCode) => this.executeJavaScript(scriptCode)).then(() => void 0);
+        return fetchPolyfill.then((scriptCode) => this.executeJavaScript(scriptCode, false)).then(() => void 0);
+    }
+
+    /**
+     * Older Android WebView don't support promises.
+     * Inject the promise-polyfill if needed.
+     */
+    protected ensurePromiseSupport() {
+        if (androidSDK >= 21 || WebViewExtBase.isPromiseSupported) {
+            return Promise.resolve();
+        }
+
+        if (typeof WebViewExtBase.isPromiseSupported === "undefined") {
+            this.writeTrace("WebViewExtBase.ensurePromiseSupport() - need to check for promise support.");
+
+            return this.executeJavaScript("typeof Promise")
+                .then((v) => v !== "undefined")
+                .then((v) => {
+                    WebViewExtBase.isPromiseSupported = v;
+                    if (v) {
+                        this.writeTrace("WebViewExtBase.ensurePromiseSupport() - promise is supported - polyfill not needed.");
+                        return Promise.resolve();
+                    }
+
+                    this.writeTrace("WebViewExtBase.ensurePromiseSupport() - promise is not supported - polyfill needed.");
+                    return this.loadPromisePolyfill();
+                });
+        }
+
+        this.writeTrace("WebViewExtBase.ensurePromiseSupport() - promise is not supported - polyfill needed.");
+        return this.loadPromisePolyfill();
+    }
+
+    protected loadPromisePolyfill() {
+        return promisePolyfill.then((scriptCode) => this.executeJavaScript(scriptCode, false)).then(() => void 0);
     }
 
     protected ensurePolyfills() {
-        return this.ensureFetchSupport();
+        return this.ensurePromiseSupport()
+            .then(() => this.ensureFetchSupport())
+            .then(() => void 0);
     }
 
     /**
@@ -932,15 +975,38 @@ domStorageProperty.register(WebViewExtBase);
 srcProperty.register(WebViewExtBase);
 supportZoomProperty.register(WebViewExtBase);
 
+/**
+ * IOS uses a bridge class to map calls to UIWebView or WKWebView
+ */
 export interface IOSWebViewBridge {
     owner: WeakRef<WebViewExtBase>;
 
+    /**
+     * Create Native View object
+     */
     createNativeView(): any;
+
+    /**
+     * Init the native view.
+     */
     initNativeView(): void;
+
+    /**
+     * Dispose the native view
+     */
     disposeNativeView(): void;
+
+    /**
+     * Add Delegate on loaded event
+     */
     onLoaded(): void;
+
+    /**
+     * Null the delegate on unloaded event.
+     */
     onUnloaded(): void;
 
+    // Resource APIs
     executeJavaScript(scriptCode: string): Promise<any>;
     registerLocalResourceForNative(resourceName: string, filepath: string): void;
     unregisterLocalResourceForNative(resourceName: string): void;
@@ -950,6 +1016,7 @@ export interface IOSWebViewBridge {
     autoLoadJavaScriptFile(resourceName: string, filepath: string): void;
     removeAutoLoadJavaScriptFile(resourceName: string): void;
 
+    // WebVeiw calls and properties
     stopLoading(): void;
     loadUrl(url: string): void;
     loadData(content: string): void;

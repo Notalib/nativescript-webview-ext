@@ -97,9 +97,9 @@ public class CustomNSURLProtocol: URLProtocol,NSURLConnectionDelegate,URLSession
                 return;
             }
             let mimeType = self.resolveMimeTypeFrom(filepath: filepath);
-            let urlResponse = URLResponse(url: url, mimeType: mimeType, expectedContentLength: -1, textEncodingName: nil)
+            let urlResponse = HTTPURLResponse.init(url: url, statusCode: 200, httpVersion: "HTTP/1.1", headerFields: ["Content-Type": mimeType])
             
-            self.client?.urlProtocol(self, didReceive: urlResponse, cacheStoragePolicy: .notAllowed)
+            self.client?.urlProtocol(self, didReceive: urlResponse!, cacheStoragePolicy: .notAllowed)
             self.client?.urlProtocol(self, didLoad: data as Data)
             self.client?.urlProtocolDidFinishLoading(self)
         }

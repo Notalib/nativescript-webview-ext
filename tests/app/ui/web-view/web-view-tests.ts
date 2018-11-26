@@ -655,7 +655,7 @@ export class WebViewTest extends testModule.UITest<WebViewExt> {
                 (function(window) {
                     window.makeRequestPromise = function(obj) {
                         return new Promise(function(resolve, reject) {
-                            let xhr = new XMLHttpRequest();
+                            var xhr = new XMLHttpRequest();
                             xhr.open(obj.method || "GET", obj.url);
 
                             xhr.onload = function() {
@@ -669,6 +669,7 @@ export class WebViewTest extends testModule.UITest<WebViewExt> {
                             xhr.onerror = function(err) {
                                 reject(err || xhr.status);
                             };
+
                             xhr.send(obj.body);
                         });
                     };
@@ -695,6 +696,58 @@ export class WebViewTest extends testModule.UITest<WebViewExt> {
             done(err);
         }
         // << webview-x-localfile-xhr
+    }
+
+    public async testXlocalFetch(done) {
+        const webview = this.testView;
+
+        // >> webview-x-localfile-fetch
+        try {
+            webview.registerLocalResource(localStyleSheetCssNAME, localStyleSheetCssFile);
+
+            let filepath = localStyleSheetCssFile;
+            if (filepath.startsWith("~")) {
+                filepath = fs.path.normalize(fs.knownFolders.currentApp().path + filepath.substr(1));
+            }
+
+            if (filepath.startsWith("file://")) {
+                filepath = filepath.replace(/^file:\/\//, "");
+            }
+
+            const expectedData = await fs.File.fromPath(filepath).readText();
+
+            const args = await webview.loadUrl(emptyHTMLFile);
+
+            // >> (hide)
+            const expectedTitle = "Blank";
+            const actualTitle = await webview.getTitle();
+
+            TKUnit.assertNull(args.error, args.error);
+            TKUnit.assertEqual(actualTitle, expectedTitle, `File "${emptyHTMLFile}" not loaded properly.`);
+
+            const fetchUrl = `x-local://${localStyleSheetCssNAME}`;
+            const actualData = await webview.executePromise<string>(
+                `
+                fetch(${JSON.stringify(fetchUrl)})
+                    .then(function(response) {
+                        const statusCode = response.status;
+                        if (statusCode >= 200 && statusCode < 300) {
+                            return response.text();
+                        }
+
+                        return Promise.reject("StatusCode: " + statusCode);
+                    })
+            `,
+            );
+
+            TKUnit.assertEqual(actualData.trim(), expectedData.trim(), `Ajax filecontent not the same`);
+            // << (hide)
+
+            done(null);
+        } catch (err) {
+            done(err);
+        }
+        // << webview-x-localfile-fetch
     }
 }
 

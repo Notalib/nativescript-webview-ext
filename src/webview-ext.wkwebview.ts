@@ -1,9 +1,8 @@
 /// <reference path="./node_modules/tns-platform-declarations/ios.d.ts" />
 /// <reference path="./platforms/ios/NotaWebViewExt.d.ts" />
-/// <reference path="./platforms/ios/GCDWebServer.d.ts" />
 
 import * as fs from "tns-core-modules/file-system";
-import { metadataViewPort, nsXMLHttpRequest, webViewBridge } from "./nativescript-webview-bridge-loader";
+import { metadataViewPort, webViewBridge } from "./nativescript-webview-bridge-loader";
 import { IOSWebViewBridge, NavigationType, traceMessageType, WebViewExtBase } from "./webview-ext-common";
 
 export class WKNavigationDelegateImpl extends NSObject implements WKNavigationDelegate {
@@ -155,7 +154,6 @@ export class WKWebViewWrapper implements IOSWebViewBridge {
     protected wkUserContentController: WKUserContentController;
     protected wkUserScriptInjectWebViewBrigde: Promise<WKUserScript> | void;
     protected wkUserScriptViewPortCode: Promise<WKUserScript>;
-    protected wkNSXMLHttpRequestCode: Promise<WKUserScript> | void;
     protected wkNamedUserScripts = [] as Array<{
         resourceName: string;
         wkUserScript: WKUserScript;
@@ -421,17 +419,11 @@ export class WKWebViewWrapper implements IOSWebViewBridge {
             this.wkUserScriptViewPortCode = this.makeWKUserScriptPromise(metadataViewPort);
         }
 
-        if (!this.wkNSXMLHttpRequestCode) {
-            this.wkNSXMLHttpRequestCode = this.makeWKUserScriptPromise(nsXMLHttpRequest);
-        }
-
         this.wkUserContentController.removeAllUserScripts();
 
         const wkUserScriptViewPortCode = this.wkUserScriptViewPortCode;
-        const wkNSXMLHttpRequestCode = this.wkNSXMLHttpRequestCode;
 
         this.addUserScriptFromPromise(wkUserScriptViewPortCode);
-        this.addUserScriptFromPromise(wkNSXMLHttpRequestCode);
         if (!autoInjectJSBridge) {
             return;
         }

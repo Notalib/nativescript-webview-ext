@@ -1,10 +1,9 @@
 /// <reference path="./node_modules/tns-platform-declarations/ios.d.ts" />
 
-import * as platform from "tns-core-modules/platform";
 import { profile } from "tns-core-modules/profiling";
 import { traceMessageType } from "tns-core-modules/ui/core/view";
 
-import { autoInjectJSBridgeProperty, IOSWebViewBridge, WebViewExtBase } from "./webview-ext-common";
+import { autoInjectJSBridgeProperty, IOSWebViewBridge, useWKWebView, WebViewExtBase } from "./webview-ext-common";
 import { UIWebViewWrapper } from "./webview-ext.uiwebview";
 import { WKWebViewWrapper } from "./webview-ext.wkwebview";
 
@@ -18,7 +17,7 @@ export class WebViewExt extends WebViewExtBase {
     constructor() {
         super();
 
-        if (Number(platform.device.sdkVersion) >= 11) {
+        if (useWKWebView) {
             this.initIOS11Plus();
         } else {
             this.initIOS9and10();
@@ -52,7 +51,8 @@ export class WebViewExt extends WebViewExtBase {
             return super.injectWebViewBridge();
         }
 
-        return Promise.resolve();
+        // WkWebView handles injecting the bridge via WKUserScripts
+        return this.ensurePolyfills();
     }
 
     public executeJavaScript<T>(scriptCode: string, stringifyResult = true): Promise<T> {
