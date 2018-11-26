@@ -6,15 +6,21 @@ Supports Android 19+ and iOS9+.
 ## Features
 * Adds a custom-scheme handler for x-local:// to the webview for loading of resources inside the webview.
     * Note: For iOS 11+ WKWebView is used, but for iOS <11 UIWebView is used
-* Adds support for capturing URLs This allows the app to open external links in an external browser and handle tel-links
-* Adds functions:
+* Adds support for capturing URLs.
+    *  This allows the app to open external links in an external browser and handle tel-links
+* Added functions like:
     - `executeJavaScript(code: string)` for executing JavaScript-code and getting result.
     - `executePromise(code: string)` for calling promises and getting the result.
     - `getTitle()` returns document.title.
-* Listen for events inside the webview from nativescript
-* Listen for events from the webview in nativescript.
-* Adds functions to load `css`- and `javascript`-files in the running webpage.
-    * Supports loading into the current page and setting up auto-loading for every loaded page.
+* Two-Way event listeners between `NativeScript` and `WebView`
+    * From `NativeScript` to `WebView`
+    * From `WebView` to `NativeScript`
+* Adds functions to inject `css`- and `javascript`-files.
+    * Into the current page.
+    * Auto-injected on page load.
+* Polyfills:
+    * Promise
+    * Fetch API (overrides Native API on Android to support x-local:// and file://)
 * Supports:
     * Android 19+
     * iOS 9+
@@ -79,8 +85,8 @@ The custom `NSURLProtocol` used with UIWebView is shared with all instances of t
 
 ### WebView
 
-Inside the WebView we have the nsWebViewBridge for sending events between the NativeScript-layer and the WebView.
-Note: The bridge will only be available `DOMContentLoaded` or `onload` inside the WebView.
+Inside the WebView we have the `nsWebViewBridge` for sending events between the `NativeScript`-layer and the `WebView`.
+**Note:** The bridge will only be available `DOMContentLoaded` or `onload` inside the WebView.
 
 | Function | Description |
 | --- | --- |
@@ -90,18 +96,14 @@ Note: The bridge will only be available `DOMContentLoaded` or `onload` inside th
 
 ## Possible features to come:
 
-* Cookie helpers
-* Setting view-port metadata
+* Cookie helpers?
+* Setting view-port metadata?
 * Share cache with native-layer?
 
 ### Android
 * Settings
     * Cache mode?
-    * AllowFileAccess?
-    * AllowFileAccessFromFileURLs?
     * AppCache and AppCAchePath?
-    * BuiltInZoomControls? and SupportZoom?
-    * DOM Storage?
     * User agent?
 
 #### iOS
