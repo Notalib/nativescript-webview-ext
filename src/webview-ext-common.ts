@@ -647,7 +647,7 @@ export class WebViewExtBase extends ContainerView {
     /**
      * Ensure fetch-api is available.
      */
-    protected ensureFetchSupport(): Promise<void> {
+    protected async ensureFetchSupport(): Promise<void> {
         if (WebViewExtBase.isFetchSupported) {
             return Promise.resolve();
         }
@@ -655,66 +655,56 @@ export class WebViewExtBase extends ContainerView {
         if (typeof WebViewExtBase.isFetchSupported === "undefined") {
             this.writeTrace("WebViewExtBase.ensureFetchSupport() - need to check for fetch support.");
 
-            return this.executeJavaScript("typeof fetch")
-                .then((v) => v !== "undefined")
-                .then((v) => {
-                    WebViewExtBase.isFetchSupported = v;
-                    if (v) {
-                        this.writeTrace("WebViewExtBase.ensureFetchSupport() - fetch is supported - polyfill not needed.");
-                        return Promise.resolve();
-                    }
+            const isSupported = (await this.executeJavaScript("typeof fetch")) !== "undefined";
 
-                    this.writeTrace("WebViewExtBase.ensureFetchSupport() - fetch is not supported - polyfill needed.");
-                    return this.loadFetchPolyfill();
-                });
+            WebViewExtBase.isFetchSupported = isSupported;
+            if (isSupported) {
+                this.writeTrace("WebViewExtBase.ensureFetchSupport() - fetch is supported - polyfill not needed.");
+                return;
+            }
         }
 
         this.writeTrace("WebViewExtBase.ensureFetchSupport() - fetch is not supported - polyfill needed.");
-        return this.loadFetchPolyfill();
+        return await this.loadFetchPolyfill();
     }
 
-    protected loadFetchPolyfill() {
-        return fetchPolyfill.then((scriptCode) => this.executeJavaScript(scriptCode, false)).then(() => void 0);
+    protected async loadFetchPolyfill() {
+        const scriptCode = await fetchPolyfill;
+        await this.executeJavaScript(scriptCode, false);
     }
 
     /**
      * Older Android WebView don't support promises.
      * Inject the promise-polyfill if needed.
      */
-    protected ensurePromiseSupport() {
+    protected async ensurePromiseSupport() {
         if (androidSDK >= 21 || WebViewExtBase.isPromiseSupported) {
-            return Promise.resolve();
+            return;
         }
 
         if (typeof WebViewExtBase.isPromiseSupported === "undefined") {
             this.writeTrace("WebViewExtBase.ensurePromiseSupport() - need to check for promise support.");
 
-            return this.executeJavaScript("typeof Promise")
-                .then((v) => v !== "undefined")
-                .then((v) => {
-                    WebViewExtBase.isPromiseSupported = v;
-                    if (v) {
-                        this.writeTrace("WebViewExtBase.ensurePromiseSupport() - promise is supported - polyfill not needed.");
-                        return Promise.resolve();
-                    }
-
-                    this.writeTrace("WebViewExtBase.ensurePromiseSupport() - promise is not supported - polyfill needed.");
-                    return this.loadPromisePolyfill();
-                });
+            const isSupported = (await this.executeJavaScript("typeof fetch")) !== "undefined";
+            WebViewExtBase.isPromiseSupported = isSupported;
+            if (isSupported) {
+                this.writeTrace("WebViewExtBase.ensurePromiseSupport() - promise is supported - polyfill not needed.");
+                return;
+            }
         }
 
         this.writeTrace("WebViewExtBase.ensurePromiseSupport() - promise is not supported - polyfill needed.");
-        return this.loadPromisePolyfill();
+        return await this.loadPromisePolyfill();
     }
 
-    protected loadPromisePolyfill() {
-        return promisePolyfill.then((scriptCode) => this.executeJavaScript(scriptCode, false)).then(() => void 0);
+    protected async loadPromisePolyfill() {
+        const scriptCode = await promisePolyfill;
+        await this.executeJavaScript(scriptCode, false);
     }
 
-    protected ensurePolyfills() {
-        return this.ensurePromiseSupport()
-            .then(() => this.ensureFetchSupport())
-            .then(() => void 0);
+    protected async ensurePolyfills() {
+        await this.ensurePromiseSupport();
+        await this.ensureFetchSupport();
     }
 
     /**
@@ -850,8 +840,10 @@ export class WebViewExtBase extends ContainerView {
     /**
      * Inject WebView JavaScript Bridge.
      */
-    protected injectWebViewBridge(): Promise<void> {
-        return webViewBridge.then((webViewInterfaceJsCode) => this.executeJavaScript(webViewInterfaceJsCode, false)).then(() => this.ensurePolyfills());
+    protected async injectWebViewBridge(): Promise<void> {
+        const scriptCode = await webViewBridge;
+        await this.executeJavaScript(scriptCode, false);
+        await this.ensurePolyfills();
     }
 
     /**
@@ -1015,7 +1007,7 @@ export interface IOSWebViewWrapper {
     getRegisteredLocalResourceFromNative(resourceName: string): string;
     autoLoadStyleSheetFile(resourceName: string, filepath: string, insertBefore?: boolean): void;
     removeAutoLoadStyleSheetFile(resourceName: string): void;
-    autoLoadJavaScriptFile(resourceName: string, filepath: string): void;
+    autoLoadJavaScriptFile(resourceName: string, filepath: string): Promise<void>;
     removeAutoLoadJavaScriptFile(resourceName: string): void;
 
     // WebVeiw calls and properties

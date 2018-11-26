@@ -376,7 +376,7 @@ export class WKWebViewWrapper implements IOSWebViewWrapper {
         this.removeNamedWKUserScript(`auto-load-css-${resourceName}`);
     }
 
-    public autoLoadJavaScriptFile(resourceName: string, path: string) {
+    public async autoLoadJavaScriptFile(resourceName: string, path: string) {
         const owner = this.owner.get();
         if (!owner) {
             return;
@@ -391,9 +391,9 @@ export class WKWebViewWrapper implements IOSWebViewWrapper {
         }
         owner.registerLocalResource(resourceName, path);
 
-        fs.File.fromPath(filepath)
-            .readText()
-            .then((scriptCode) => this.addNamedWKUserScript(resourceName, scriptCode));
+        const scriptCode = await fs.File.fromPath(filepath).readText();
+
+        this.addNamedWKUserScript(resourceName, scriptCode);
     }
 
     public removeAutoLoadJavaScriptFile(resourceName: string) {
@@ -438,12 +438,14 @@ export class WKWebViewWrapper implements IOSWebViewWrapper {
         }
     }
 
-    protected makeWKUserScriptPromise(scriptCodePromise: Promise<string>) {
-        return scriptCodePromise.then((scriptCode) => this.createWkUserScript(scriptCode));
+    protected async makeWKUserScriptPromise(scriptCodePromise: Promise<string>) {
+        const scriptCode = await scriptCodePromise;
+        return this.createWkUserScript(scriptCode);
     }
 
-    protected addUserScriptFromPromise(userScriptPromise: Promise<WKUserScript>) {
-        return userScriptPromise.then((userScript) => this.addUserScript(userScript));
+    protected async addUserScriptFromPromise(userScriptPromise: Promise<WKUserScript>) {
+        const userScript = await userScriptPromise;
+        return this.addUserScript(userScript);
     }
 
     protected addUserScript(userScript: WKUserScript) {

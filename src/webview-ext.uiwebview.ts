@@ -298,7 +298,7 @@ export class UIWebViewWrapper implements IOSWebViewWrapper {
         throw new Error("removeAutoLoadStyleSheetFile could not be called on UIWebView");
     }
 
-    public autoLoadJavaScriptFile() {
+    public autoLoadJavaScriptFile(): Promise<void> {
         throw new Error("removeAutoLoadJavaScriptFile could not be called on UIWebView");
     }
 
