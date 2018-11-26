@@ -3,7 +3,7 @@
 import { profile } from "tns-core-modules/profiling";
 import { traceMessageType } from "tns-core-modules/ui/core/view";
 
-import { autoInjectJSBridgeProperty, IOSWebViewBridge, useWKWebView, WebViewExtBase } from "./webview-ext-common";
+import { autoInjectJSBridgeProperty, IOSWebViewWrapper, useWKWebView, WebViewExtBase } from "./webview-ext-common";
 import { UIWebViewWrapper } from "./webview-ext.uiwebview";
 import { WKWebViewWrapper } from "./webview-ext.wkwebview";
 
@@ -12,7 +12,7 @@ export * from "./webview-ext-common";
 export class WebViewExt extends WebViewExtBase {
     protected _ios: WKWebView | UIWebView;
 
-    protected nativeBridge: IOSWebViewBridge;
+    protected nativeWrapper: IOSWebViewWrapper;
 
     constructor() {
         super();
@@ -32,7 +32,7 @@ export class WebViewExt extends WebViewExtBase {
         this.nativeViewProtected = this._ios = nativeBridge.createNativeView();
         nativeBridge.initNativeView();
 
-        this.nativeBridge = nativeBridge;
+        this.nativeWrapper = nativeBridge;
     }
 
     protected initIOS9and10() {
@@ -43,11 +43,11 @@ export class WebViewExt extends WebViewExtBase {
         this.nativeViewProtected = this._ios = nativeBridge.createNativeView();
         nativeBridge.initNativeView();
 
-        this.nativeBridge = nativeBridge;
+        this.nativeWrapper = nativeBridge;
     }
 
     protected injectWebViewBridge() {
-        if (this.nativeBridge.shouldInjectWebViewBridge) {
+        if (this.nativeWrapper.shouldInjectWebViewBridge) {
             return super.injectWebViewBridge();
         }
 
@@ -80,7 +80,7 @@ export class WebViewExt extends WebViewExtBase {
             `;
         }
 
-        return this.nativeBridge
+        return this.nativeWrapper
             .executeJavaScript(scriptCode.trim())
             .then((result): T => this.parseWebViewJavascriptResult(result))
             .then((result) => {
@@ -99,45 +99,45 @@ export class WebViewExt extends WebViewExtBase {
     public onLoaded() {
         super.onLoaded();
 
-        this.nativeBridge.onLoaded();
+        this.nativeWrapper.onLoaded();
     }
 
     public onUnloaded() {
-        this.nativeBridge.onUnloaded();
+        this.nativeWrapper.onUnloaded();
 
         super.onUnloaded();
     }
 
     public stopLoading() {
-        this.nativeBridge.stopLoading();
+        this.nativeWrapper.stopLoading();
     }
 
     public _loadUrl(src: string) {
-        this.nativeBridge.loadUrl(src);
+        this.nativeWrapper.loadUrl(src);
     }
 
     public _loadData(content: string) {
-        this.nativeBridge.loadData(content);
+        this.nativeWrapper.loadData(content);
     }
 
     public get canGoBack(): boolean {
-        return this.nativeBridge.canGoBack;
+        return this.nativeWrapper.canGoBack;
     }
 
     public get canGoForward(): boolean {
-        return this.nativeBridge.canGoForward;
+        return this.nativeWrapper.canGoForward;
     }
 
     public goBack() {
-        return this.nativeBridge.goBack();
+        return this.nativeWrapper.goBack();
     }
 
     public goForward() {
-        return this.nativeBridge.goForward();
+        return this.nativeWrapper.goForward();
     }
 
     public reload() {
-        return this.nativeBridge.reload();
+        return this.nativeWrapper.reload();
     }
 
     public registerLocalResource(resourceName: string, path: string) {
@@ -151,7 +151,7 @@ export class WebViewExt extends WebViewExtBase {
 
         this.writeTrace(`WebViewExt<ios>.registerLocalResource("${resourceName}", "${path}") -> file: "${filepath}"`);
 
-        this.nativeBridge.registerLocalResourceForNative(resourceName, filepath);
+        this.nativeWrapper.registerLocalResourceForNative(resourceName, filepath);
     }
 
     public unregisterLocalResource(resourceName: string) {
@@ -159,13 +159,13 @@ export class WebViewExt extends WebViewExtBase {
 
         resourceName = this.fixLocalResourceName(resourceName);
 
-        this.nativeBridge.unregisterLocalResourceForNative(resourceName);
+        this.nativeWrapper.unregisterLocalResourceForNative(resourceName);
     }
 
     public getRegisteredLocalResource(resourceName: string) {
         resourceName = this.fixLocalResourceName(resourceName);
 
-        let result = this.nativeBridge.getRegisteredLocalResourceFromNative(resourceName);
+        let result = this.nativeWrapper.getRegisteredLocalResourceFromNative(resourceName);
 
         this.writeTrace(`WebViewExt<android>.getRegisteredLocalResource("${resourceName}") -> "${result}"`);
         return result;
@@ -203,7 +203,7 @@ export class WebViewExt extends WebViewExtBase {
 
     public autoLoadStyleSheetFile(resourceName: string, filepath: string, insertBefore?: boolean) {
         if (this.isWKWebView) {
-            return this.nativeBridge.autoLoadStyleSheetFile(resourceName, filepath, insertBefore);
+            return this.nativeWrapper.autoLoadStyleSheetFile(resourceName, filepath, insertBefore);
         } else {
             return super.autoLoadStyleSheetFile(resourceName, filepath, insertBefore);
         }
@@ -211,7 +211,7 @@ export class WebViewExt extends WebViewExtBase {
 
     public removeAutoLoadStyleSheetFile(resourceName: string) {
         if (this.isWKWebView) {
-            this.nativeBridge.removeAutoLoadStyleSheetFile(resourceName);
+            this.nativeWrapper.removeAutoLoadStyleSheetFile(resourceName);
         } else {
             super.removeAutoLoadStyleSheetFile(resourceName);
         }
@@ -219,7 +219,7 @@ export class WebViewExt extends WebViewExtBase {
 
     public autoLoadJavaScriptFile(resourceName: string, filepath: string) {
         if (this.isWKWebView) {
-            this.nativeBridge.autoLoadJavaScriptFile(resourceName, filepath);
+            this.nativeWrapper.autoLoadJavaScriptFile(resourceName, filepath);
         } else {
             super.autoLoadJavaScriptFile(resourceName, filepath);
         }
@@ -227,13 +227,13 @@ export class WebViewExt extends WebViewExtBase {
 
     public removeAutoLoadJavaScriptFile(resourceName: string) {
         if (this.isWKWebView) {
-            this.nativeBridge.removeAutoLoadJavaScriptFile(resourceName);
+            this.nativeWrapper.removeAutoLoadJavaScriptFile(resourceName);
         } else {
             super.removeAutoLoadJavaScriptFile(resourceName);
         }
     }
 
     [autoInjectJSBridgeProperty.setNative](enabled: boolean) {
-        this.nativeBridge.enableAutoInject(enabled);
+        this.nativeWrapper.enableAutoInject(enabled);
     }
 }

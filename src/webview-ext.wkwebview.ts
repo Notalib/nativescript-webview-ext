@@ -3,7 +3,7 @@
 
 import * as fs from "tns-core-modules/file-system";
 import { metadataViewPort, webViewBridge } from "./nativescript-webview-bridge-loader";
-import { IOSWebViewBridge, NavigationType, traceMessageType, WebViewExtBase } from "./webview-ext-common";
+import { IOSWebViewWrapper, NavigationType, traceMessageType, WebViewExtBase } from "./webview-ext-common";
 
 export class WKNavigationDelegateImpl extends NSObject implements WKNavigationDelegate {
     public static ObjCProtocols = [WKNavigationDelegate];
@@ -147,7 +147,7 @@ export class WKScriptMessageHandlerImpl extends NSObject implements WKScriptMess
     }
 }
 
-export class WKWebViewWrapper implements IOSWebViewBridge {
+export class WKWebViewWrapper implements IOSWebViewWrapper {
     protected wkWebViewConfiguration: WKWebViewConfiguration;
     protected wkNavigationDelegate: WKNavigationDelegateImpl;
     protected wkCustomUrlSchemeHandler: CustomUrlSchemeHandler;

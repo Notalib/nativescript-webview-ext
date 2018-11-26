@@ -977,7 +977,7 @@ supportZoomProperty.register(WebViewExtBase);
 /**
  * IOS uses a bridge class to map calls to UIWebView or WKWebView
  */
-export interface IOSWebViewBridge {
+export interface IOSWebViewWrapper {
     owner: WeakRef<WebViewExtBase>;
 
     /**

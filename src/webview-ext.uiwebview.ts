@@ -1,7 +1,7 @@
 /// <reference path="./node_modules/tns-platform-declarations/ios.d.ts" />
 
 import * as fs from "tns-core-modules/file-system";
-import { IOSWebViewBridge, NavigationType, WebViewExtBase } from "./webview-ext-common";
+import { IOSWebViewWrapper, NavigationType, WebViewExtBase } from "./webview-ext-common";
 
 export class UIWebViewDelegateImpl extends NSObject implements UIWebViewDelegate {
     public static ObjCProtocols = [UIWebViewDelegate];
@@ -116,7 +116,7 @@ export class UIWebViewDelegateImpl extends NSObject implements UIWebViewDelegate
 }
 
 let registeredCustomNSURLProtocol = false;
-export class UIWebViewWrapper implements IOSWebViewBridge {
+export class UIWebViewWrapper implements IOSWebViewWrapper {
     public owner: WeakRef<WebViewExtBase>;
     public get ios(): UIWebView | void {
         const owner = this.owner.get();
