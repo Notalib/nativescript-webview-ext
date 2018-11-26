@@ -195,6 +195,16 @@ export class UIWebViewWrapper implements IOSWebViewBridge {
             return;
         }
 
+        if (src.startsWith(owner.interceptScheme)) {
+            const tmpSrc = owner.getRegisteredLocalResource(src);
+            if (!tmpSrc) {
+                owner._onLoadFinished(src, "x-local not found");
+                return;
+            }
+
+            src = tmpSrc;
+        }
+
         const nsURL = NSURL.URLWithString(src);
         const nsRequestWithUrl = NSURLRequest.requestWithURL(nsURL);
         owner.writeTrace(`WebViewExt<ios>._loadUrl("${src}") -> this._uiWebView.loadRequest("${nsRequestWithUrl}"`);
