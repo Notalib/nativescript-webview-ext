@@ -278,7 +278,7 @@ function initializeWebViewClient(): void {
 
 let instanceNo = 0;
 export class WebViewExt extends WebViewExtBase {
-    public nativeViewProtected: AndroidWebView;
+    public nativeViewProtected: AndroidWebView | void;
 
     protected readonly localResourceMap = new Map<string, string>();
 
@@ -309,6 +309,9 @@ export class WebViewExt extends WebViewExtBase {
         super.initNativeView();
         initializeWebViewClient();
         const nativeView = this.nativeViewProtected;
+        if (!nativeView) {
+            return;
+        }
 
         const client = new WebViewExtClient(this);
         nativeView.setWebViewClient(client);
@@ -456,13 +459,13 @@ export class WebViewExt extends WebViewExtBase {
         }
 
         const result = await new Promise<T>((resolve, reject) => {
-            if (!this.android) {
+            if (!this.nativeViewProtected) {
                 this.writeTrace(`WebViewExt<android>.executeJavaScript() -> no nativeview?`, traceMessageType.error);
                 reject(new Error("Native Android not inited, cannot call executeJavaScript"));
                 return;
             }
 
-            this.android.evaluateJavascript(
+            this.nativeViewProtected.evaluateJavascript(
                 scriptCode,
                 new android.webkit.ValueCallback({
                     onReceiveValue(result: any) {
@@ -475,21 +478,31 @@ export class WebViewExt extends WebViewExtBase {
         return await this.parseWebViewJavascriptResult(result);
     }
 
-    public getTitle() {
-        return Promise.resolve(this.nativeViewProtected.getTitle());
+    public async getTitle() {
+        return this.nativeViewProtected && this.nativeViewProtected.getTitle();
     }
 
     public zoomIn() {
+        if (!this.nativeViewProtected) {
+            return false;
+        }
         return this.nativeViewProtected.zoomIn();
     }
 
     public zoomOut() {
+        if (!this.nativeViewProtected) {
+            return false;
+        }
         return this.nativeViewProtected.zoomOut();
     }
 
     public zoomBy(zoomFactor: number) {
         if (androidSDK < 21) {
             this.writeTrace(`WebViewExt<android>.zoomBy - not supported on this SDK`);
+            return;
+        }
+
+        if (!this.nativeViewProtected) {
             return;
         }
 
@@ -509,26 +522,43 @@ export class WebViewExt extends WebViewExtBase {
     }
 
     [builtInZoomControlsProperty.getDefault]() {
+        if (!this.nativeViewProtected) {
+            return false;
+        }
+
         const settings = this.nativeViewProtected.getSettings();
         return settings.getBuiltInZoomControls();
     }
 
     [builtInZoomControlsProperty.setNative](enabled: boolean) {
+        if (!this.nativeViewProtected) {
+            return;
+        }
         const settings = this.nativeViewProtected.getSettings();
         settings.setBuiltInZoomControls(!!enabled);
     }
 
     [displayZoomControlsProperty.getDefault]() {
+        if (!this.nativeViewProtected) {
+            return false;
+        }
         const settings = this.nativeViewProtected.getSettings();
         return settings.getDisplayZoomControls();
     }
 
     [displayZoomControlsProperty.setNative](enabled: boolean) {
+        if (!this.nativeViewProtected) {
+            return;
+        }
         const settings = this.nativeViewProtected.getSettings();
         settings.setDisplayZoomControls(!!enabled);
     }
 
     [cacheModeProperty.getDefault](): CacheMode {
+        if (!this.nativeViewProtected) {
+            return null;
+        }
+
         const settings = this.nativeViewProtected.getSettings();
         const cacheModeInt = settings.getCacheMode();
         for (const [key, value] of Array.from(cacheModeMap)) {
@@ -541,6 +571,10 @@ export class WebViewExt extends WebViewExtBase {
     }
 
     [cacheModeProperty.setNative](cacheMode: CacheMode) {
+        if (!this.nativeViewProtected) {
+            return;
+        }
+
         const settings = this.nativeViewProtected.getSettings();
         for (const [key, nativeValue] of Array.from(cacheModeMap)) {
             if (key === cacheMode) {
@@ -551,31 +585,55 @@ export class WebViewExt extends WebViewExtBase {
     }
 
     [databaseStorageProperty.getDefault]() {
+        if (!this.nativeViewProtected) {
+            return false;
+        }
+
         const settings = this.nativeViewProtected.getSettings();
         return settings.getDatabaseEnabled();
     }
 
     [databaseStorageProperty.setNative](enabled: boolean) {
+        if (!this.nativeViewProtected) {
+            return;
+        }
+
         const settings = this.nativeViewProtected.getSettings();
         settings.setDatabaseEnabled(!!enabled);
     }
 
     [domStorageProperty.getDefault]() {
+        if (!this.nativeViewProtected) {
+            return false;
+        }
+
         const settings = this.nativeViewProtected.getSettings();
         return settings.getDomStorageEnabled();
     }
 
     [domStorageProperty.setNative](enabled: boolean) {
+        if (!this.nativeViewProtected) {
+            return;
+        }
+
         const settings = this.nativeViewProtected.getSettings();
         settings.setDomStorageEnabled(!!enabled);
     }
 
     [supportZoomProperty.getDefault]() {
+        if (!this.nativeViewProtected) {
+            return false;
+        }
+
         const settings = this.nativeViewProtected.getSettings();
         return settings.supportZoom();
     }
 
     [supportZoomProperty.setNative](enabled: boolean) {
+        if (!this.nativeViewProtected) {
+            return;
+        }
+
         const settings = this.nativeViewProtected.getSettings();
         settings.setSupportZoom(!!enabled);
     }
