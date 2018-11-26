@@ -3,7 +3,7 @@
 /// <reference path="./platforms/ios/GCDWebServer.d.ts" />
 
 import * as fs from "tns-core-modules/file-system";
-import { webViewBridgeJsCodePromise } from "./nativescript-webview-bridge-loader";
+import { metadataViewPort, nsXMLHttpRequest, webViewBridge } from "./nativescript-webview-bridge-loader";
 import { IOSWebViewBridge, NavigationType, traceMessageType, WebViewExtBase } from "./webview-ext-common";
 
 export class WKNavigationDelegateImpl extends NSObject implements WKNavigationDelegate {
@@ -154,9 +154,10 @@ export class WKWebViewWrapper implements IOSWebViewBridge {
     protected wkCustomUrlSchemeHandler: CustomUrlSchemeHandler;
     protected wkUserContentController: WKUserContentController;
     protected wkUserScriptInjectWebViewBrigde: Promise<WKUserScript> | void;
-    protected wkUserScriptViewPortCode: WKUserScript;
+    protected wkUserScriptViewPortCode: Promise<WKUserScript>;
+    protected wkNSXMLHttpRequestCode: Promise<WKUserScript> | void;
     protected wkNamedUserScripts = [] as Array<{
-        name: string;
+        resourceName: string;
         wkUserScript: WKUserScript;
     }>;
 
@@ -363,8 +364,9 @@ export class WKWebViewWrapper implements IOSWebViewBridge {
 
         resourceName = this.fixLocalResourceName(resourceName);
         if (filepath) {
-            this.registerLocalResourceForNative(resourceName, filepath);
+            owner.registerLocalResource(resourceName, filepath);
         }
+
         const href = `${owner.interceptScheme}://${resourceName}`;
         const scriptCode = owner.generaateLoadCSSFileScriptCode(href, insertBefore);
 
@@ -376,20 +378,24 @@ export class WKWebViewWrapper implements IOSWebViewBridge {
         this.removeNamedWKUserScript(`auto-load-css-${resourceName}`);
     }
 
-    public autoLoadJavaScriptFile(resourceName: string, filepath: string) {
+    public autoLoadJavaScriptFile(resourceName: string, path: string) {
         const owner = this.owner.get();
         if (!owner) {
             return;
         }
 
-        const fixedResourceName = this.fixLocalResourceName(resourceName);
-        if (filepath) {
-            owner.registerLocalResource(fixedResourceName, filepath);
-        }
+        resourceName = this.fixLocalResourceName(resourceName);
 
-        const href = `${owner.interceptScheme}://${fixedResourceName}`;
-        const scriptCode = owner.generateLoadJavaScriptFileScriptCode(href);
-        this.addNamedWKUserScript(href, scriptCode);
+        const filepath = owner.resolveLocalResourceFilePath(path);
+        if (!filepath) {
+            owner.writeTrace(`WKWebViewWrapper.autoLoadJavaScriptFile("${resourceName}", "${path}") - couldn't resolve filepath`);
+            return;
+        }
+        owner.registerLocalResource(resourceName, path);
+
+        fs.File.fromPath(filepath)
+            .readText()
+            .then((scriptCode) => this.addNamedWKUserScript(resourceName, scriptCode));
     }
 
     public removeAutoLoadJavaScriptFile(resourceName: string) {
@@ -412,41 +418,44 @@ export class WKWebViewWrapper implements IOSWebViewBridge {
      */
     protected loadWKUserScripts(autoInjectJSBridge = this.autoInjectJSBridge) {
         if (!this.wkUserScriptViewPortCode) {
-            this.wkUserScriptViewPortCode = this.createWkUserScript(
-                `
-                (function() {
-                    let meta = document.querySelector(
-                        'head meta[name="viewport"]',
-                    );
-                    if (!meta) {
-                        meta = document.createElement("meta");
-                        document.head.appendChild(meta);
-                    }
+            this.wkUserScriptViewPortCode = this.makeWKUserScriptPromise(metadataViewPort);
+        }
 
-                    meta.setAttribute("name", "viewport");
-                    meta.setAttribute("content", "initial-scale=1.0");
-                })();
-                `.trim(),
-            );
+        if (!this.wkNSXMLHttpRequestCode) {
+            this.wkNSXMLHttpRequestCode = this.makeWKUserScriptPromise(nsXMLHttpRequest);
         }
 
         this.wkUserContentController.removeAllUserScripts();
-        this.wkUserContentController.addUserScript(this.wkUserScriptViewPortCode);
+
+        const wkUserScriptViewPortCode = this.wkUserScriptViewPortCode;
+        const wkNSXMLHttpRequestCode = this.wkNSXMLHttpRequestCode;
+
+        this.addUserScriptFromPromise(wkUserScriptViewPortCode);
+        this.addUserScriptFromPromise(wkNSXMLHttpRequestCode);
         if (!autoInjectJSBridge) {
             return;
         }
 
         if (!this.wkUserScriptInjectWebViewBrigde) {
-            this.wkUserScriptInjectWebViewBrigde = webViewBridgeJsCodePromise.then((jsBridgeScript) => this.createWkUserScript(`${jsBridgeScript}`.trim()));
+            this.wkUserScriptInjectWebViewBrigde = this.makeWKUserScriptPromise(webViewBridge);
         }
 
-        this.wkUserScriptInjectWebViewBrigde.then((wkUserScriptInjectWebViewBrigde) => {
-            this.wkUserContentController.addUserScript(wkUserScriptInjectWebViewBrigde);
+        this.addUserScriptFromPromise(this.wkUserScriptInjectWebViewBrigde);
+        for (const { wkUserScript } of this.wkNamedUserScripts) {
+            this.addUserScript(wkUserScript);
+        }
+    }
 
-            for (const { wkUserScript } of this.wkNamedUserScripts) {
-                this.wkUserContentController.addUserScript(wkUserScript);
-            }
-        });
+    protected makeWKUserScriptPromise(scriptCodePromise: Promise<string>) {
+        return scriptCodePromise.then((scriptCode) => this.createWkUserScript(scriptCode));
+    }
+
+    protected addUserScriptFromPromise(userScriptPromise: Promise<WKUserScript>) {
+        return userScriptPromise.then((userScript) => this.addUserScript(userScript));
+    }
+
+    protected addUserScript(userScript: WKUserScript) {
+        this.wkUserContentController.addUserScript(userScript);
     }
 
     /**
@@ -455,18 +464,18 @@ export class WKWebViewWrapper implements IOSWebViewBridge {
      * Add/replace a named WKUserScript.
      * These scripts will be injected when a new documnet is loaded.
      */
-    protected addNamedWKUserScript(name: string, scriptCode: string) {
+    protected addNamedWKUserScript(resourceName: string, scriptCode: string) {
         if (!scriptCode) {
             return;
         }
 
-        this.removeNamedWKUserScript(name);
+        this.removeNamedWKUserScript(resourceName);
 
         const wkUserScript = this.createWkUserScript(scriptCode);
 
-        this.wkNamedUserScripts.push({ name, wkUserScript });
+        this.wkNamedUserScripts.push({ resourceName, wkUserScript });
 
-        this.wkUserContentController.addUserScript(wkUserScript);
+        this.addUserScript(wkUserScript);
     }
 
     /**
@@ -474,8 +483,8 @@ export class WKWebViewWrapper implements IOSWebViewBridge {
      *
      * Remove a named WKUserScript
      */
-    protected removeNamedWKUserScript(name: string) {
-        const idx = this.wkNamedUserScripts.findIndex((val) => val.name === name);
+    protected removeNamedWKUserScript(resourceName: string) {
+        const idx = this.wkNamedUserScripts.findIndex((val) => val.resourceName === resourceName);
         if (idx === -1) {
             return;
         }

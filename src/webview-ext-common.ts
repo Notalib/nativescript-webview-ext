@@ -1,6 +1,6 @@
 import * as fs from "tns-core-modules/file-system";
 import { CSSType, EventData, Property, traceEnabled, traceMessageType, traceWrite, View } from "tns-core-modules/ui/core/view";
-import { webViewBridgeJsCodePromise, fetchPolyfillJsCodePromise } from "./nativescript-webview-bridge-loader";
+import { fetchPolyfill, webViewBridge } from "./nativescript-webview-bridge-loader";
 
 export * from "tns-core-modules/ui//core/view";
 
@@ -411,7 +411,7 @@ export class WebViewExtBase extends View {
         return false;
     }
 
-    protected resolveLocalResourceFilePath(filepath: string): string | void {
+    public resolveLocalResourceFilePath(filepath: string): string | void {
         if (!filepath) {
             this.writeTrace("WebViewExt.resolveLocalResourceFilePath() no filepath", traceMessageType.error);
             return;
@@ -663,12 +663,12 @@ export class WebViewExtBase extends View {
                 });
         }
 
-        this.writeTrace("WebViewExtBase.ensureFetchSupport() - promise is not supported - polyfill needed.");
+        this.writeTrace("WebViewExtBase.ensureFetchSupport() - fetch is not supported - polyfill needed.");
         return this.loadFetchPolyfill();
     }
 
     protected loadFetchPolyfill() {
-        return fetchPolyfillJsCodePromise.then((scriptCode) => this.executeJavaScript(scriptCode)).then(() => void 0);
+        return fetchPolyfill.then((scriptCode) => this.executeJavaScript(scriptCode)).then(() => void 0);
     }
 
     protected ensurePolyfills() {
@@ -806,9 +806,7 @@ export class WebViewExtBase extends View {
      * Inject WebView JavaScript Bridge.
      */
     protected injectWebViewBridge(): Promise<void> {
-        return webViewBridgeJsCodePromise
-            .then((webViewInterfaceJsCode) => this.executeJavaScript(webViewInterfaceJsCode, false))
-            .then(() => this.ensurePolyfills());
+        return webViewBridge.then((webViewInterfaceJsCode) => this.executeJavaScript(webViewInterfaceJsCode, false)).then(() => this.ensurePolyfills());
     }
 
     /**

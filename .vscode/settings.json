@@ -4,25 +4,33 @@
     "files.trimTrailingWhitespace": true
   },
   "files.watcherExclude": {
+    "{test,demo}/**/platforms": true,
     "**/.git/objects/**": true,
     "**/.git/subtree-cache/**": true,
-    "**/node_modules/**": true,
-    "{test,demo}/**/platforms": true,
+    "**/node_modules": true,
+    "**/node_modules/**/*": true,
+    "**/*.d.ts": {
+      "when": "$(basename).ts"
+    },
+    "**/*.js": {
+      "when": "$(basename).ts"
+    }
   },
   "files.exclude": {
-    "**/.git": true,
-    "**/.svn": true,
-    "**/.hg": true,
-    "**/CVS": true,
-    "**/.DS_Store": true,
-    "**/node_modules": true,
     "{test,demo}/**/platforms": true,
+    "**/.DS_Store": true,
+    "**/.git": true,
+    "**/.hg": true,
+    "**/.svn": true,
     "**/*.d.ts": {
       "when": "$(basename).ts"
     },
     "**/*.js": {
       "when": "$(basename).ts"
     },
-    "**/*.metadata.json": true
+    "**/*.metadata.json": true,
+    "**/CVS": true,
+    "**/node_modules": true,
+    "**/node_modules/**/*": true
   },
 }

@@ -20,7 +20,7 @@
         "format": "prettier --write --config ../.prettierrc.json angular/index.ts *.ts",
         "tsc": "npx tsc -skipLibCheck",
         "ngc": "ngc --project tsconfig.aot.json",
-        "build": "npm i && npm-run-all build:webview-bridge build:polyfill ngc tsc",
+        "build": "npm i && rimraf www && npm-run-all build:webview-bridge build:polyfill ngc tsc",
         "build:polyfill": "npm-run-all build:polyfill:promise build:polyfill:fetch",
         "build:polyfill:promise": "cp ./node_modules/promise-polyfill/dist/polyfill.min.js ./www/promise-polyfill.android.js",
         "build:polyfill:fetch": "cp ./node_modules/whatwg-fetch/fetch.js ./www/fetch-polyfill.js",

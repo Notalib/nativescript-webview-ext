@@ -2,7 +2,7 @@
 
 import * as fs from "tns-core-modules/file-system";
 import * as platform from "tns-core-modules/platform";
-import { promisePolyfillJsCodePromise } from "./nativescript-webview-bridge-loader";
+import { promisePolyfill } from "./nativescript-webview-bridge-loader";
 import {
     builtInZoomControlsProperty,
     cacheModeProperty,
@@ -478,7 +478,7 @@ export class WebViewExt extends WebViewExtBase {
     }
 
     protected loadPromisePolyfill() {
-        return promisePolyfillJsCodePromise.then((scriptCode) => this.executeJavaScript(scriptCode)).then(() => void 0);
+        return promisePolyfill.then((scriptCode) => this.executeJavaScript(scriptCode)).then(() => void 0);
     }
 
     protected ensurePolyfills() {
