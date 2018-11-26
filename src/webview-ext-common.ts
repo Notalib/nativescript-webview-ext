@@ -645,8 +645,7 @@ export class WebViewExtBase extends View {
     }
 
     /**
-     * Older WebView's don't support fetch-api.
-     * Inject the fetch-polyfill if needed.
+     * Ensure fetch-api is available.
      */
     protected ensureFetchSupport(): Promise<void> {
         if (WebViewExtBase.isFetchSupported) {
