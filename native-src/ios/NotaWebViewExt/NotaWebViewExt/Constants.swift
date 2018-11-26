@@ -10,6 +10,7 @@ import Foundation
 
 struct Constants {
     static let customURLScheme = "x-local"
+    
     static let mimeType: [String: String] = [
         "html": "text/html",
         "htm": "text/html",

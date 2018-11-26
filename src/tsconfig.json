@@ -20,13 +20,7 @@
         "noImplicitAny": false,
         "noImplicitReturns": true,
         "noImplicitUseStrict": false,
-        "noFallthroughCasesInSwitch": true,
-        "baseUrl": ".",
-        "paths": {
-            "ui/web-view": [
-                "node_modules/tns-core-modules/ui/web-view/"
-            ]
-        }
+        "noFallthroughCasesInSwitch": true
     },
     "exclude": [
         "node_modules",

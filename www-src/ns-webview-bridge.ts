@@ -19,7 +19,7 @@ declare const androidWebViewBridge: {
  * to iOS which is necessary to initiate data transfer from webView to iOS
  */
 function createIFrameForUIWebView(src: string): HTMLIFrameElement {
-    const rootElm = document.documentElement;
+    const rootElm = document.documentElement || document.body;
     const newFrameElm = document.createElement("iframe");
     newFrameElm.setAttribute("src", src);
     rootElm.appendChild(newFrameElm);
@@ -269,10 +269,12 @@ class NSWebViewBridge {
             linkElement.setAttribute("rel", "stylesheet");
             linkElement.setAttribute("type", "text/css");
             linkElement.setAttribute("href", href);
-            if (insertBefore && document.head.childElementCount > 0) {
-                document.head.insertBefore(linkElement, document.head.firstElementChild);
-            } else {
-                document.head.appendChild(linkElement);
+            if (document.head) {
+                if (insertBefore && document.head.childElementCount > 0) {
+                    document.head.insertBefore(linkElement, document.head.firstElementChild);
+                } else {
+                    document.head.appendChild(linkElement);
+                }
             }
         });
     }
@@ -282,7 +284,7 @@ class NSWebViewBridge {
      */
     public async executePromise(promise: Promise<any>, eventName: string) {
         try {
-            const data = await Promise.resolve(promise);
+            const data = await promise;
             this.emit(eventName, {
                 data,
             });
@@ -297,7 +299,7 @@ class NSWebViewBridge {
      * If err is an Error the message and stack will be extracted and emitted to the native-layer.
      */
     public emitError(err: any, eventName = "web-error") {
-        if (err && err.message) {
+        if (err && typeof err === "object" && err.message) {
             this.emit(eventName, {
                 err: {
                     message: err.message,

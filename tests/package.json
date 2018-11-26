@@ -5,7 +5,10 @@
   "readme": "NativeScript Application",
   "repository": "<fill-your-repository-here>",
   "nativescript": {
-    "id": "dk.nota.WebViewUnitTest"
+    "id": "dk.nota.WebViewUnitTest",
+    "tns-android": {
+      "version": "5.0.0"
+    }
   },
   "dependencies": {
     "@nota/nativescript-webview-ext": "file:../src",

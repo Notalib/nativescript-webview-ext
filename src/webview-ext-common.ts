@@ -1,8 +1,14 @@
 import * as fs from "tns-core-modules/file-system";
+import * as platform from "tns-core-modules/platform";
 import { ContainerView, CSSType, EventData, Property, traceEnabled, traceMessageType, traceWrite } from "tns-core-modules/ui/core/view";
-import { webViewBridgeJsCodePromise } from "./nativescript-webview-bridge-loader";
+import { fetchPolyfill, promisePolyfill, webViewBridge } from "./nativescript-webview-bridge-loader";
 
 export * from "tns-core-modules/ui//core/view";
+
+const isAndroid = platform.isAndroid;
+const isIOS = platform.isIOS;
+export const androidSDK = isAndroid && Number(platform.device.sdkVersion);
+export const useWKWebView = isIOS && Number(platform.device.sdkVersion) >= 11;
 
 export const autoInjectJSBridgeProperty = new Property<WebViewExtBase, boolean>({ name: "autoInjectJSBridge", defaultValue: true });
 export const builtInZoomControlsProperty = new Property<WebViewExtBase, boolean>({ name: "builtInZoomControls", defaultValue: false });
@@ -114,6 +120,9 @@ export class UnsupportSDKError extends Error {
 
 @CSSType("WebView")
 export class WebViewExtBase extends ContainerView {
+    public static isFetchSupported: boolean;
+    public static isPromiseSupported: boolean;
+
     /**
      * Gets the native [android widget](http://developer.android.com/reference/android/webkit/WebView.html) that represents the user interface for this component. Valid only when running on Android OS.
      */
@@ -254,9 +263,9 @@ export class WebViewExtBase extends ContainerView {
             return Promise.resolve(args);
         }
 
-        await this.injectWebViewBridge();
-
         try {
+            await this.injectWebViewBridge();
+
             await this.loadJavaScriptFiles(this.autoInjectScriptFiles);
             await this.loadStyleSheetFiles(this.autoInjectStyleSheetFiles);
             await this.executePromises(this.autoInjectJavaScriptBlocks.map((data) => data.scriptCode), -1);
@@ -375,19 +384,6 @@ export class WebViewExtBase extends ContainerView {
 
         this.stopLoading();
 
-        if (src.startsWith(this.interceptScheme)) {
-            this.writeTrace(`WebViewExt.src = "${originSrc}" resolve x-local file`);
-            const filepath = this.getRegisteredLocalResource(src);
-            if (filepath) {
-                src = `file://${filepath}`;
-                this.writeTrace(`WebViewExt.src = "${originSrc}" x-local resolved to "${src}"`);
-            } else {
-                this.writeTrace(`WebViewExt.src = "${originSrc}" x-local couldn't resolve to file`, traceMessageType.error);
-                this._onLoadFinished(src, "unknown x-local-resource").catch(() => void 0);
-                return;
-            }
-        }
-
         // Add file:/// prefix for local files.
         // They should be loaded with _loadUrl() method as it handles query params.
         if (src.startsWith("~/")) {
@@ -408,7 +404,7 @@ export class WebViewExtBase extends ContainerView {
             }
         }
 
-        if (lcSrc.startsWith("http://") || lcSrc.startsWith("https://") || lcSrc.startsWith("file:///")) {
+        if (lcSrc.startsWith(this.interceptScheme) || lcSrc.startsWith("http://") || lcSrc.startsWith("https://") || lcSrc.startsWith("file:///")) {
             this._loadUrl(src);
 
             this.writeTrace(`WebViewExt.src = "${originSrc}" - LoadUrl("${src}")`);
@@ -422,9 +418,9 @@ export class WebViewExtBase extends ContainerView {
         return false;
     }
 
-    protected resolveLocalResourceFilePath(filepath: string): string | void {
+    public resolveLocalResourceFilePath(filepath: string): string | void {
         if (!filepath) {
-            console.error("WebViewExt.resolveLocalResourceFilePath() no filepath");
+            this.writeTrace("WebViewExt.resolveLocalResourceFilePath() no filepath", traceMessageType.error);
             return;
         }
 
@@ -437,7 +433,7 @@ export class WebViewExtBase extends ContainerView {
         }
 
         if (!fs.File.exists(filepath)) {
-            console.error(`WebViewExt.resolveLocalResourceFilePath("${filepath}") - no such file`);
+            this.writeTrace(`WebViewExt.resolveLocalResourceFilePath("${filepath}") - no such file`, traceMessageType.error);
             return;
         }
 
@@ -649,6 +645,79 @@ export class WebViewExtBase extends ContainerView {
     }
 
     /**
+     * Ensure fetch-api is available.
+     */
+    protected ensureFetchSupport(): Promise<void> {
+        if (WebViewExtBase.isFetchSupported) {
+            return Promise.resolve();
+        }
+
+        if (typeof WebViewExtBase.isFetchSupported === "undefined") {
+            this.writeTrace("WebViewExtBase.ensureFetchSupport() - need to check for fetch support.");
+
+            return this.executeJavaScript("typeof fetch")
+                .then((v) => v !== "undefined")
+                .then((v) => {
+                    WebViewExtBase.isFetchSupported = v;
+                    if (v) {
+                        this.writeTrace("WebViewExtBase.ensureFetchSupport() - fetch is supported - polyfill not needed.");
+                        return Promise.resolve();
+                    }
+
+                    this.writeTrace("WebViewExtBase.ensureFetchSupport() - fetch is not supported - polyfill needed.");
+                    return this.loadFetchPolyfill();
+                });
+        }
+
+        this.writeTrace("WebViewExtBase.ensureFetchSupport() - fetch is not supported - polyfill needed.");
+        return this.loadFetchPolyfill();
+    }
+
+    protected loadFetchPolyfill() {
+        return fetchPolyfill.then((scriptCode) => this.executeJavaScript(scriptCode, false)).then(() => void 0);
+    }
+
+    /**
+     * Older Android WebView don't support promises.
+     * Inject the promise-polyfill if needed.
+     */
+    protected ensurePromiseSupport() {
+        if (androidSDK >= 21 || WebViewExtBase.isPromiseSupported) {
+            return Promise.resolve();
+        }
+
+        if (typeof WebViewExtBase.isPromiseSupported === "undefined") {
+            this.writeTrace("WebViewExtBase.ensurePromiseSupport() - need to check for promise support.");
+
+            return this.executeJavaScript("typeof Promise")
+                .then((v) => v !== "undefined")
+                .then((v) => {
+                    WebViewExtBase.isPromiseSupported = v;
+                    if (v) {
+                        this.writeTrace("WebViewExtBase.ensurePromiseSupport() - promise is supported - polyfill not needed.");
+                        return Promise.resolve();
+                    }
+
+                    this.writeTrace("WebViewExtBase.ensurePromiseSupport() - promise is not supported - polyfill needed.");
+                    return this.loadPromisePolyfill();
+                });
+        }
+
+        this.writeTrace("WebViewExtBase.ensurePromiseSupport() - promise is not supported - polyfill needed.");
+        return this.loadPromisePolyfill();
+    }
+
+    protected loadPromisePolyfill() {
+        return promisePolyfill.then((scriptCode) => this.executeJavaScript(scriptCode, false)).then(() => void 0);
+    }
+
+    protected ensurePolyfills() {
+        return this.ensurePromiseSupport()
+            .then(() => this.ensureFetchSupport())
+            .then(() => void 0);
+    }
+
+    /**
      * Execute JavaScript inside the webview.
      * The code should be wrapped inside an anonymous-function.
      * Larger scripts should be injected with loadJavaScriptFile.
@@ -723,20 +792,33 @@ export class WebViewExtBase extends ContainerView {
         return new Promise<T>((resolve, reject) => {
             let timer: any;
             const tmpPromiseEvent = (args: any) => {
+                clearTimeout(timer);
+
                 this.off(eventName);
+
                 const { data, err } = args.data || ({} as any);
-                if (err) {
+                // Was it a success? No 'err' received.
+                if (typeof err === "undefined") {
+                    resolve(data);
+                    return;
+                }
+
+                // Rejected promise.
+                if (err && typeof err === "object") {
+                    // err is an object. Might be a serialized Error-object.
                     const error = new Error(err.message || err);
                     if (err.stack) {
+                        // Add the web stack to the Error object.
                         (error as any).webStack = err.stack;
                     }
+
                     reject(error);
                     return;
                 }
-                resolve(data);
 
-                clearTimeout(timer);
+                reject(new Error(err));
             };
+
             this.on(eventName, tmpPromiseEvent);
 
             this.executeJavaScript(promiseScriptCode, false);
@@ -744,6 +826,7 @@ export class WebViewExtBase extends ContainerView {
             if (timeout > 0) {
                 timer = setTimeout(() => {
                     reject(new Error(`Timed out after: ${timeout}`));
+
                     this.off(eventName);
                 }, timeout);
             }
@@ -753,23 +836,22 @@ export class WebViewExtBase extends ContainerView {
     /**
      * Generate scriptcode for loading javascript-file.
      */
-    protected generateLoadJavaScriptFileScriptCode(scriptHref: string) {
+    public generateLoadJavaScriptFileScriptCode(scriptHref: string) {
         return `window.nsWebViewBridge.injectJavaScriptFile(${JSON.stringify(scriptHref)});`;
     }
 
     /**
      * Generate scriptcode for loading CSS-file.
      */
-    protected generaateLoadCSSFileScriptCode(stylesheetHref: string, insertBefore = false) {
+    public generaateLoadCSSFileScriptCode(stylesheetHref: string, insertBefore = false) {
         return `window.nsWebViewBridge.injectStyleSheetFile(${JSON.stringify(stylesheetHref)}, ${!!insertBefore});`;
     }
 
     /**
      * Inject WebView JavaScript Bridge.
      */
-    protected async injectWebViewBridge(): Promise<void> {
-        const webViewInterfaceJsCode = await webViewBridgeJsCodePromise;
-        await this.executeJavaScript(webViewInterfaceJsCode, false);
+    protected injectWebViewBridge(): Promise<void> {
+        return webViewBridge.then((webViewInterfaceJsCode) => this.executeJavaScript(webViewInterfaceJsCode, false)).then(() => this.ensurePolyfills());
     }
 
     /**
@@ -850,7 +932,7 @@ export class WebViewExtBase extends ContainerView {
     /**
      * Helper function, strips 'x-local://' from a resource name
      */
-    protected fixLocalResourceName(resourceName: string) {
+    public fixLocalResourceName(resourceName: string) {
         if (resourceName.startsWith(this.interceptScheme)) {
             return resourceName.substr(this.interceptScheme.length + 3);
         }
@@ -894,3 +976,58 @@ displayZoomControlsProperty.register(WebViewExtBase);
 domStorageProperty.register(WebViewExtBase);
 srcProperty.register(WebViewExtBase);
 supportZoomProperty.register(WebViewExtBase);
+
+/**
+ * IOS uses a bridge class to map calls to UIWebView or WKWebView
+ */
+export interface IOSWebViewWrapper {
+    owner: WeakRef<WebViewExtBase>;
+
+    /**
+     * Create Native View object
+     */
+    createNativeView(): any;
+
+    /**
+     * Init the native view.
+     */
+    initNativeView(): void;
+
+    /**
+     * Dispose the native view
+     */
+    disposeNativeView(): void;
+
+    /**
+     * Add Delegate on loaded event
+     */
+    onLoaded(): void;
+
+    /**
+     * Null the delegate on unloaded event.
+     */
+    onUnloaded(): void;
+
+    // Resource APIs
+    executeJavaScript(scriptCode: string): Promise<any>;
+    registerLocalResourceForNative(resourceName: string, filepath: string): void;
+    unregisterLocalResourceForNative(resourceName: string): void;
+    getRegisteredLocalResourceFromNative(resourceName: string): string;
+    autoLoadStyleSheetFile(resourceName: string, filepath: string, insertBefore?: boolean): void;
+    removeAutoLoadStyleSheetFile(resourceName: string): void;
+    autoLoadJavaScriptFile(resourceName: string, filepath: string): void;
+    removeAutoLoadJavaScriptFile(resourceName: string): void;
+
+    // WebVeiw calls and properties
+    stopLoading(): void;
+    loadUrl(url: string): void;
+    loadData(content: string): void;
+    readonly canGoBack: boolean;
+    readonly canGoForward: boolean;
+    goBack(): void;
+    goForward(): void;
+    reload(): void;
+
+    readonly shouldInjectWebViewBridge: boolean;
+    enableAutoInject(enable: boolean): void;
+}

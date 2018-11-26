@@ -7,7 +7,7 @@
  4. tests should use TKUnit.assert(condition, message) to mark error. If no assert fails test is successful
  5. (if exists) at the end of each test tearDown() module function is called
  6. (if exists) at the end of module test tearDownModule() module function is called
- 
+
 */
 
 import * as Application from "tns-core-modules/application";
@@ -15,7 +15,6 @@ import * as timer from "tns-core-modules/timer";
 import * as trace from "tns-core-modules/trace";
 import * as types from "tns-core-modules/utils/types";
 import * as platform from "tns-core-modules/platform";
-import { topmost } from "tns-core-modules/ui/frame";
 
 import * as utils from "tns-core-modules/utils/utils";
 
@@ -23,7 +22,7 @@ const sdkVersion = parseInt(platform.device.sdkVersion);
 
 trace.enable();
 
-const env = require('./environment.json');
+const env = require("./environment.json");
 console.log(env);
 
 export interface TestInfoEntry {
@@ -40,8 +39,7 @@ export interface TestInfoEntry {
 export function time(): number {
     if (global.android) {
         return java.lang.System.nanoTime() / 1000000; // 1 ms = 1000000 ns
-    }
-    else {
+    } else {
         return CACurrentMediaTime() * 1000;
     }
 }
@@ -53,7 +51,7 @@ export function write(messages: string | string[], type?: number) {
     }
 
     for (const message of messages) {
-        trace.write(`${env.testUUID || ''} ${message}`.trim(), trace.categories.Test, type);
+        trace.write(`${env.testUUID || ""} ${message}`.trim(), trace.categories.Test, type);
     }
 }
 
@@ -63,8 +61,7 @@ function runTest(testInfo: TestInfoEntry) {
     try {
         if (testInfo.instance) {
             testInfo.testFunc.apply(testInfo.instance);
-        }
-        else {
+        } else {
             testInfo.testFunc();
         }
 
@@ -74,8 +71,7 @@ function runTest(testInfo: TestInfoEntry) {
             write(`--- [${testInfo.testName}] OK, duration: ${duration.toFixed(2)}`, trace.messageType.info);
             testInfo.isPassed = true;
         }
-    }
-    catch (e) {
+    } catch (e) {
         if (testInfo.isTest) {
             duration = time() - start;
             testInfo.duration = duration;
@@ -105,7 +101,6 @@ const defaultTimeout = 5000;
 function runAsync(testInfo: TestInfoEntry, recursiveIndex: number, testTimeout?: number) {
     let error;
     let isDone = false;
-    let handle;
     const testStartTime = time();
     //write("--- [" + testInfo.testName + "] Started at: " + testStartTime, trace.messageType.info);
     const doneCallback = (e: Error) => {
@@ -114,7 +109,7 @@ function runAsync(testInfo: TestInfoEntry, recursiveIndex: number, testTimeout?:
         } else {
             isDone = true;
         }
-    }
+    };
 
     const timeout = testTimeout || testInfo.testTimeout || defaultTimeout;
 
@@ -128,7 +123,7 @@ function runAsync(testInfo: TestInfoEntry, recursiveIndex: number, testTimeout?:
             runTests(testsQueue, recursiveIndex + 1);
         } else if (error) {
             write(`--- [${testInfo.testName}] FAILED: ${error.message}, duration: ${duration.toFixed(2)}`, trace.messageType.error);
-           testInfo.errorMessage = error.message;
+            testInfo.errorMessage = error.message;
             runTests(testsQueue, recursiveIndex + 1);
         } else {
             const testEndTime = time();
@@ -140,7 +135,7 @@ function runAsync(testInfo: TestInfoEntry, recursiveIndex: number, testTimeout?:
                 setTimeout(checkFinished, 20);
             }
         }
-    }
+    };
 
     try {
         if (testInfo.instance) {
@@ -208,30 +203,30 @@ export function assertNotEqual(actual: any, expected: any, message?: string) {
     }
 }
 
-export function assertEqual<T extends { equals?(arg: T): boolean } | any>(actual: T, expected: T, message: string = '') {
-    if (!types.isNullOrUndefined(actual)
-        && !types.isNullOrUndefined(expected)
-        && types.getClass(actual) === types.getClass(expected)
-        && types.isFunction(actual.equals)) {
-
+export function assertEqual<T extends { equals?(arg: T): boolean } | any>(actual: T, expected: T, message: string = "") {
+    if (
+        !types.isNullOrUndefined(actual) &&
+        !types.isNullOrUndefined(expected) &&
+        types.getClass(actual) === types.getClass(expected) &&
+        types.isFunction(actual.equals)
+    ) {
         // Use the equals method
         if (!actual.equals(expected)) {
-            throw new Error(`${message} Actual: <${actual}>(${typeof (actual)}). Expected: <${expected}>(${typeof (expected)})`);
+            throw new Error(`${message} Actual: <${actual}>(${typeof actual}). Expected: <${expected}>(${typeof expected})`);
         }
-    }
-    else if (actual !== expected) {
-        throw new Error(`${message} Actual: <${actual}>(${typeof (actual)}). Expected: <${expected}>(${typeof (expected)})` );
+    } else if (actual !== expected) {
+        throw new Error(`${message} Actual: <${actual}>(${typeof actual}). Expected: <${expected}>(${typeof expected})`);
     }
 }
 
 /**
  * Assert two json like objects are deep equal.
  */
-export function assertDeepEqual(actual, expected, message: string = '', path: any[] = []): void {
+export function assertDeepEqual(actual, expected, message: string = "", path: any[] = []): void {
     let typeofActual: string = typeof actual;
     let typeofExpected: string = typeof expected;
     if (typeofActual !== typeofExpected) {
-        throw new Error(message + ' ' + "At /" + path.join("/") + " types of actual " + typeofActual + " and expected " + typeofExpected + " differ.");
+        throw new Error(message + " " + "At /" + path.join("/") + " types of actual " + typeofActual + " and expected " + typeofExpected + " differ.");
     } else if (typeofActual === "object" || typeofActual === "array") {
         if (expected instanceof Map) {
             if (actual instanceof Map) {
@@ -239,47 +234,47 @@ export function assertDeepEqual(actual, expected, message: string = '', path: an
                     if (actual.has(key)) {
                         assertDeepEqual(actual.get(key), value, message, path.concat([key]));
                     } else {
-                        throw new Error(message + ' ' + "At /" + path.join("/") + " expected Map has key '" + key + "' but actual does not.");
+                        throw new Error(message + " " + "At /" + path.join("/") + " expected Map has key '" + key + "' but actual does not.");
                     }
                 });
                 actual.forEach((value, key) => {
                     if (!expected.has(key)) {
-                        throw new Error(message + ' ' + "At /" + path.join("/") + " actual Map has key '" + key + "' but expected does not.");
+                        throw new Error(message + " " + "At /" + path.join("/") + " actual Map has key '" + key + "' but expected does not.");
                     }
                 });
             } else {
-                throw new Error(message + ' ' + "At /" + path.join("/") + " expected is Map but actual is not.");
+                throw new Error(message + " " + "At /" + path.join("/") + " expected is Map but actual is not.");
             }
         }
         if (expected instanceof Set) {
             if (actual instanceof Set) {
-                expected.forEach(i => {
+                expected.forEach((i) => {
                     if (!actual.has(i)) {
-                        throw new Error(message + ' ' + "At /" + path.join("/") + " expected Set has item '" + i + "' but actual does not.");
+                        throw new Error(message + " " + "At /" + path.join("/") + " expected Set has item '" + i + "' but actual does not.");
                     }
                 });
-                actual.forEach(i => {
+                actual.forEach((i) => {
                     if (!expected.has(i)) {
-                        throw new Error(message + ' ' + "At /" + path.join("/") + " actual Set has item '" + i + "' but expected does not.");
+                        throw new Error(message + " " + "At /" + path.join("/") + " actual Set has item '" + i + "' but expected does not.");
                     }
-                })
+                });
             } else {
-                throw new Error(message + ' ' + "At /" + path.join("/") + " expected is Set but actual is not.");
+                throw new Error(message + " " + "At /" + path.join("/") + " expected is Set but actual is not.");
             }
         }
         for (let key in actual) {
             if (!(key in expected)) {
-                throw new Error(message + ' ' + "At /" + path.join("/") + " found unexpected key " + key + ".");
+                throw new Error(message + " " + "At /" + path.join("/") + " found unexpected key " + key + ".");
             }
             assertDeepEqual(actual[key], expected[key], message, path.concat([key]));
         }
         for (let key in expected) {
             if (!(key in actual)) {
-                throw new Error(message + ' ' + "At /" + path.join("/") + " expected a key " + key + ".");
+                throw new Error(message + " " + "At /" + path.join("/") + " expected a key " + key + ".");
             }
         }
     } else if (actual !== expected) {
-        throw new Error(message + ' ' + "At /" + path.join("/") + " actual: '" + actual + "' and expected: '" + expected + "' differ.");
+        throw new Error(message + " " + "At /" + path.join("/") + " actual: '" + actual + "' and expected: '" + expected + "' differ.");
     }
 }
 
@@ -375,7 +370,7 @@ export function waitUntilReady(isReady: () => boolean, timeoutSec: number = 3, s
                 break;
             }
 
-            totalWaitTime += (time() - begin);
+            totalWaitTime += time() - begin;
             if (totalWaitTime >= timeoutMs) {
                 if (shouldThrow) {
                     throw new Error("waitUntilReady Timeout.");
@@ -451,7 +446,8 @@ function doModalAndroid(quitLoop: () => boolean, timeoutSec: number, shouldThrow
                 target.dispatchMessage(msg);
             }
 
-            if (sdkVersion < 21) {//https://code.google.com/p/android-test-kit/issues/detail?id=84
+            if (sdkVersion < 21) {
+                //https://code.google.com/p/android-test-kit/issues/detail?id=84
                 msg.recycle();
             }
         }

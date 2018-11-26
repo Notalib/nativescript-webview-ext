@@ -2,7 +2,11 @@
 <html>
   <head>
     <script>
-      'use strict';
+      function callFromNativeScript() {
+        console.log('got a message from nativescript');
+
+        window.nsWebViewBridge.emit('gotMessage', { huba: "hop" });
+      }
 
       function getNumber() {
         return 42;
@@ -12,12 +16,8 @@
         return 3.14;
       }
 
-      function getFalse() {
+      function getBoolean() {
         return false;
-      }
-
-      function getTruth() {
-        return true;
       }
 
       function getString() {
@@ -29,37 +29,15 @@
       }
 
       function getObject() {
-        return {
-          prop: "test",
-          name: "object-test",
-          values: [
-            42,
-            3.14
-          ]
-        };
-      }
-
-      function setupEventListener() {
-        window.nsWebViewBridge.on('tns-message', function(args) {
-          window.nsWebViewBridge.emit('web-message', args);
-        });
-      }
-
-      function testPromiseResolve() {
-        return new Promise(function(resolve) {
-          setTimeout(function() {
-            resolve(42);
-          }, 100);
-        });
-      }
-
-      function testPromiseReject() {
-        return new Promise(function(resolve, reject) {
-          setTimeout(function() {
-            reject(new Error('The Cake is a Lie'));
-          }, 100);
-        });
+        return { prop: "test", name: "object-test", values: [ 42, 3.14 ] };
       }
     </script>
   </head>
+  <body>
+    <p class="red">RED</p>
+    <div>
+      <h1>Should overide url?</h1>
+      <a href="http://google.com">Go to google - should not load</a>
+    </div>
+  </body>
 </html>

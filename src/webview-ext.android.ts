@@ -1,9 +1,8 @@
 /// <reference path="./platforms/android/webviewinterface.d.ts" />
 
 import * as fs from "tns-core-modules/file-system";
-import * as platform from "tns-core-modules/platform";
-import { promisePolyfillJsCodePromise } from "./nativescript-webview-bridge-loader";
 import {
+    androidSDK,
     builtInZoomControlsProperty,
     cacheModeProperty,
     databaseStorageProperty,
@@ -17,8 +16,6 @@ import {
 } from "./webview-ext-common";
 
 export * from "./webview-ext-common";
-
-const androidSDK = Number(platform.device.sdkVersion);
 
 const extToMimeType = new Map<string, string>([
     ["html", "text/html"],
@@ -55,16 +52,17 @@ export declare namespace dk {
 }
 
 export interface AndroidWebViewClient extends android.webkit.WebViewClient {
-    owner?: WebViewExt;
+    owner: WebViewExt | null;
 }
 
 export interface AndroidWebView extends android.webkit.WebView {
-    client?: AndroidWebViewClient;
+    client: AndroidWebViewClient | null;
     bridgeInterface?: dk.nota.webviewinterface.WebViewBridgeInterface;
 }
 
 let WebViewExtClient: new (owner: WebViewExt) => AndroidWebViewClient;
-let WebViewBridgeInterface: new () => dk.nota.webviewinterface.WebViewBridgeInterface;
+let WebViewBridgeInterface: new (owner: WebViewExt) => dk.nota.webviewinterface.WebViewBridgeInterface;
+
 function initializeWebViewClient(): void {
     if (WebViewExtClient) {
         return;
@@ -78,16 +76,16 @@ function initializeWebViewClient(): void {
     ]);
 
     class WebViewExtClientImpl extends android.webkit.WebViewClient {
-        public owner: WebViewExt;
-
-        constructor() {
+        constructor(public owner: WebViewExt) {
             super();
+
             return global.__native(this);
         }
 
         public shouldOverrideUrlLoading(view: android.webkit.WebView, request: any) {
             const owner = this.owner;
             if (!owner) {
+                console.warn("WebViewExtClientImpl.shouldOverrideUrlLoading(...) - no owner");
                 return true;
             }
 
@@ -128,6 +126,7 @@ function initializeWebViewClient(): void {
         public shouldInterceptRequest(view: android.webkit.WebView, request: any) {
             const owner = this.owner;
             if (!owner) {
+                console.warn("WebViewExtClientImpl.shouldInterceptRequest(...) - no owner");
                 return super.shouldInterceptRequest(view, request);
             }
 
@@ -187,6 +186,7 @@ function initializeWebViewClient(): void {
             super.onPageStarted(view, url, favicon);
             const owner = this.owner;
             if (!owner) {
+                console.warn("WebViewExtClientImpl.onPageStarted(...) - no owner");
                 return;
             }
 
@@ -198,6 +198,7 @@ function initializeWebViewClient(): void {
             super.onPageFinished(view, url);
             const owner = this.owner;
             if (!owner) {
+                console.warn("WebViewExtClientImpl.onPageFinished(...) - no owner");
                 return;
             }
 
@@ -220,6 +221,7 @@ function initializeWebViewClient(): void {
 
             const owner = this.owner;
             if (!owner) {
+                console.warn("WebViewExtClientImpl.onReceivedErrorAPI23(...) - no owner");
                 return;
             }
 
@@ -237,19 +239,20 @@ function initializeWebViewClient(): void {
             super.onReceivedError(view, errorCode, description, failingUrl);
 
             const owner = this.owner;
-            if (owner) {
-                owner.writeTrace(`WebViewClientClass.onReceivedErrorBeforeAPI23(${errorCode}, "${description}", "${failingUrl}")`);
-                owner._onLoadFinished(failingUrl, `${description}(${errorCode})`).catch(() => void 0);
+            if (!owner) {
+                console.warn("WebViewExtClientImpl.onReceivedErrorBeforeAPI23(...) - no owner");
+                return;
             }
+
+            owner.writeTrace(`WebViewClientClass.onReceivedErrorBeforeAPI23(${errorCode}, "${description}", "${failingUrl}")`);
+            owner._onLoadFinished(failingUrl, `${description}(${errorCode})`).catch(() => void 0);
         }
     }
 
     WebViewExtClient = WebViewExtClientImpl;
 
     class WebViewBridgeInterfaceImpl extends dk.nota.webviewinterface.WebViewBridgeInterface {
-        public owner: WebViewExt;
-
-        constructor() {
+        constructor(public owner: WebViewExt) {
             super();
             return global.__native(this);
         }
@@ -257,6 +260,7 @@ function initializeWebViewClient(): void {
         public emitEventToNativeScript(eventName: string, data: string) {
             const owner = this.owner;
             if (!owner) {
+                console.warn("WebViewExtClientImpl.onReceivedErrorBeforeAPI23(...) - no owner");
                 return;
             }
 
@@ -274,8 +278,6 @@ function initializeWebViewClient(): void {
 
 let instanceNo = 0;
 export class WebViewExt extends WebViewExtBase {
-    protected static isPromiseSupported: boolean;
-
     public nativeViewProtected: AndroidWebView;
 
     protected readonly localResourceMap = new Map<string, string>();
@@ -312,19 +314,17 @@ export class WebViewExt extends WebViewExtBase {
         nativeView.setWebViewClient(client);
         nativeView.client = client;
 
-        const bridgeInterface = new WebViewBridgeInterface();
+        const bridgeInterface = new WebViewBridgeInterface(this);
         nativeView.addJavascriptInterface(bridgeInterface, "androidWebViewBridge");
         nativeView.bridgeInterface = bridgeInterface;
-
-        this.nativeViewProtected.bridgeInterface.owner = this;
     }
 
     public disposeNativeView() {
         const nativeView = this.nativeViewProtected;
         if (nativeView) {
-            nativeView.destroy();
             nativeView.client.owner = null;
             nativeView.bridgeInterface.owner = null;
+            nativeView.destroy();
         }
 
         super.disposeNativeView();
@@ -426,6 +426,27 @@ export class WebViewExt extends WebViewExtBase {
         return result;
     }
 
+    /**
+     * Always load the Fetch-polyfill on Android.
+     *
+     * Native 'Fetch API' on Android rejects all request for resources no HTTP or HTTPS.
+     * This breaks x-local requests (and file://).
+     */
+    public ensureFetchSupport() {
+        this.writeTrace("WebViewExt<android>.ensureFetchSupport() - Override 'Fetch API' to support x-local.");
+
+        // The polyfill is not loaded if fetch already exists, start by null'ing it.
+        return this.executeJavaScript(
+            `
+            try {
+                window.fetch = null;
+            } catch (err) {
+
+            }
+        `,
+        ).then(() => this.loadFetchPolyfill());
+    }
+
     public async executeJavaScript<T>(scriptCode: string): Promise<T> {
         if (androidSDK < 19) {
             this.writeTrace(`WebViewExt<android>.executeJavaScript() -> SDK:${androidSDK} not supported`, traceMessageType.error);
@@ -452,42 +473,8 @@ export class WebViewExt extends WebViewExtBase {
         return await this.parseWebViewJavascriptResult(result);
     }
 
-    /**
-     * Older Android WebView don't support promises.
-     * Inject the promise-polyfill if needed.
-     */
-    protected async ensurePromiseSupport() {
-        if (androidSDK >= 21 || WebViewExt.isPromiseSupported) {
-            return;
-        }
-
-        if (typeof WebViewExt.isPromiseSupported === "undefined") {
-            this.writeTrace("WebViewExt<android>.ensurePromiseSupport() - need to check for promise support.");
-
-            WebViewExt.isPromiseSupported = (await this.executeJavaScript("typeof Promise")) !== "undefined";
-            if (WebViewExt.isPromiseSupported) {
-                this.writeTrace("WebViewExt<android>.ensurePromiseSupport() - promise is supported - polyfill not needed.");
-                return;
-            }
-
-            this.writeTrace("WebViewExt<android>.ensurePromiseSupport() - promise is not supported - polyfill needed.");
-            return await this.loadPromisePolyfill();
-        }
-
-        this.writeTrace("WebViewExt<android>.ensurePromiseSupport() - promise is not supported - polyfill needed.");
-        return await this.loadPromisePolyfill();
-    }
-
-    protected loadPromisePolyfill() {
-        return promisePolyfillJsCodePromise.then((scriptCode) => this.executeJavaScript(scriptCode)).then(() => void 0);
-    }
-
-    protected injectWebViewBridge() {
-        return super.injectWebViewBridge().then(() => this.ensurePromiseSupport());
-    }
-
-    public async getTitle() {
-        return this.nativeViewProtected.getTitle();
+    public getTitle() {
+        return Promise.resolve(this.nativeViewProtected.getTitle());
     }
 
     public zoomIn() {
