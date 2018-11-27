@@ -36,6 +36,10 @@ export interface TestInfoEntry {
     duration: number;
 }
 
+export interface DoneCallback {
+    (e?: Error): void;
+}
+
 export function time(): number {
     if (global.android) {
         return java.lang.System.nanoTime() / 1000000; // 1 ms = 1000000 ns

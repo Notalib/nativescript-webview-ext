@@ -203,7 +203,7 @@ export class UIWebViewWrapper implements IOSWebViewWrapper {
 
         const nsURL = NSURL.URLWithString(src);
         const nsRequestWithUrl = NSURLRequest.requestWithURL(nsURL);
-        owner.writeTrace(`WebViewExt<ios>._loadUrl("${src}") -> this._uiWebView.loadRequest("${nsRequestWithUrl}"`);
+        owner.writeTrace(`UIWebViewWrapper.loadUrl("${src}") -> this.ios.loadRequest("${nsRequestWithUrl}"`);
         ios.loadRequest(nsRequestWithUrl);
     }
 
@@ -229,7 +229,7 @@ export class UIWebViewWrapper implements IOSWebViewWrapper {
         const baseUrl = `file:///${fs.knownFolders.currentApp().path}/`;
         const nsBaseUrl = NSURL.URLWithString(baseUrl);
 
-        owner.writeTrace(`WebViewExt<ios>._loadUrl(content) -> this._uiWebView.loadHTMLStringBaseURL("${nsBaseUrl}")`);
+        owner.writeTrace(`UIWebViewWrapper.loadUrl(content) -> this.ios.loadHTMLStringBaseURL("${nsBaseUrl}")`);
         ios.loadHTMLStringBaseURL(content, nsBaseUrl);
     }
 

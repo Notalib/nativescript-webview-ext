@@ -652,25 +652,23 @@ export class WebViewExtBase extends View {
             return Promise.resolve();
         }
 
+        let isSupported = Promise.resolve(false);
         if (typeof WebViewExtBase.isFetchSupported === "undefined") {
             this.writeTrace("WebViewExtBase.ensureFetchSupport() - need to check for fetch support.");
 
-            return this.executeJavaScript("typeof fetch")
-                .then((v) => v !== "undefined")
-                .then((v) => {
-                    WebViewExtBase.isFetchSupported = v;
-                    if (v) {
-                        this.writeTrace("WebViewExtBase.ensureFetchSupport() - fetch is supported - polyfill not needed.");
-                        return Promise.resolve();
-                    }
-
-                    this.writeTrace("WebViewExtBase.ensureFetchSupport() - fetch is not supported - polyfill needed.");
-                    return this.loadFetchPolyfill();
-                });
+            isSupported = this.executeJavaScript<boolean>("typeof fetch !== 'undefined'");
         }
 
-        this.writeTrace("WebViewExtBase.ensureFetchSupport() - fetch is not supported - polyfill needed.");
-        return this.loadFetchPolyfill();
+        return isSupported.then((isSupported) => {
+            WebViewExtBase.isFetchSupported = isSupported;
+            if (isSupported) {
+                this.writeTrace("WebViewExtBase.ensureFetchSupport() - fetch is supported - polyfill not needed.");
+                return Promise.resolve();
+            }
+
+            this.writeTrace("WebViewExtBase.ensureFetchSupport() - fetch is not supported - polyfill needed.");
+            return this.loadFetchPolyfill();
+        });
     }
 
     protected loadFetchPolyfill() {
@@ -686,25 +684,24 @@ export class WebViewExtBase extends View {
             return Promise.resolve();
         }
 
+        let isSupported = Promise.resolve(false);
+
         if (typeof WebViewExtBase.isPromiseSupported === "undefined") {
             this.writeTrace("WebViewExtBase.ensurePromiseSupport() - need to check for promise support.");
 
-            return this.executeJavaScript("typeof Promise")
-                .then((v) => v !== "undefined")
-                .then((v) => {
-                    WebViewExtBase.isPromiseSupported = v;
-                    if (v) {
-                        this.writeTrace("WebViewExtBase.ensurePromiseSupport() - promise is supported - polyfill not needed.");
-                        return Promise.resolve();
-                    }
-
-                    this.writeTrace("WebViewExtBase.ensurePromiseSupport() - promise is not supported - polyfill needed.");
-                    return this.loadPromisePolyfill();
-                });
+            isSupported = this.executeJavaScript<boolean>("typeof Promise !== 'undefined'");
         }
 
-        this.writeTrace("WebViewExtBase.ensurePromiseSupport() - promise is not supported - polyfill needed.");
-        return this.loadPromisePolyfill();
+        return isSupported.then((isSupported) => {
+            WebViewExtBase.isPromiseSupported = isSupported;
+            if (isSupported) {
+                this.writeTrace("WebViewExtBase.ensurePromiseSupport() - promise is supported - polyfill not needed.");
+                return Promise.resolve();
+            }
+
+            this.writeTrace("WebViewExtBase.ensurePromiseSupport() - promise is not supported - polyfill needed.");
+            return this.loadPromisePolyfill();
+        });
     }
 
     protected loadPromisePolyfill() {
