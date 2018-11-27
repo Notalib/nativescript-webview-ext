@@ -485,11 +485,7 @@ export class WKWebViewWrapper implements IOSWebViewWrapper {
      * Factory function for creating a WKUserScript instance.
      */
     protected createWkUserScript(source: string) {
-        return new WKUserScript({
-            forMainFrameOnly: true,
-            injectionTime: WKUserScriptInjectionTime.AtDocumentEnd,
-            source,
-        });
+        return WKUserScript.alloc().initWithSourceInjectionTimeForMainFrameOnly(source, WKUserScriptInjectionTime.AtDocumentEnd, true);
     }
 
     public enableAutoInject(enable: boolean) {

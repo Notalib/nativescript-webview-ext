@@ -652,7 +652,7 @@ export class WebViewExtBase extends View {
             return Promise.resolve();
         }
 
-        let isSupported = Promise.resolve(false);
+        let isSupported = Promise.resolve(WebViewExtBase.isFetchSupported);
         if (typeof WebViewExtBase.isFetchSupported === "undefined") {
             this.writeTrace("WebViewExtBase.ensureFetchSupport() - need to check for fetch support.");
 
@@ -661,7 +661,7 @@ export class WebViewExtBase extends View {
 
         return isSupported.then((isSupported) => {
             WebViewExtBase.isFetchSupported = isSupported;
-            if (isSupported) {
+            if (isSupported === true) {
                 this.writeTrace("WebViewExtBase.ensureFetchSupport() - fetch is supported - polyfill not needed.");
                 return Promise.resolve();
             }
@@ -684,17 +684,18 @@ export class WebViewExtBase extends View {
             return Promise.resolve();
         }
 
-        let isSupported = Promise.resolve(false);
-
+        let isSupported: Promise<boolean>;
         if (typeof WebViewExtBase.isPromiseSupported === "undefined") {
             this.writeTrace("WebViewExtBase.ensurePromiseSupport() - need to check for promise support.");
 
             isSupported = this.executeJavaScript<boolean>("typeof Promise !== 'undefined'");
+        } else {
+            isSupported = Promise.resolve(WebViewExtBase.isPromiseSupported);
         }
 
         return isSupported.then((isSupported) => {
             WebViewExtBase.isPromiseSupported = isSupported;
-            if (isSupported) {
+            if (isSupported === true) {
                 this.writeTrace("WebViewExtBase.ensurePromiseSupport() - promise is supported - polyfill not needed.");
                 return Promise.resolve();
             }
@@ -727,14 +728,15 @@ export class WebViewExtBase extends View {
      * Execute a promise inside the webview and wait for it to resolve.
      * Note: The scriptCode must return a promise.
      */
-    public executePromise<T>(scriptCode: string, timeout: number = 500): Promise<T> {
-        return this.executePromises<T>([scriptCode], timeout).then((results) => results && results[0]);
+    public executePromise<T>(scriptCode: string, timeoutPrPromise = 2000): Promise<T> {
+        return this.executePromises<T>([scriptCode], timeoutPrPromise).then((results) => results && results[0]);
     }
 
-    public executePromises<T>(scriptCodes: string[], timeout: number = 500): Promise<T | void> {
+    public executePromises<T>(scriptCodes: string[], timeout = 2000): Promise<T | void> {
         if (scriptCodes.length === 0) {
             return Promise.resolve();
         }
+
         const reqId = `${Math.round(Math.random() * 1000)}`;
         const eventName = `tmp-promise-event-${reqId}`;
 

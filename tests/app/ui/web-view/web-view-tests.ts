@@ -274,6 +274,7 @@ export class WebViewTest extends testModule.UITest<WebViewExt> {
                 const styles = await webview.executeJavaScript<any>(jsGetElementStyleSheet);
                 TKUnit.assertNotNull(styles, `Couldn't load styles`);
                 TKUnit.assertEqual(new Color(styles.color).hex, expectedRedColor.hex, `div.red isn't red`);
+
                 done();
             } catch (err) {
                 done(err);
