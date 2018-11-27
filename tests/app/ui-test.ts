@@ -6,7 +6,6 @@ import * as navHelper from "./ui/helper";
 import * as TKUnit from "./TKUnit";
 
 export class UITest<T extends View> implements trace.TraceWriter {
-
     private _testPage: Page;
     private _testView: T;
     private _errorMessage;

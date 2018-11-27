@@ -62,6 +62,7 @@ export interface AndroidWebView extends android.webkit.WebView {
 
 let WebViewExtClient: new () => AndroidWebViewClient;
 let WebViewBridgeInterface: new () => dk.nota.webviewinterface.WebViewBridgeInterface;
+
 function initializeWebViewClient(): void {
     if (WebViewExtClient) {
         return;
@@ -416,6 +417,27 @@ export class WebViewExt extends WebViewExtBase {
         this.writeTrace(`WebViewExt<android>.getRegisteredLocalResource("${resourceName}") => "${result}"`);
 
         return result;
+    }
+
+    /**
+     * Always load the Fetch-polyfill on Android.
+     *
+     * Native 'Fetch API' on Android rejects all request for resources no HTTP or HTTPS.
+     * This breaks x-local requests (and file://).
+     */
+    public ensureFetchSupport() {
+        this.writeTrace("WebViewExt<android>.ensureFetchSupport() - Override 'Fetch API' to support x-local.");
+
+        // The polyfill is not loaded if fetch already exists, start by null'ing it.
+        return this.executeJavaScript(
+            `
+            try {
+                window.fetch = null;
+            } catch (err) {
+
+            }
+        `,
+        ).then(() => this.loadFetchPolyfill());
     }
 
     public executeJavaScript<T>(scriptCode: string): Promise<T> {

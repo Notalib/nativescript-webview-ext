@@ -52,7 +52,9 @@
         "JavaScript",
         "Android",
         "iOS",
-        "WebView"
+        "WebView",
+        "UIWebView",
+        "WkWebView"
     ],
     "author": {
         "name": "Nota",

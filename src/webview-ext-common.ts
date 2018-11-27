@@ -645,8 +645,7 @@ export class WebViewExtBase extends View {
     }
 
     /**
-     * Older WebView's don't support fetch-api.
-     * Inject the fetch-polyfill if needed.
+     * Ensure fetch-api is available.
      */
     protected ensureFetchSupport(): Promise<void> {
         if (WebViewExtBase.isFetchSupported) {
@@ -976,7 +975,7 @@ supportZoomProperty.register(WebViewExtBase);
 /**
  * IOS uses a bridge class to map calls to UIWebView or WKWebView
  */
-export interface IOSWebViewBridge {
+export interface IOSWebViewWrapper {
     owner: WeakRef<WebViewExtBase>;
 
     /**
