@@ -186,12 +186,8 @@ export class UIWebViewWrapper implements IOSWebViewBridge {
 
     public loadUrl(src: string) {
         const owner = this.owner.get();
-        if (!owner) {
-            return;
-        }
-
         const ios = this.ios;
-        if (!ios) {
+        if (!owner || !ios) {
             return;
         }
 
@@ -225,19 +221,16 @@ export class UIWebViewWrapper implements IOSWebViewBridge {
 
     public loadData(content: string) {
         const owner = this.owner.get();
-        if (!owner) {
-            return;
-        }
-
         const ios = this.ios;
-        if (!ios) {
+        if (!owner || !ios) {
             return;
         }
 
-        const nsURL = NSURL.alloc().initWithString(`file:///${fs.knownFolders.currentApp().path}/`);
+        const baseUrl = `file:///${fs.knownFolders.currentApp().path}/`;
+        const nsBaseUrl = NSURL.URLWithString(baseUrl);
 
-        owner.writeTrace(`WebViewExt<ios>._loadUrl(content) -> this._uiWebView.loadHTMLStringBaseURL("${nsURL}")`);
-        ios.loadHTMLStringBaseURL(content, nsURL);
+        owner.writeTrace(`WebViewExt<ios>._loadUrl(content) -> this._uiWebView.loadHTMLStringBaseURL("${nsBaseUrl}")`);
+        ios.loadHTMLStringBaseURL(content, nsBaseUrl);
     }
 
     public get canGoBack(): boolean {

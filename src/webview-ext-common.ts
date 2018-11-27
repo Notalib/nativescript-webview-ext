@@ -675,7 +675,7 @@ export class WebViewExtBase extends View {
     }
 
     protected loadFetchPolyfill() {
-        return fetchPolyfill.then((scriptCode) => this.executeJavaScript(scriptCode, false)).then(() => void 0);
+        return fetchPolyfill.then((scriptCode) => this.executeJavaScript<void>(scriptCode, false));
     }
 
     /**
@@ -709,13 +709,11 @@ export class WebViewExtBase extends View {
     }
 
     protected loadPromisePolyfill() {
-        return promisePolyfill.then((scriptCode) => this.executeJavaScript(scriptCode, false)).then(() => void 0);
+        return promisePolyfill.then((scriptCode) => this.executeJavaScript<void>(scriptCode, false));
     }
 
     protected ensurePolyfills() {
-        return this.ensurePromiseSupport()
-            .then(() => this.ensureFetchSupport())
-            .then(() => void 0);
+        return this.ensurePromiseSupport().then(() => this.ensureFetchSupport());
     }
 
     /**
