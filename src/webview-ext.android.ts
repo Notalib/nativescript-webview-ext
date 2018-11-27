@@ -433,7 +433,7 @@ export class WebViewExt extends WebViewExtBase {
      * Always load the Fetch-polyfill on Android.
      *
      * Native 'Fetch API' on Android rejects all request for resources no HTTP or HTTPS.
-     * This breaks x-local requests (and file://).
+     * This breaks x-local:// requests (and file://).
      */
     public async ensureFetchSupport() {
         this.writeTrace("WebViewExt<android>.ensureFetchSupport() - Override 'Fetch API' to support x-local.");
