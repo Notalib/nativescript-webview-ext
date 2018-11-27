@@ -96,6 +96,8 @@ declare class CustomUrlSchemeHandler extends NSObject {
 
 	static new(): CustomUrlSchemeHandler; // inherited from NSObject
 
+	checkTcpPortForListenWithPort(port: number): boolean;
+
 	clearRegisteredLocalResource(): void;
 
 	getRegisteredLocalResourceForKey(forKey: string): string;

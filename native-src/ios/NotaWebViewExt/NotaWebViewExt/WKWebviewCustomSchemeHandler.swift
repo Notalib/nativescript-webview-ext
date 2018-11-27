@@ -71,8 +71,9 @@ public class CustomUrlSchemeHandler: NSObject,WKURLSchemeHandler {
                 return;
             }
             
-            let urlResponse = URLResponse(url: url, mimeType: mimeType, expectedContentLength: -1, textEncodingName: nil)
-            urlSchemeTask.didReceive(urlResponse)
+            let urlResponse = HTTPURLResponse.init(url: url, statusCode: 200, httpVersion: "HTTP/1.1", headerFields: ["Content-Type": mimeType])
+            
+            urlSchemeTask.didReceive(urlResponse!)
             urlSchemeTask.didReceive(data as Data)
             urlSchemeTask.didFinish()
         }

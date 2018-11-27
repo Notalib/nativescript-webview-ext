@@ -284,7 +284,7 @@ class NSWebViewBridge {
      */
     public async executePromise(promise: Promise<any>, eventName: string) {
         try {
-            const data = await Promise.resolve(promise);
+            const data = await promise;
             this.emit(eventName, {
                 data,
             });
@@ -299,7 +299,7 @@ class NSWebViewBridge {
      * If err is an Error the message and stack will be extracted and emitted to the native-layer.
      */
     public emitError(err: any, eventName = "web-error") {
-        if (err && err.message) {
+        if (err && typeof err === "object" && err.message) {
             this.emit(eventName, {
                 err: {
                     message: err.message,

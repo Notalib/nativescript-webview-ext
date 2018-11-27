@@ -2,7 +2,7 @@
 import * as tests from "../testRunner";
 
 function runTests() {
-    setTimeout(() => tests.runAll(''), 10);
+    setTimeout(() => tests.runAll("."), 10);
 }
 
 export function onNavigatedTo(args) {

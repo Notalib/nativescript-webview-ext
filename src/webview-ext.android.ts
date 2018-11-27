@@ -1,9 +1,8 @@
 /// <reference path="./platforms/android/webviewinterface.d.ts" />
 
 import * as fs from "tns-core-modules/file-system";
-import * as platform from "tns-core-modules/platform";
-import { promisePolyfillJsCodePromise } from "./nativescript-webview-bridge-loader";
 import {
+    androidSDK,
     builtInZoomControlsProperty,
     cacheModeProperty,
     databaseStorageProperty,
@@ -17,8 +16,6 @@ import {
 } from "./webview-ext-common";
 
 export * from "./webview-ext-common";
-
-const androidSDK = Number(platform.device.sdkVersion);
 
 const extToMimeType = new Map<string, string>([
     ["html", "text/html"],
@@ -65,6 +62,7 @@ export interface AndroidWebView extends android.webkit.WebView {
 
 let WebViewExtClient: new () => AndroidWebViewClient;
 let WebViewBridgeInterface: new () => dk.nota.webviewinterface.WebViewBridgeInterface;
+
 function initializeWebViewClient(): void {
     if (WebViewExtClient) {
         return;
@@ -273,8 +271,6 @@ function initializeWebViewClient(): void {
 
 let instanceNo = 0;
 export class WebViewExt extends WebViewExtBase {
-    protected static isPromiseSupported: boolean;
-
     public nativeViewProtected: AndroidWebView;
 
     protected readonly localResourceMap = new Map<string, string>();
@@ -423,6 +419,27 @@ export class WebViewExt extends WebViewExtBase {
         return result;
     }
 
+    /**
+     * Always load the Fetch-polyfill on Android.
+     *
+     * Native 'Fetch API' on Android rejects all request for resources no HTTP or HTTPS.
+     * This breaks x-local requests (and file://).
+     */
+    public ensureFetchSupport() {
+        this.writeTrace("WebViewExt<android>.ensureFetchSupport() - Override 'Fetch API' to support x-local.");
+
+        // The polyfill is not loaded if fetch already exists, start by null'ing it.
+        return this.executeJavaScript(
+            `
+            try {
+                window.fetch = null;
+            } catch (err) {
+
+            }
+        `,
+        ).then(() => this.loadFetchPolyfill());
+    }
+
     public executeJavaScript<T>(scriptCode: string): Promise<T> {
         if (androidSDK < 19) {
             this.writeTrace(`WebViewExt<android>.executeJavaScript() -> SDK:${androidSDK} not supported`, traceMessageType.error);
@@ -445,44 +462,6 @@ export class WebViewExt extends WebViewExtBase {
                 }),
             );
         }).then((result): T => this.parseWebViewJavascriptResult(result));
-    }
-
-    /**
-     * Older Android WebView don't support promises.
-     * Inject the promise-polyfill if needed.
-     */
-    protected ensurePromiseSupport() {
-        if (androidSDK >= 21 || WebViewExt.isPromiseSupported) {
-            return Promise.resolve();
-        }
-
-        if (typeof WebViewExt.isPromiseSupported === "undefined") {
-            this.writeTrace("WebViewExt<android>.ensurePromiseSupport() - need to check for promise support.");
-
-            return this.executeJavaScript("typeof Promise")
-                .then((v) => v !== "undefined")
-                .then((v) => {
-                    WebViewExt.isPromiseSupported = v;
-                    if (v) {
-                        this.writeTrace("WebViewExt<android>.ensurePromiseSupport() - promise is supported - polyfill not needed.");
-                        return Promise.resolve();
-                    }
-
-                    this.writeTrace("WebViewExt<android>.ensurePromiseSupport() - promise is not supported - polyfill needed.");
-                    return this.loadPromisePolyfill();
-                });
-        }
-
-        this.writeTrace("WebViewExt<android>.ensurePromiseSupport() - promise is not supported - polyfill needed.");
-        return this.loadPromisePolyfill();
-    }
-
-    protected loadPromisePolyfill() {
-        return promisePolyfillJsCodePromise.then((scriptCode) => this.executeJavaScript(scriptCode)).then(() => void 0);
-    }
-
-    protected injectWebViewBridge() {
-        return super.injectWebViewBridge().then(() => this.ensurePromiseSupport());
     }
 
     public getTitle() {
