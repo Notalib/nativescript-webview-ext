@@ -1,7 +1,7 @@
 // >> web-view-loaded
+import { WebViewExt } from "@nota/nativescript-webview-ext";
 import { EventData } from "tns-core-modules/data/observable";
 import { isAndroid } from "tns-core-modules/platform";
-import { WebView } from "tns-core-modules/ui/web-view";
 
 export function navigatingTo(args: EventData) {
     console.log("page navigating to");
@@ -16,7 +16,7 @@ export function webViewPan(args) {
 }
 
 export function webViewLoaded(args) {
-    let webview: WebView = <WebView>args.object;
+    let webview = <WebViewExt>args.object;
     if (isAndroid) {
         webview.android.getSettings().setDisplayZoomControls(false);
     }

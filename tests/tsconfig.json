@@ -15,6 +15,9 @@
             "~/*": [
                 "app/*"
             ],
+            "tns-core-modules/*": [
+                "./node_modules/tns-core-modules/*"
+            ],
             "*": [
                 "./node_modules/tns-core-modules/*",
                 "./node_modules/*"

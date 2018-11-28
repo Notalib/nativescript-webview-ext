@@ -8,6 +8,7 @@ import { Frame, topmost } from "tns-core-modules/ui/frame";
 import { StackLayout } from "tns-core-modules/ui/layouts/stack-layout";
 import { Page } from "tns-core-modules/ui/page";
 import { TextView } from "tns-core-modules/ui/text-view";
+import { ios } from "tns-core-modules/utils/utils";
 
 import * as TKUnit from "./TKUnit";
 import "./ui-test";
@@ -56,8 +57,14 @@ export function isRunningOnEmulator(): boolean {
 
 export const allTests = {};
 
+import * as webViewSafeAreaTests from "./ui/web-view/web-view-safe-area-tests";
 import * as webViewTests from "./ui/web-view/web-view-tests";
-allTests["WEB-VIEW"] = webViewTests;
+
+if (platform.isIOS && ios.MajorVersion > 10) {
+    allTests["SAFEAREA-WEBVIEW"] = webViewSafeAreaTests;
+}
+
+// allTests["WEB-VIEW"] = webViewTests;
 
 const testsSuitesWithLongDelay = {
     HTTP: 15 * 1000,
