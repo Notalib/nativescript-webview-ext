@@ -186,12 +186,8 @@ export class UIWebViewWrapper implements IOSWebViewWrapper {
 
     public loadUrl(src: string) {
         const owner = this.owner.get();
-        if (!owner) {
-            return;
-        }
-
         const ios = this.ios;
-        if (!ios) {
+        if (!owner || !ios) {
             return;
         }
 
@@ -207,7 +203,7 @@ export class UIWebViewWrapper implements IOSWebViewWrapper {
 
         const nsURL = NSURL.URLWithString(src);
         const nsRequestWithUrl = NSURLRequest.requestWithURL(nsURL);
-        owner.writeTrace(`WebViewExt<ios>._loadUrl("${src}") -> this._uiWebView.loadRequest("${nsRequestWithUrl}"`);
+        owner.writeTrace(`UIWebViewWrapper.loadUrl("${src}") -> this.ios.loadRequest("${nsRequestWithUrl}"`);
         ios.loadRequest(nsRequestWithUrl);
     }
 
@@ -225,19 +221,16 @@ export class UIWebViewWrapper implements IOSWebViewWrapper {
 
     public loadData(content: string) {
         const owner = this.owner.get();
-        if (!owner) {
-            return;
-        }
-
         const ios = this.ios;
-        if (!ios) {
+        if (!owner || !ios) {
             return;
         }
 
-        const nsURL = NSURL.alloc().initWithString(`file:///${fs.knownFolders.currentApp().path}/`);
+        const baseUrl = `file:///${fs.knownFolders.currentApp().path}/`;
+        const nsBaseUrl = NSURL.URLWithString(baseUrl);
 
-        owner.writeTrace(`WebViewExt<ios>._loadUrl(content) -> this._uiWebView.loadHTMLStringBaseURL("${nsURL}")`);
-        ios.loadHTMLStringBaseURL(content, nsURL);
+        owner.writeTrace(`UIWebViewWrapper.loadUrl(content) -> this.ios.loadHTMLStringBaseURL("${nsBaseUrl}")`);
+        ios.loadHTMLStringBaseURL(content, nsBaseUrl);
     }
 
     public get canGoBack(): boolean {

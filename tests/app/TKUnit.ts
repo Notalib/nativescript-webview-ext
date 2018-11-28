@@ -25,15 +25,24 @@ trace.enable();
 const env = require("./environment.json");
 console.log(env);
 
+export interface WebViewError extends Error {
+    webStack?: string;
+}
+
 export interface TestInfoEntry {
     testFunc: () => void;
     instance: Object;
     isTest: boolean;
     testName: string;
     isPassed: boolean;
-    errorMessage: string;
+    readonly errorMessage: string;
     testTimeout: number;
     duration: number;
+    error?: WebViewError;
+}
+
+export interface DoneCallback {
+    (e?: Error): void;
 }
 
 export function time(): number {
@@ -77,7 +86,7 @@ function runTest(testInfo: TestInfoEntry) {
             testInfo.duration = duration;
             write(`--- [${testInfo.testName}] FAILED: ${e.message}, Stack: ${e.stack}, duration: ${duration.toFixed(2)}`, trace.messageType.error);
             testInfo.isPassed = false;
-            testInfo.errorMessage = e.message;
+            testInfo.error = e;
         }
     }
 }
@@ -122,14 +131,20 @@ function runAsync(testInfo: TestInfoEntry, recursiveIndex: number, testTimeout?:
             testInfo.isPassed = true;
             runTests(testsQueue, recursiveIndex + 1);
         } else if (error) {
-            write(`--- [${testInfo.testName}] FAILED: ${error.message}, duration: ${duration.toFixed(2)}`, trace.messageType.error);
-            testInfo.errorMessage = error.message;
+            const stack = error && error.stack;
+            const webStack = error && error.webStack;
+            write(
+                `--- [${testInfo.testName}] FAILED: ${error.message}, . Stack: ${stack}. WebStack: ${webStack}. duration: ${duration.toFixed(2)}`,
+                trace.messageType.error,
+            );
+            testInfo.error = error;
             runTests(testsQueue, recursiveIndex + 1);
         } else {
             const testEndTime = time();
             if (testEndTime - testStartTime > timeout) {
                 write(`--- [${testInfo.testName}] TIMEOUT, duration: ${duration.toFixed(2)}`, trace.messageType.error);
-                testInfo.errorMessage = "Test timeout.";
+
+                testInfo.error = new Error("Test timeout.");
                 runTests(testsQueue, recursiveIndex + 1);
             } else {
                 setTimeout(checkFinished, 20);

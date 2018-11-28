@@ -231,42 +231,35 @@ export class WKWebViewWrapper implements IOSWebViewWrapper {
 
     public loadUrl(src: string) {
         const owner = this.owner.get();
-        if (!owner) {
-            return;
-        }
-
         const ios = this.ios;
-        if (!ios) {
+        if (!owner || !ios) {
             return;
         }
 
         const nsURL = NSURL.URLWithString(src);
         if (src.startsWith("file:///")) {
             const nsReadAccessUrl = NSURL.URLWithString(src);
-            owner.writeTrace(`WebViewExt<ios>._loadUrl("${src}") -> this._wkWebView.loadFileURLAllowingReadAccessToURL("${nsURL}", "${nsReadAccessUrl}"`);
+            owner.writeTrace(`WKWebViewWrapper.loadUrl("${src}") -> this.ios.loadFileURLAllowingReadAccessToURL("${nsURL}", "${nsReadAccessUrl}"`);
             ios.loadFileURLAllowingReadAccessToURL(nsURL, nsReadAccessUrl);
         } else {
             const nsRequestWithUrl = NSURLRequest.requestWithURL(nsURL);
-            owner.writeTrace(`WebViewExt<ios>._loadUrl("${src}") -> this._wkWebView.loadRequest("${nsRequestWithUrl}"`);
+            owner.writeTrace(`WKWebViewWrapper.loadUrl("${src}") -> this.ios.loadRequest("${nsRequestWithUrl}"`);
             ios.loadRequest(nsRequestWithUrl);
         }
     }
 
     public loadData(content: string) {
         const owner = this.owner.get();
-        if (!owner) {
-            return;
-        }
-
         const ios = this.ios;
-        if (!ios) {
+        if (!owner || !ios) {
             return;
         }
 
-        const nsURL = NSURL.alloc().initWithString(`file:///${fs.knownFolders.currentApp().path}/`);
+        const baseUrl = `file:///${fs.knownFolders.currentApp().path}/`;
+        const nsBaseUrl = NSURL.URLWithString(baseUrl);
 
-        owner.writeTrace(`WebViewExt<ios>._loadUrl(content) -> this._wkWebView.loadHTMLStringBaseURL("${nsURL}")`);
-        ios.loadHTMLStringBaseURL(content, nsURL);
+        owner.writeTrace(`WKWebViewWrapper.loadUrl(content) -> this.ios.loadHTMLStringBaseURL("${nsBaseUrl}")`);
+        ios.loadHTMLStringBaseURL(content, nsBaseUrl);
     }
 
     public get canGoBack(): boolean {
@@ -493,8 +486,8 @@ export class WKWebViewWrapper implements IOSWebViewWrapper {
      *
      * Factory function for creating a WKUserScript instance.
      */
-    protected createWkUserScript(scriptCode: string) {
-        return WKUserScript.alloc().initWithSourceInjectionTimeForMainFrameOnly(scriptCode.trim(), WKUserScriptInjectionTime.AtDocumentEnd, true);
+    protected createWkUserScript(source: string) {
+        return WKUserScript.alloc().initWithSourceInjectionTimeForMainFrameOnly(source, WKUserScriptInjectionTime.AtDocumentEnd, true);
     }
 
     public enableAutoInject(enable: boolean) {

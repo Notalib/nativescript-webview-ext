@@ -89,7 +89,17 @@ function printRunTestStats() {
         const testName = testCase.testName;
         if (!testCase.isPassed) {
             failedTestCount++;
-            failedTestInfo.push(testName + " FAILED: " + testCase.errorMessage);
+            const stack = testCase.stack;
+            const webStack = testCase.webStack;
+
+            let message = [`${testName} FAILED: ${testCase.errorMessage}. `];
+            if (stack) {
+                message.push(`Stack ${stack}`);
+            }
+            if (webStack) {
+                message.push(`WebStack ${webStack}`);
+            }
+            failedTestInfo.push(message.join(" "));
         }
 
         const duration = (testCase.duration / 1000).toFixed(2);
@@ -264,17 +274,29 @@ class TestInfo implements TKUnit.TestInfoEntry {
     isTest: boolean;
     testName: string;
     isPassed: boolean;
-    errorMessage: string;
     testTimeout: number;
     duration: number;
+    error?: TKUnit.WebViewError;
 
-    constructor(testFunc, testInstance?: any, isTest?, testName?, isPassed?, errorMessage?, testTimeout?, duration?) {
+    get errorMessage() {
+        return (this.error && this.error.message) || "";
+    }
+
+    get stack() {
+        return this.error && this.error.stack;
+    }
+
+    get webStack() {
+        return this.error && this.error.webStack;
+    }
+
+    constructor(testFunc, testInstance?: any, isTest?, testName?, isPassed?, error?, testTimeout?, duration?) {
         this.testFunc = testFunc;
         this.instance = testInstance || null;
         this.isTest = isTest || false;
         this.testName = testName || "";
         this.isPassed = isPassed || false;
-        this.errorMessage = errorMessage || "";
+        this.error = error;
         this.testTimeout = testTimeout;
         this.duration = duration;
     }

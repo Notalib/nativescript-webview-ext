@@ -120,7 +120,16 @@ export class UnsupportSDKError extends Error {
 
 @CSSType("WebView")
 export class WebViewExtBase extends ContainerView {
+    /**
+     * Is Fetch API supported?
+     *
+     * Note: Android's Native Fetch API needs to be replaced with the polyfill.
+     */
     public static isFetchSupported: boolean;
+
+    /**
+     * Does this platform's WebView support promises?
+     */
     public static isPromiseSupported: boolean;
 
     /**
@@ -655,13 +664,12 @@ export class WebViewExtBase extends ContainerView {
         if (typeof WebViewExtBase.isFetchSupported === "undefined") {
             this.writeTrace("WebViewExtBase.ensureFetchSupport() - need to check for fetch support.");
 
-            const isSupported = (await this.executeJavaScript("typeof fetch")) !== "undefined";
+            WebViewExtBase.isFetchSupported = await this.executeJavaScript<boolean>("typeof fetch !== 'undefined'");
+        }
 
-            WebViewExtBase.isFetchSupported = isSupported;
-            if (isSupported) {
-                this.writeTrace("WebViewExtBase.ensureFetchSupport() - fetch is supported - polyfill not needed.");
-                return;
-            }
+        if (WebViewExtBase.isFetchSupported) {
+            this.writeTrace("WebViewExtBase.ensureFetchSupport() - fetch is supported - polyfill not needed.");
+            return;
         }
 
         this.writeTrace("WebViewExtBase.ensureFetchSupport() - fetch is not supported - polyfill needed.");
@@ -670,7 +678,8 @@ export class WebViewExtBase extends ContainerView {
 
     protected async loadFetchPolyfill() {
         const scriptCode = await fetchPolyfill;
-        await this.executeJavaScript(scriptCode, false);
+
+        await this.executeJavaScript<void>(scriptCode, false);
     }
 
     /**
@@ -685,26 +694,25 @@ export class WebViewExtBase extends ContainerView {
         if (typeof WebViewExtBase.isPromiseSupported === "undefined") {
             this.writeTrace("WebViewExtBase.ensurePromiseSupport() - need to check for promise support.");
 
-            const isSupported = (await this.executeJavaScript("typeof fetch")) !== "undefined";
-            WebViewExtBase.isPromiseSupported = isSupported;
-            if (isSupported) {
-                this.writeTrace("WebViewExtBase.ensurePromiseSupport() - promise is supported - polyfill not needed.");
-                return;
-            }
+            WebViewExtBase.isPromiseSupported = await this.executeJavaScript<boolean>("typeof Promise !== 'undefined'");
+        }
+
+        if (WebViewExtBase.isPromiseSupported) {
+            this.writeTrace("WebViewExtBase.ensurePromiseSupport() - promise is supported - polyfill not needed.");
+            return;
         }
 
         this.writeTrace("WebViewExtBase.ensurePromiseSupport() - promise is not supported - polyfill needed.");
-        return await this.loadPromisePolyfill();
+        await this.loadPromisePolyfill();
     }
 
     protected async loadPromisePolyfill() {
         const scriptCode = await promisePolyfill;
-        await this.executeJavaScript(scriptCode, false);
+        await this.executeJavaScript<void>(scriptCode, false);
     }
 
-    protected async ensurePolyfills() {
-        await this.ensurePromiseSupport();
-        await this.ensureFetchSupport();
+    protected ensurePolyfills() {
+        return this.ensurePromiseSupport().then(() => this.ensureFetchSupport());
     }
 
     /**
@@ -722,13 +730,13 @@ export class WebViewExtBase extends ContainerView {
      * Execute a promise inside the webview and wait for it to resolve.
      * Note: The scriptCode must return a promise.
      */
-    public async executePromise<T>(scriptCode: string, timeout: number = 500): Promise<T> {
+    public async executePromise<T>(scriptCode: string, timeout = 2000): Promise<T> {
         const results = await this.executePromises<T>([scriptCode], timeout);
 
         return results && results[0];
     }
 
-    public async executePromises<T>(scriptCodes: string[], timeout: number = 500): Promise<T | void> {
+    public async executePromises<T>(scriptCodes: string[], timeout = 2000): Promise<T | void> {
         if (scriptCodes.length === 0) {
             return;
         }
