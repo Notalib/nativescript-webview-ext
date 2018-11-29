@@ -64,7 +64,7 @@ if (platform.isIOS && ios.MajorVersion > 10) {
     allTests["SAFEAREA-WEBVIEW"] = webViewSafeAreaTests;
 }
 
-// allTests["WEB-VIEW"] = webViewTests;
+allTests["WEB-VIEW"] = webViewTests;
 
 const testsSuitesWithLongDelay = {
     HTTP: 15 * 1000,
