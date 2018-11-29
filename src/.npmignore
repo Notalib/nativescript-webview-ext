@@ -1,5 +1,5 @@
 *.map
 *.ts
 !*.d.ts
-tsconfig.json
+tsconfig*.json
 hooks
