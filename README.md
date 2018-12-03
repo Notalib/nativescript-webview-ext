@@ -33,6 +33,16 @@ Describe your plugin installation steps. Ideally it would be something like:
 tns plugin add @nota/nativescript-webview-ext
 ```
 
+### Angular support
+
+Import `WebViewExtModule` from `@nota/nativescript-webview-ext/angular` and add it to your `NgModule`.
+
+### Vue support
+
+Import `@nota/nativescript-webview-ext/vue` in your app entry file (llikely app.js or main.js).
+
+This registers the element `WebViewExt` for `Vue`.
+
 ## Usage
 
 ## Limitations
