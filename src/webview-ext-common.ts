@@ -8,7 +8,7 @@ export * from "tns-core-modules/ui//core/view";
 const isAndroid = platform.isAndroid;
 const isIOS = platform.isIOS;
 export const androidSDK = isAndroid && Number(platform.device.sdkVersion);
-export const useWKWebView = isIOS && Number(platform.device.sdkVersion) >= 11;
+export const useWKWebView = isIOS && typeof CustomUrlSchemeHandler !== "undefined";
 
 export const autoInjectJSBridgeProperty = new Property<WebViewExtBase, boolean>({ name: "autoInjectJSBridge", defaultValue: true });
 export const builtInZoomControlsProperty = new Property<WebViewExtBase, boolean>({ name: "builtInZoomControls", defaultValue: false });

@@ -144,7 +144,6 @@ export class UIWebViewWrapper implements IOSWebViewWrapper {
 
         const uiWebView = UIWebView.new();
         uiWebView.scrollView.bounces = false;
-        uiWebView.scrollView.scrollEnabled = false;
         uiWebView.scalesPageToFit = false;
 
         return uiWebView;
