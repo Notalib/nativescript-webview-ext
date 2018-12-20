@@ -8,6 +8,9 @@ import { UITest } from "../../ui-test";
 import * as helper from "../helper";
 import { bottom, dipToDp, equal, left, right, top } from "../layouts/layout-tests-helper";
 
+// Argh.... Needed for WebViewSafeAreaTest.getViews(template) to work;
+global.registerModule("ui/web-view-ext", () => require("@nota/nativescript-webview-ext"));
+
 export class WebViewSafeAreaTest extends UITest<WebViewExt> {
     private executeSnippet<U extends { root: view.View }>(ui: U, setup: (ui: U) => void, test: (ui: U) => void, pageOptions?: helper.PageOptions): void {
         function waitUntilTestElementLayoutIsValid(view: view.View, timeoutSec?: number): void {

@@ -3,7 +3,7 @@
 import { profile } from "tns-core-modules/profiling";
 import { traceMessageType } from "tns-core-modules/ui/core/view";
 
-import { autoInjectJSBridgeProperty, IOSWebViewWrapper, useWKWebView, WebViewExtBase } from "./webview-ext-common";
+import { autoInjectJSBridgeProperty, IOSWebViewWrapper, useWKWebView, WebViewExtBase, scrollBounceProperty } from "./webview-ext-common";
 import { UIWebViewWrapper } from "./webview-ext.uiwebview";
 import { WKWebViewWrapper } from "./webview-ext.wkwebview";
 
@@ -12,8 +12,13 @@ export * from "./webview-ext-common";
 export class WebViewExt extends WebViewExtBase {
     protected nativeWrapper: IOSWebViewWrapper;
 
-    public readonly isUIWebView = !useWKWebView;
-    public readonly isWKWebView = useWKWebView;
+    public get isUIWebView() {
+        return !useWKWebView;
+    }
+
+    public get isWKWebView() {
+        return useWKWebView;
+    }
 
     public createNativeView() {
         if (useWKWebView) {
@@ -221,5 +226,13 @@ export class WebViewExt extends WebViewExtBase {
 
     [autoInjectJSBridgeProperty.setNative](enabled: boolean) {
         this.nativeWrapper.enableAutoInject(enabled);
+    }
+
+    [scrollBounceProperty.getDefault]() {
+        return this.nativeWrapper.scrollBounce;
+    }
+
+    [scrollBounceProperty.setNative](enabled: boolean) {
+        this.nativeWrapper.scrollBounce = enabled;
     }
 }

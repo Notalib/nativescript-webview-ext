@@ -1,5 +1,4 @@
-import { registerElement } from "nativescript-vue";
+import * as Vue from "nativescript-vue";
 
 const webviewElementName = "WebViewExt";
-
-registerElement(webviewElementName, () => require("@nota/nativescript-webview-ext").WebViewExt);
+Vue.registerElement(webviewElementName, () => require("@nota/nativescript-webview-ext").WebViewExt);

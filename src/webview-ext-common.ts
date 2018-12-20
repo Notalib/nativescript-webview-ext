@@ -5,8 +5,10 @@ import { fetchPolyfill, promisePolyfill, webViewBridge } from "./nativescript-we
 
 export * from "tns-core-modules/ui//core/view";
 
-const isAndroid = platform.isAndroid;
-const isIOS = platform.isIOS;
+declare const CustomUrlSchemeHandler: any;
+
+const { isAndroid, isIOS } = platform;
+
 export const androidSDK = isAndroid && Number(platform.device.sdkVersion);
 export const useWKWebView = isIOS && typeof CustomUrlSchemeHandler !== "undefined";
 
@@ -35,6 +37,10 @@ export const supportZoomProperty = new Property<WebViewExtBase, boolean>({
 });
 export const srcProperty = new Property<WebViewExtBase, string>({
     name: "src",
+});
+export const scrollBounceProperty = new Property<WebViewExtBase, boolean>({
+    name: "scrollBounce",
+    defaultValue: true,
 });
 
 export enum EventNames {
@@ -169,12 +175,12 @@ export class WebViewExtBase extends ContainerView {
     /**
      * iOS <11 uses a UIWebview
      */
-    public isUIWebView: boolean;
+    public readonly isUIWebView: boolean;
 
     /**
      * iOS 11+ uses an WKWebView
      */
-    public isWKWebView: boolean;
+    public readonly isWKWebView: boolean;
 
     /**
      * Gets or sets the url, local file path or HTML string.
@@ -216,6 +222,13 @@ export class WebViewExtBase extends ContainerView {
      * Android: should the webview support zoom
      */
     public supportZoom: boolean;
+
+    /**
+     * iOS: Should the scrollView bounce? Defaults to true.
+     */
+    public scrollBounce: boolean;
+
+    public cacheMode: "default" | "no_cache" | "cache_first" | "cache_only";
 
     /**
      * List of js-files to be auto injected on load finished
@@ -976,6 +989,7 @@ displayZoomControlsProperty.register(WebViewExtBase);
 domStorageProperty.register(WebViewExtBase);
 srcProperty.register(WebViewExtBase);
 supportZoomProperty.register(WebViewExtBase);
+scrollBounceProperty.register(WebViewExtBase);
 
 /**
  * IOS uses a bridge class to map calls to UIWebView or WKWebView
@@ -1030,4 +1044,5 @@ export interface IOSWebViewWrapper {
 
     readonly shouldInjectWebViewBridge: boolean;
     enableAutoInject(enable: boolean): void;
+    scrollBounce: boolean;
 }

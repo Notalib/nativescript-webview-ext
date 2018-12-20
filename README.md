@@ -61,11 +61,18 @@ The custom `NSURLProtocol` used with UIWebView is shared with all instances of t
 
 | Property | Value | Description |
 | --- | --- | --- |
-| isUIWebView | true / false | Is the native webview an UIWebView? True if `iOS <11` |
-| isWkWebView | true / false | Is the native webview an WKWebView? True if `iOS >=11` |
+| readonly isUIWebView | true / false | Is the native webview an UIWebView? True if `iOS <11` |
+| readonly isWkWebView | true / false | Is the native webview an WKWebView? True if `iOS >=11` |
 | src | | Load src |
 | autoInjectJSBridge | true / false | Should the window.nsWebViewBridge be injected on `loadFinishedEvent`? Defaults to true |
-| debugMode | true / false | Enable chrome debugger for webview on Android. Note: Applies to all webviews in App |
+| debugMode | true / false | Android: Enable chrome debugger for webview on Android. Note: Applies to all webviews in App |
+| scrollBounce | true / false | iOS: Should the scrollView bounce? Defaults to true. |
+| builtInZoomControls | true / false | Android: Is the built-in zoom mechanisms being used |
+| displayZoomControls | true / false | Android: displays on-screen zoom controls when using the built-in zoom mechanisms |
+| databaseStorage | true / false | Android: Enaable/Disabled database storage API. Note: It affects all webviews in the process. |
+| domStorage | true / false | Android: Enaable/Disabled DOM Storage API. E.g localStorage |
+| supportZoom: | true / false | Android: should the webview support zoom |
+| cacheMode | default / no_cache / cache_first / cache_only | Android: Set caching mode. |
 
 | Function | Description |
 | --- | --- |

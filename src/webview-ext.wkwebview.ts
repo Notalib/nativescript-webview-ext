@@ -493,4 +493,22 @@ export class WKWebViewWrapper implements IOSWebViewWrapper {
     public enableAutoInject(enable: boolean) {
         this.loadWKUserScripts(enable);
     }
+
+    public set scrollBounce(enable: boolean) {
+        const ios = this.ios;
+        if (!ios) {
+            return;
+        }
+
+        ios.scrollView.bounces = !!enable;
+    }
+
+    public get scrollBounce() {
+        const ios = this.ios;
+        if (!ios) {
+            return false;
+        }
+
+        return ios.scrollView.bounces;
+    }
 }
