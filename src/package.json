@@ -20,9 +20,10 @@
         "build": "npm i && rimraf www && npm-run-all build:webview-bridge build:polyfill ngc tsc",
         "ci.tslint": "npm i && tslint '**/*.ts' --config '../tslint.json' --exclude '**/node_modules/**'",
         "clean": "cd ../demo && rimraf hooks node_modules platforms && cd ../src && rimraf node_modules && npm run plugin.link",
-        "demo.android": "npm run build && npm-run-all --parallel build:webview-bridge:watch plugin.tscwatch run.demo.android run.http-server",
-        "demo.ios": "npm run build && npm-run-all --parallel build:webview-bridge:watch plugin.tscwatch run.demo.ios run.http-server",
+        "demo.android": "npm run build && npm-run-all demo.install --parallel build:webview-bridge:watch plugin.tscwatch run.demo.android run.http-server",
+        "demo.ios": "npm run build && npm-run-all demo.install --parallel build:webview-bridge:watch plugin.tscwatch run.demo.ios run.http-server",
         "demo.reset": "git clean -d -x -f ../demo && npm install",
+        "demo.install": "cd ../demo && npm install",
         "format:check": "prettier-check --config ../.prettierrc.json angular/index.ts vue/index.ts *.ts",
         "format": "prettier --write --config ../.prettierrc.json angular/index.ts vue/index.ts *.ts",
         "lint": "npm-run-all format:check tslint",
@@ -35,11 +36,13 @@
         "run.http-server": "cd ../demo/www && npx hs -p 8080 --cors",
         "run.test.android": "cd ../tests && tns run android --syncAllFiles",
         "run.test.ios": "cd ../tests && tns run ios --syncAllFiles",
-        "test.android": "npm run build && npm-run-all --parallel build:webview-bridge:watch plugin.tscwatch run.test.android",
-        "test.ios": "npm run build && npm-run-all --parallel build:webview-bridge:watch plugin.tscwatch run.test.ios",
+        "test.android": "npm run build && npm-run-all test.install --parallel build:webview-bridge:watch plugin.tscwatch run.test.android",
+        "test.ios": "npm run build && npm-run-all test.install --parallel build:webview-bridge:watch plugin.tscwatch run.test.ios",
         "test.reset": "git clean -d -x -f ../tests && npm install",
+        "test.install": "cd ../tests && npm install",
         "tsc": "npx tsc -skipLibCheck",
-        "tslint": "cd .. && tslint \"**/*.ts\" --config tslint.json --exclude \"**/node_modules/**\" --exclude \"**/*.d.ts\" --exclude \"**/platforms/**\""
+        "tslint": "cd .. && tslint \"**/*.ts\" --config tslint.json --exclude \"**/node_modules/**\" --exclude \"**/*.d.ts\" --exclude \"**/platforms/**\"",
+        "postinstall": "./make-podfile.sh"
     },
     "keywords": [
         "NativeScript",
@@ -102,6 +105,8 @@
         "whatwg-fetch": "^3.0.0",
         "zone.js": "^0.8.26"
     },
-    "dependencies": {},
+    "dependencies": {
+        "json": "^9.0.6"
+    },
     "bootstrapper": "nativescript-plugin-seed"
 }

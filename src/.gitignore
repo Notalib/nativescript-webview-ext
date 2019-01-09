@@ -1,1 +1,4 @@
 ./www
+platforms/ios/Podfile
+platforms/ios/NotaWebViewExt/NotaWebViewExt.xcodeproj/xcuserdata
+platforms/ios/NotaWebViewExt/NotaWebViewExt.podspec
