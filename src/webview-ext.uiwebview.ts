@@ -179,6 +179,7 @@ export class UIWebViewWrapper implements IOSWebViewWrapper {
         if (!ios) {
             return;
         }
+
         ios.stopLoading();
     }
 
