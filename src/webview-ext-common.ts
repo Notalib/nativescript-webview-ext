@@ -173,12 +173,12 @@ export class WebViewExtBase extends ContainerView {
     }
 
     /**
-     * iOS <11 uses a UIWebview
+     * iOS <11 uses an UIWebview
      */
     public readonly isUIWebView: boolean;
 
     /**
-     * iOS 11+ uses an WKWebView
+     * iOS 11+ uses a WKWebView
      */
     public readonly isWKWebView: boolean;
 
