@@ -3,29 +3,29 @@
     "name": "hugo",
     "id": "dk.nota.webviewdemo",
     "tns-android": {
-      "version": "5.0.0"
+      "version": "5.1.0"
     },
     "tns-ios": {
-      "version": "5.0.0"
+      "version": "5.1.0"
     }
   },
   "dependencies": {
     "@nota/nativescript-webview-ext": "file://../src",
-    "lodash": "^4.17.10",
+    "lodash": "^4.17.11",
     "nativescript-theme-core": "^1.0.4",
-    "tns-core-modules": "~5.0.0",
+    "tns-core-modules": "~5.1.0",
     "url": "^0.11.0"
   },
   "devDependencies": {
-    "@types/lodash": "^4.14.108",
+    "@types/lodash": "^4.14.119",
     "http-server": "^0.11.1",
     "nativescript-dev-typescript": "^0.7.6",
-    "tns-platform-declarations": "~5.0.0",
-    "tslint": "^5.11.0",
-    "typescript": "~3.1.1"
+    "tns-platform-declarations": "~5.1.0",
+    "tslint": "^5.12.1",
+    "typescript": "~3.1.6"
   },
   "scripts": {
     "build.plugin": "cd ../src && npm run build",
-    "ci.tslint": "npm i && tslint --config '../tslint.json' 'app/**/*.ts' --exclude '**/node_modules/**'"
+    "ci.tslint": "npm run build.plugin && npm i && tslint --config '../tslint.json' 'app/**/*.ts' --exclude '**/node_modules/**'"
   }
 }
