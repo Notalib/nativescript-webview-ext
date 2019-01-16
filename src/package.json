@@ -17,7 +17,7 @@
         "build:typings": "npm run build && (cd ../demo && TNS_TYPESCRIPT_DECLARATIONS_PATH=\"$PWD/../typings\" tns build ios) && cp ../typings/i386/*NotaWebViewExt.d.ts platforms/ios/NotaWebViewExt.d.ts",
         "build:webview-bridge:watch": "npm run build:webview-bridge -- -w",
         "build:webview-bridge": "export WWW_OUTDIR=$PWD/www; cd $(git rev-parse --show-toplevel)/www-src && npm i && npm run build -- --outDir ${WWW_OUTDIR}",
-        "build": "npm i && rimraf www && npm-run-all build:webview-bridge build:polyfill ngc tsc",
+        "build": "npm ci && rimraf www && npm-run-all build:webview-bridge build:polyfill ngc tsc",
         "ci.tslint": "npm i && tslint '**/*.ts' --config '../tslint.json' --exclude '**/node_modules/**'",
         "clean": "cd ../demo && rimraf hooks node_modules platforms && cd ../src && rimraf node_modules && npm run plugin.link",
         "demo.android": "npm run build && npm-run-all demo.install --parallel build:webview-bridge:watch plugin.tscwatch run.demo.android run.http-server",

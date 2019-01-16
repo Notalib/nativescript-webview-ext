@@ -21,7 +21,7 @@ publish/src
 publish/package
 demo/report/report.html
 demo/report/stats.json
-package-lock.json
+!package-lock.json
 typings
 tests/test-runner/index.d.ts
 tests/tsconfig.tns.json
