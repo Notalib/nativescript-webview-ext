@@ -33,4 +33,25 @@
     "**/node_modules": true,
     "**/node_modules/**/*": true
   },
+  "cSpell.words": [
+    "NSURL",
+    "Polyfill",
+    "Polyfills",
+    "WKURL",
+    "endregion",
+    "filepath",
+    "null'ing",
+    "opentype",
+    "readonly",
+    "stringify",
+    "stringify'able",
+    "uiwebview",
+    "unregister",
+    "webview",
+    "webview's",
+    "webviewinterface",
+    "webviews",
+    "wkwebview",
+    "xhtm"
+  ],
 }

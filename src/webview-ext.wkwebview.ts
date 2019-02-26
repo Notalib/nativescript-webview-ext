@@ -152,7 +152,7 @@ export class WKWebViewWrapper implements IOSWebViewWrapper {
     protected wkNavigationDelegate: WKNavigationDelegateImpl;
     protected wkCustomUrlSchemeHandler: CustomUrlSchemeHandler;
     protected wkUserContentController: WKUserContentController;
-    protected wkUserScriptInjectWebViewBrigde: Promise<WKUserScript> | void;
+    protected wkUserScriptInjectWebViewBridge: Promise<WKUserScript> | void;
     protected wkUserScriptViewPortCode: Promise<WKUserScript>;
     protected wkNamedUserScripts = [] as Array<{
         resourceName: string;
@@ -359,7 +359,7 @@ export class WKWebViewWrapper implements IOSWebViewWrapper {
         }
 
         const href = `${owner.interceptScheme}://${resourceName}`;
-        const scriptCode = owner.generaateLoadCSSFileScriptCode(href, insertBefore);
+        const scriptCode = owner.generateLoadCSSFileScriptCode(href, insertBefore);
 
         this.addNamedWKUserScript(`auto-load-css-${resourceName}`, scriptCode);
     }
@@ -421,11 +421,11 @@ export class WKWebViewWrapper implements IOSWebViewWrapper {
             return;
         }
 
-        if (!this.wkUserScriptInjectWebViewBrigde) {
-            this.wkUserScriptInjectWebViewBrigde = this.makeWKUserScriptPromise(webViewBridge);
+        if (!this.wkUserScriptInjectWebViewBridge) {
+            this.wkUserScriptInjectWebViewBridge = this.makeWKUserScriptPromise(webViewBridge);
         }
 
-        this.addUserScriptFromPromise(this.wkUserScriptInjectWebViewBrigde);
+        this.addUserScriptFromPromise(this.wkUserScriptInjectWebViewBridge);
         for (const { wkUserScript } of this.wkNamedUserScripts) {
             this.addUserScript(wkUserScript);
         }
@@ -449,7 +449,7 @@ export class WKWebViewWrapper implements IOSWebViewWrapper {
      * iOS11+
      *
      * Add/replace a named WKUserScript.
-     * These scripts will be injected when a new documnet is loaded.
+     * These scripts will be injected when a new document is loaded.
      */
     protected addNamedWKUserScript(resourceName: string, scriptCode: string) {
         if (!scriptCode) {

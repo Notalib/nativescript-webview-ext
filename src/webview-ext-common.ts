@@ -95,7 +95,7 @@ export interface LoadFinishedEventData extends LoadEventData {
     eventName: EventNames.LoadFinished;
 }
 
-export interface ShouldOverideUrlLoadEventData extends LoadEventData {
+export interface ShouldOverrideUrlLoadEventData extends LoadEventData {
     eventName: EventNames.ShouldOverrideUrlLoading;
 
     httpMethod: string;
@@ -103,6 +103,9 @@ export interface ShouldOverideUrlLoadEventData extends LoadEventData {
     /** Flip this to true in your callback, if you want to cancel the url-loading */
     cancel?: boolean;
 }
+
+/** BackForward compat for spelling error... */
+export interface ShouldOverideUrlLoadEventData extends ShouldOverrideUrlLoadEventData {}
 
 /**
  * Event data containing information for the loading events of a WebView.
@@ -116,11 +119,11 @@ export interface WebViewEventData extends EventData {
  */
 export type NavigationType = "linkClicked" | "formSubmitted" | "backForward" | "reload" | "formResubmitted" | "other" | void;
 
-export class UnsupportSDKError extends Error {
+export class UnsupportedSDKError extends Error {
     constructor(minSdk: number) {
         super(`Android API < ${minSdk} not supported`);
 
-        Object.setPrototypeOf(this, UnsupportSDKError.prototype);
+        Object.setPrototypeOf(this, UnsupportedSDKError.prototype);
     }
 }
 
@@ -167,7 +170,7 @@ export class WebViewExtBase extends ContainerView {
         return EventNames.LoadFinished;
     }
 
-    /** String value used when hooking to shouldOverideUrlLoading event */
+    /** String value used when hooking to shouldOverrideUrlLoading event */
     public static get shouldOverrideUrlLoadingEvent() {
         return EventNames.ShouldOverrideUrlLoading;
     }
@@ -208,13 +211,13 @@ export class WebViewExtBase extends ContainerView {
     public displayZoomControls: boolean;
 
     /**
-     * Android: Enaable/Disabled database storage API.
+     * Android: Enable/Disabled database storage API.
      * Note: It affects all webviews in the process.
      */
     public databaseStorage: boolean;
 
     /**
-     * Android: Enaable/Disabled DOM Storage API. E.g localStorage
+     * Android: Enable/Disabled DOM Storage API. E.g localStorage
      */
     public domStorage: boolean;
 
@@ -325,17 +328,17 @@ export class WebViewExtBase extends ContainerView {
      * @param navigationType Type of navigation (iOS-only)
      */
     public _onShouldOverrideUrlLoading(url: string, httpMethod: string, navigationType?: NavigationType) {
-        const args = {
+        const argsWithSpellingError = {
             eventName: WebViewExtBase.shouldOverrideUrlLoadingEvent,
             httpMethod,
             navigationType,
             object: this,
             url,
-        } as ShouldOverideUrlLoadEventData;
+        } as ShouldOverrideUrlLoadEventData;
 
-        this.notify(args);
+        this.notify(argsWithSpellingError);
 
-        return args.cancel;
+        return argsWithSpellingError.cancel;
     }
 
     /**
@@ -487,7 +490,7 @@ export class WebViewExtBase extends ContainerView {
     /**
      * Load URL - Wait for promise
      *
-     * @param {stirng} src
+     * @param {string} src
      * @returns {Promise<LoadFinishedEventData>}
      */
     public loadUrl(src: string): Promise<LoadFinishedEventData> {
@@ -592,7 +595,7 @@ export class WebViewExtBase extends ContainerView {
                 this.registerLocalResource(fixedResourceName, filepath);
             }
             const href = `${this.interceptScheme}://${fixedResourceName}`;
-            const scriptCode = this.generaateLoadCSSFileScriptCode(href, insertBefore);
+            const scriptCode = this.generateLoadCSSFileScriptCode(href, insertBefore);
 
             promiseScriptCodes.push(scriptCode);
 
@@ -764,7 +767,7 @@ export class WebViewExtBase extends ContainerView {
 
         const scriptBody = [] as string[];
 
-        // Execuate the promises in order, one at a time.
+        // Execute the promises in order, one at a time.
         for (const scriptCode of scriptCodes) {
             // Wrapped in a Promise.then to delay executing scriptCode till the previous promise have finished
             scriptBody.push(
@@ -845,16 +848,16 @@ export class WebViewExtBase extends ContainerView {
     }
 
     /**
-     * Generate scriptcode for loading javascript-file.
+     * Generate script code for loading javascript-file.
      */
     public generateLoadJavaScriptFileScriptCode(scriptHref: string) {
         return `window.nsWebViewBridge.injectJavaScriptFile(${JSON.stringify(scriptHref)});`;
     }
 
     /**
-     * Generate scriptcode for loading CSS-file.
+     * Generate script code for loading CSS-file.generateLoadCSSFileScriptCode
      */
-    public generaateLoadCSSFileScriptCode(stylesheetHref: string, insertBefore = false) {
+    public generateLoadCSSFileScriptCode(stylesheetHref: string, insertBefore = false) {
         return `window.nsWebViewBridge.injectStyleSheetFile(${JSON.stringify(stylesheetHref)}, ${!!insertBefore});`;
     }
 
@@ -967,7 +970,7 @@ export interface WebViewExtBase {
      * Raised before the webview requests an URL.
      * Can be cancelled by settings args.cancel = true in your event handler.
      */
-    on(event: EventNames.ShouldOverrideUrlLoading, callback: (args: ShouldOverideUrlLoadEventData) => void, thisArg?: any);
+    on(event: EventNames.ShouldOverrideUrlLoading, callback: (args: ShouldOverrideUrlLoadEventData) => void, thisArg?: any);
 
     /**
      * Raised when a loadStarted event occurs.
@@ -1032,7 +1035,23 @@ export interface IOSWebViewWrapper {
     autoLoadJavaScriptFile(resourceName: string, filepath: string): Promise<void>;
     removeAutoLoadJavaScriptFile(resourceName: string): void;
 
-    // WebVeiw calls and properties
+    // WebView calls and properties
+    stopLoading(): void;
+    loadUrl(url: string): void;
+    loadData(content: string): void;
+    readonly canGoBack: boolean;
+    readonly canGoForward: boolean;
+    goBack(): void;
+    goForward(): void;
+    reload(): void;
+
+    readonly shouldInjectWebViewBridge: boolean;
+    enableAutoInject(enable: boolean): void;
+    scrollBounce: boolean;
+}
+sourceName: string): void;
+
+    // WebView calls and properties
     stopLoading(): void;
     loadUrl(url: string): void;
     loadData(content: string): void;

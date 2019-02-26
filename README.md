@@ -39,7 +39,7 @@ Import `WebViewExtModule` from `@nota/nativescript-webview-ext/angular` and add 
 
 ### Vue support
 
-Import `@nota/nativescript-webview-ext/vue` in your app entry file (llikely app.js or main.js).
+Import `@nota/nativescript-webview-ext/vue` in your app entry file (likely app.js or main.js).
 
 This registers the element `WebViewExt` for `Vue`.
 
@@ -69,8 +69,8 @@ The custom `NSURLProtocol` used with UIWebView is shared with all instances of t
 | scrollBounce | true / false | iOS: Should the scrollView bounce? Defaults to true. |
 | builtInZoomControls | true / false | Android: Is the built-in zoom mechanisms being used |
 | displayZoomControls | true / false | Android: displays on-screen zoom controls when using the built-in zoom mechanisms |
-| databaseStorage | true / false | Android: Enaable/Disabled database storage API. Note: It affects all webviews in the process. |
-| domStorage | true / false | Android: Enaable/Disabled DOM Storage API. E.g localStorage |
+| databaseStorage | true / false | Android: Enable/Disabled database storage API. Note: It affects all webviews in the process. |
+| domStorage | true / false | Android: Enable/Disabled DOM Storage API. E.g localStorage |
 | supportZoom: | true / false | Android: should the webview support zoom |
 | cacheMode | default / no_cache / cache_first / cache_only | Android: Set caching mode. |
 
@@ -95,7 +95,7 @@ The custom `NSURLProtocol` used with UIWebView is shared with all instances of t
 ## Events
 | Event | Description |
 | --- | --- |
-| 'shouldOverideUrlLoading' | Raised before the webview requests an URL. Can cancelled by setting args.cancel = true in the `ShouldOverideUrlLoadEventData` |
+| 'shouldOverrideUrlLoading' | Raised before the webview requests an URL. Can cancelled by setting args.cancel = true in the `ShouldOverrideUrlLoadEventData` |
 | 'loadStarted' | Raised when a loadStarted event occurs. args is an `LoadStartedEventData` |
 | 'loadFinished' | Raised when a loadFinished event occurs. args is an `LoadFinishedEventData` |
 | Events emitted from the webview | Raised when nsWebViewBridge.emit(...) is called inside the webview. args in an `WebViewEventData` |
@@ -124,7 +124,7 @@ Inside the WebView we have the `nsWebViewBridge` for sending events between the 
     * User agent?
 
 #### iOS
-* Optionas for native scrolllView.
+* Options for native scrollView.
 * Disable/Enable scroll bounce.
 * UIWebView? scalesPageToFit.
 

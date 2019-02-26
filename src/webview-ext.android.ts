@@ -11,7 +11,7 @@ import {
     domStorageProperty,
     supportZoomProperty,
     traceMessageType,
-    UnsupportSDKError,
+    UnsupportedSDKError,
     WebViewExtBase,
 } from "./webview-ext-common";
 
@@ -40,7 +40,7 @@ type CacheMode = "default" | "cache_first" | "no_cache" | "cache_only";
 //#region android_native_classes
 let cacheModeMap: Map<CacheMode, number>;
 
-// Minor extention of the Native interface to allow for owner
+// Minor extension of the Native interface to allow for owner
 export declare namespace dk {
     namespace nota {
         namespace webviewinterface {
@@ -455,13 +455,13 @@ export class WebViewExt extends WebViewExtBase {
     public async executeJavaScript<T>(scriptCode: string): Promise<T> {
         if (androidSDK < 19) {
             this.writeTrace(`WebViewExt<android>.executeJavaScript() -> SDK:${androidSDK} not supported`, traceMessageType.error);
-            return Promise.reject(new UnsupportSDKError(19));
+            return Promise.reject(new UnsupportedSDKError(19));
         }
 
         const result = await new Promise<T>((resolve, reject) => {
             if (!this.nativeViewProtected) {
-                this.writeTrace(`WebViewExt<android>.executeJavaScript() -> no nativeview?`, traceMessageType.error);
-                reject(new Error("Native Android not inited, cannot call executeJavaScript"));
+                this.writeTrace(`WebViewExt<android>.executeJavaScript() -> no nativeView?`, traceMessageType.error);
+                reject(new Error("Native Android not initialized, cannot call executeJavaScript"));
                 return;
             }
 

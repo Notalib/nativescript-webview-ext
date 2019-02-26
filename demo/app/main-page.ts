@@ -1,4 +1,4 @@
-import { LoadEventData, LoadFinishedEventData, ShouldOverideUrlLoadEventData, WebViewExt } from "@nota/nativescript-webview-ext";
+import { LoadEventData, LoadFinishedEventData, ShouldOverrideUrlLoadEventData, WebViewExt } from "@nota/nativescript-webview-ext";
 import * as _ from "lodash";
 import * as observable from "tns-core-modules/data/observable";
 import { isAndroid } from "tns-core-modules/platform";
@@ -25,7 +25,7 @@ export function webviewLoaded(args: LoadEventData) {
         webview.src = "http://localhost:8080";
     }
 
-    webview.on(WebViewExt.shouldOverrideUrlLoadingEvent, (args: ShouldOverideUrlLoadEventData) => {
+    webview.on(WebViewExt.shouldOverrideUrlLoadingEvent, (args: ShouldOverrideUrlLoadEventData) => {
         console.log(args.url);
         console.log(args.httpMethod);
         if (args.url.indexOf("google.com") !== -1) {
