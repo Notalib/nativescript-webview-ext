@@ -47,6 +47,8 @@ export enum EventNames {
     LoadFinished = "loadFinished",
     LoadStarted = "loadStarted",
     ShouldOverrideUrlLoading = "shouldOverrideUrlLoading",
+    LoadProgress = "loadProgress",
+    TitleChanged = "titleChange",
 }
 
 export interface LoadJavaScriptResource {
@@ -107,10 +109,26 @@ export interface ShouldOverrideUrlLoadEventData extends LoadEventData {
 /** BackForward compat for spelling error... */
 export interface ShouldOverideUrlLoadEventData extends ShouldOverrideUrlLoadEventData {}
 
+export interface LoadProgressEventData extends EventData {
+    object: WebViewExtBase;
+    eventName: EventNames.LoadProgress;
+    url: string;
+    progress: number;
+}
+
+export interface TitleChangedEventData extends EventData {
+    object: WebViewExtBase;
+    eventName: EventNames.LoadProgress;
+    url: string;
+    title: string;
+}
+
 /**
  * Event data containing information for the loading events of a WebView.
  */
 export interface WebViewEventData extends EventData {
+    object: WebViewExtBase;
+
     data?: any;
 }
 
@@ -173,6 +191,14 @@ export class WebViewExtBase extends ContainerView {
     /** String value used when hooking to shouldOverrideUrlLoading event */
     public static get shouldOverrideUrlLoadingEvent() {
         return EventNames.ShouldOverrideUrlLoading;
+    }
+
+    public static get loadProgressEvent() {
+        return EventNames.LoadProgress;
+    }
+
+    public static get titleChangedEvent() {
+        return EventNames.TitleChanged;
     }
 
     /**
@@ -299,6 +325,8 @@ export class WebViewExtBase extends ContainerView {
         }
 
         this.notify(args);
+
+        this.getTitle().then((title) => this._titleChanged(title));
         return args;
     }
 
@@ -355,6 +383,28 @@ export class WebViewExtBase extends ContainerView {
         }
 
         return args.cancel;
+    }
+
+    public _loadProgress(progress: number) {
+        const args = {
+            eventName: WebViewExtBase.loadProgressEvent,
+            object: this,
+            progress,
+            url: this.src,
+        } as LoadProgressEventData;
+
+        this.notify(args);
+    }
+
+    public _titleChanged(title: string) {
+        const args = {
+            eventName: WebViewExtBase.loadProgressEvent,
+            object: this,
+            title,
+            url: this.src,
+        } as TitleChangedEventData;
+
+        this.notify(args);
     }
 
     /**
@@ -997,6 +1047,16 @@ export interface WebViewExtBase {
      * Raised when a loadFinished event occurs.
      */
     on(event: EventNames.LoadFinished, callback: (args: LoadFinishedEventData) => void, thisArg?: any);
+
+    /**
+     * Raised when a loadProgress event occurs.
+     */
+    on(event: EventNames.LoadProgress, callback: (args: LoadProgressEventData) => void, thisArg?: any);
+
+    /**
+     * Raised when a titleChanged event occurs.
+     */
+    on(event: EventNames.TitleChanged, callback: (args: TitleChangedEventData) => void, thisArg?: any);
 }
 
 autoInjectJSBridgeProperty.register(WebViewExtBase);
