@@ -147,6 +147,54 @@ export class WKScriptMessageHandlerImpl extends NSObject implements WKScriptMess
     }
 }
 
+export class WKUIDelegateImpl extends NSObject implements WKUIDelegate {
+    public static ObjCProtocols = [WKUIDelegate];
+    public owner: WeakRef<WebViewExtBase>;
+
+    public static initWithOwner(owner: WeakRef<WebViewExtBase>): WKUIDelegateImpl {
+        const delegate = <WKUIDelegateImpl>WKUIDelegateImpl.new();
+        delegate.owner = owner;
+        return delegate;
+    }
+
+    /**
+     * Handle alerts from the webview
+     */
+    public webViewRunJavaScriptAlertPanelWithMessageInitiatedByFrameCompletionHandler(
+        webView: WKWebView,
+        message: string,
+        frame: WKFrameInfo,
+        completionHandler: () => void,
+    ): void {
+        throw new Error("Not implemented");
+    }
+
+    /**
+     * Handle confirm dialogs from the webview
+     */
+    public webViewRunJavaScriptConfirmPanelWithMessageInitiatedByFrameCompletionHandler(
+        webView: WKWebView,
+        message: string,
+        frame: WKFrameInfo,
+        completionHandler: (p1: boolean) => void,
+    ): void {
+        throw new Error("Not implemented");
+    }
+
+    /**
+     * Handle prompt dialogs from the webview
+     */
+    public webViewRunJavaScriptTextInputPanelWithPromptDefaultTextInitiatedByFrameCompletionHandler(
+        webView: WKWebView,
+        prompt: string,
+        defaultText: string,
+        frame: WKFrameInfo,
+        completionHandler: (p1: string) => void,
+    ): void {
+        throw new Error("Not implemented");
+    }
+}
+
 export class WKWebViewWrapper implements IOSWebViewWrapper {
     protected wkWebViewConfiguration: WKWebViewConfiguration;
     protected wkNavigationDelegate: WKNavigationDelegateImpl;
