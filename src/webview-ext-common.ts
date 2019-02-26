@@ -46,7 +46,7 @@ export const scrollBounceProperty = new Property<WebViewExtBase, boolean>({
 export enum EventNames {
     LoadFinished = "loadFinished",
     LoadStarted = "loadStarted",
-    ShouldOverrideUrlLoading = "shouldOverideUrlLoading",
+    ShouldOverrideUrlLoading = "shouldOverrideUrlLoading",
 }
 
 export interface LoadJavaScriptResource {
@@ -328,7 +328,7 @@ export class WebViewExtBase extends ContainerView {
      * @param navigationType Type of navigation (iOS-only)
      */
     public _onShouldOverrideUrlLoading(url: string, httpMethod: string, navigationType?: NavigationType) {
-        const argsWithSpellingError = {
+        const args = {
             eventName: WebViewExtBase.shouldOverrideUrlLoadingEvent,
             httpMethod,
             navigationType,
@@ -336,9 +336,25 @@ export class WebViewExtBase extends ContainerView {
             url,
         } as ShouldOverrideUrlLoadEventData;
 
-        this.notify(argsWithSpellingError);
+        this.notify(args);
 
-        return argsWithSpellingError.cancel;
+        const eventNameWithSpellingError = "shouldOverideUrlLoading";
+        if (this.hasListeners(eventNameWithSpellingError)) {
+            console.error(
+                `eventName '${eventNameWithSpellingError}' is deprecated due to spelling error:\nPlease use: ${WebViewExtBase.shouldOverrideUrlLoadingEvent}`,
+            );
+            const argsWithSpellingError = {
+                ...args,
+                eventName: eventNameWithSpellingError,
+            };
+
+            this.notify(argsWithSpellingError);
+            if (argsWithSpellingError.cancel) {
+                return argsWithSpellingError.cancel;
+            }
+        }
+
+        return args.cancel;
     }
 
     /**
@@ -1034,22 +1050,6 @@ export interface IOSWebViewWrapper {
     removeAutoLoadStyleSheetFile(resourceName: string): void;
     autoLoadJavaScriptFile(resourceName: string, filepath: string): Promise<void>;
     removeAutoLoadJavaScriptFile(resourceName: string): void;
-
-    // WebView calls and properties
-    stopLoading(): void;
-    loadUrl(url: string): void;
-    loadData(content: string): void;
-    readonly canGoBack: boolean;
-    readonly canGoForward: boolean;
-    goBack(): void;
-    goForward(): void;
-    reload(): void;
-
-    readonly shouldInjectWebViewBridge: boolean;
-    enableAutoInject(enable: boolean): void;
-    scrollBounce: boolean;
-}
-sourceName: string): void;
 
     // WebView calls and properties
     stopLoading(): void;

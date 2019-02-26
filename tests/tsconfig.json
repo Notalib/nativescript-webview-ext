@@ -8,10 +8,15 @@
         "noEmitOnError": true,
         "lib": [
             "es6",
-            "dom"
+            "dom",
+            "es2015.iterable",
+            "es2017.object"
         ],
         "baseUrl": ".",
         "paths": {
+            "@nota/nativescript-webview-ext/*": [
+                "../src/*"
+            ],
             "~/*": [
                 "app/*"
             ],

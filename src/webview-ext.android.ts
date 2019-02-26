@@ -40,20 +40,7 @@ type CacheMode = "default" | "cache_first" | "no_cache" | "cache_only";
 //#region android_native_classes
 let cacheModeMap: Map<CacheMode, number>;
 
-// Minor extension of the Native interface to allow for owner
-export declare namespace dk {
-    namespace nota {
-        namespace webviewinterface {
-            class WebViewBridgeInterface extends java.lang.Object {
-                public owner?: WebViewExt;
-            }
-        }
-    }
-}
-
-export interface AndroidWebViewClient extends android.webkit.WebViewClient {
-    owner: WebViewExt | null;
-}
+export interface AndroidWebViewClient extends android.webkit.WebViewClient {}
 
 export interface AndroidWebView extends android.webkit.WebView {
     client: AndroidWebViewClient | null;
@@ -61,6 +48,7 @@ export interface AndroidWebView extends android.webkit.WebView {
 }
 
 let WebViewExtClient: new (owner: WebViewExt) => AndroidWebViewClient;
+let WebChromeViewExtClient: new (owner: WebViewExt) => android.webkit.WebChromeClient;
 let WebViewBridgeInterface: new (owner: WebViewExt) => dk.nota.webviewinterface.WebViewBridgeInterface;
 
 function initializeWebViewClient(): void {
@@ -76,14 +64,16 @@ function initializeWebViewClient(): void {
     ]);
 
     class WebViewExtClientImpl extends android.webkit.WebViewClient {
-        constructor(public owner: WebViewExt) {
+        private owner: WeakRef<WebViewExt>;
+        constructor(owner: WebViewExt) {
             super();
 
+            this.owner = new WeakRef(owner);
             return global.__native(this);
         }
 
         public shouldOverrideUrlLoading(view: android.webkit.WebView, request: any) {
-            const owner = this.owner;
+            const owner = this.owner.get();
             if (!owner) {
                 console.warn("WebViewExtClientImpl.shouldOverrideUrlLoading(...) - no owner");
                 return true;
@@ -124,7 +114,7 @@ function initializeWebViewClient(): void {
         }
 
         public shouldInterceptRequest(view: android.webkit.WebView, request: any) {
-            const owner = this.owner;
+            const owner = this.owner.get();
             if (!owner) {
                 console.warn("WebViewExtClientImpl.shouldInterceptRequest(...) - no owner");
                 return super.shouldInterceptRequest(view, request);
@@ -184,7 +174,7 @@ function initializeWebViewClient(): void {
 
         public onPageStarted(view: android.webkit.WebView, url: string, favicon: android.graphics.Bitmap) {
             super.onPageStarted(view, url, favicon);
-            const owner = this.owner;
+            const owner = this.owner.get();
             if (!owner) {
                 console.warn("WebViewExtClientImpl.onPageStarted(...) - no owner");
                 return;
@@ -196,7 +186,7 @@ function initializeWebViewClient(): void {
 
         public onPageFinished(view: android.webkit.WebView, url: string) {
             super.onPageFinished(view, url);
-            const owner = this.owner;
+            const owner = this.owner.get();
             if (!owner) {
                 console.warn("WebViewExtClientImpl.onPageFinished(...) - no owner");
                 return;
@@ -219,7 +209,7 @@ function initializeWebViewClient(): void {
         private onReceivedErrorAPI23(view: android.webkit.WebView, request: any, error: any) {
             super.onReceivedError(view, request, error);
 
-            const owner = this.owner;
+            const owner = this.owner.get();
             if (!owner) {
                 console.warn("WebViewExtClientImpl.onReceivedErrorAPI23(...) - no owner");
                 return;
@@ -238,7 +228,7 @@ function initializeWebViewClient(): void {
         private onReceivedErrorBeforeAPI23(view: android.webkit.WebView, errorCode: number, description: string, failingUrl: string) {
             super.onReceivedError(view, errorCode, description, failingUrl);
 
-            const owner = this.owner;
+            const owner = this.owner.get();
             if (!owner) {
                 console.warn("WebViewExtClientImpl.onReceivedErrorBeforeAPI23(...) - no owner");
                 return;
@@ -251,14 +241,78 @@ function initializeWebViewClient(): void {
 
     WebViewExtClient = WebViewExtClientImpl;
 
-    class WebViewBridgeInterfaceImpl extends dk.nota.webviewinterface.WebViewBridgeInterface {
-        constructor(public owner: WebViewExt) {
+    class WebChromeViewExtClientImpl extends android.webkit.WebChromeClient {
+        private owner: WeakRef<WebViewExt>;
+        constructor(owner: WebViewExt) {
             super();
+
+            this.owner = new WeakRef(owner);
+            return global.__native(this);
+        }
+
+        public onGeolocationPermissionsHidePrompt(): void {
+            return super.onGeolocationPermissionsHidePrompt();
+        }
+
+        public onConsoleMessage(...args: any): boolean {
+            if (arguments.length !== 1) {
+                return false;
+            }
+
+            const owner = this.owner.get();
+            if (!owner) {
+                return false;
+            }
+
+            const consoleMessage = args[0] as android.webkit.ConsoleMessage;
+
+            if (consoleMessage instanceof android.webkit.ConsoleMessage) {
+                const message = consoleMessage.message();
+                const lineNo = consoleMessage.lineNumber();
+                let level = "log";
+                const { DEBUG, LOG, WARNING } = android.webkit.ConsoleMessage.MessageLevel;
+                switch (consoleMessage.messageLevel()) {
+                    case DEBUG: {
+                        level = "debug";
+                        break;
+                    }
+                    case LOG: {
+                        level = "log";
+                        break;
+                    }
+                    case WARNING: {
+                        level = "warn";
+                        break;
+                    }
+                }
+
+                owner.notify({
+                    eventName: "webConsole",
+                    data: {
+                        lineNo,
+                        message,
+                        level,
+                    },
+                } as any);
+            }
+
+            return false;
+        }
+    }
+
+    WebChromeViewExtClient = WebChromeViewExtClientImpl;
+
+    class WebViewBridgeInterfaceImpl extends dk.nota.webviewinterface.WebViewBridgeInterface {
+        private owner: WeakRef<WebViewExt>;
+        constructor(owner: WebViewExt) {
+            super();
+
+            this.owner = new WeakRef(owner);
             return global.__native(this);
         }
 
         public emitEventToNativeScript(eventName: string, data: string) {
-            const owner = this.owner;
+            const owner = this.owner.get();
             if (!owner) {
                 console.warn("WebViewExtClientImpl.onReceivedErrorBeforeAPI23(...) - no owner");
                 return;
@@ -315,6 +369,7 @@ export class WebViewExt extends WebViewExtBase {
 
         const client = new WebViewExtClient(this);
         nativeView.setWebViewClient(client);
+        nativeView.setWebChromeClient(new WebChromeViewExtClient(this));
         nativeView.client = client;
 
         const bridgeInterface = new WebViewBridgeInterface(this);
@@ -325,8 +380,6 @@ export class WebViewExt extends WebViewExtBase {
     public disposeNativeView() {
         const nativeView = this.nativeViewProtected;
         if (nativeView) {
-            nativeView.client.owner = null;
-            nativeView.bridgeInterface.owner = null;
             nativeView.destroy();
         }
 

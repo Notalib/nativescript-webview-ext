@@ -8,7 +8,7 @@
         "noLib": false,
         "emitDecoratorMetadata": true,
         "experimentalDecorators": true,
-        "lib": ["es6", "dom"],
+        "lib": ["es6", "dom", "es2015.iterable", "es2017.object"],
         "inlineSourceMap": true,
         "inlineSources": true,
         "pretty": false,
@@ -22,9 +22,6 @@
         "noImplicitUseStrict": false,
         "noFallthroughCasesInSwitch": true
     },
-    "exclude": [
-        "node_modules",
-        "platforms"
-    ],
+    "exclude": ["node_modules", "platforms"],
     "compileOnSave": false
 }

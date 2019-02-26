@@ -4,7 +4,8 @@
     "files.trimTrailingWhitespace": true
   },
   "files.watcherExclude": {
-    "{test,demo}/**/platforms": true,
+    "**/platforms": true,
+    "**/platforms/**/*": true,
     "**/.git/objects/**": true,
     "**/.git/subtree-cache/**": true,
     "**/node_modules": true,
@@ -16,8 +17,14 @@
       "when": "$(basename).ts"
     }
   },
+  "search.exclude": {
+    "**/platforms": true,
+    "**/platforms/**/*": true,
+    "**/node_modules/**/*": true,
+    "**/node_modules": true,
+    "**/bower_components": true
+  },
   "files.exclude": {
-    "{test,demo}/**/platforms": true,
     "**/.DS_Store": true,
     "**/.git": true,
     "**/.hg": true,
@@ -31,20 +38,34 @@
     "**/*.metadata.json": true,
     "**/CVS": true,
     "**/node_modules": true,
-    "**/node_modules/**/*": true
+    "**/node_modules/**/*": true,
+    "**/platforms": true,
+    "**/platforms/**/*": true
   },
   "cSpell.words": [
+    "Freiling",
+    "Morten",
     "NSURL",
+    "OUTDIR",
+    "Overide",
     "Polyfill",
     "Polyfills",
+    "Sjøgren",
     "WKURL",
+    "bootstrapper",
     "endregion",
     "filepath",
+    "filewalker",
+    "mabs",
     "null'ing",
     "opentype",
+    "prettierrc",
     "readonly",
     "stringify",
     "stringify'able",
+    "toplevel",
+    "tscwatch",
+    "uglifyjs",
     "uiwebview",
     "unregister",
     "webview",
