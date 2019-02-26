@@ -238,12 +238,13 @@ export class WKWebViewWrapper implements IOSWebViewWrapper {
 
         const nsURL = NSURL.URLWithString(src);
         if (src.startsWith("file:///")) {
-            const nsReadAccessUrl = NSURL.URLWithString(src);
-            owner.writeTrace(`WKWebViewWrapper.loadUrl("${src}") -> this.ios.loadFileURLAllowingReadAccessToURL("${nsURL}", "${nsReadAccessUrl}"`);
+            const cachePath = src.substring(0, src.lastIndexOf("/"));
+            const nsReadAccessUrl = NSURL.URLWithString(cachePath);
+            owner.writeTrace(`WKWebViewWrapper.loadUrl("${src}") -> ios.loadFileURLAllowingReadAccessToURL("${nsURL}", "${nsReadAccessUrl}"`);
             ios.loadFileURLAllowingReadAccessToURL(nsURL, nsReadAccessUrl);
         } else {
             const nsRequestWithUrl = NSURLRequest.requestWithURL(nsURL);
-            owner.writeTrace(`WKWebViewWrapper.loadUrl("${src}") -> this.ios.loadRequest("${nsRequestWithUrl}"`);
+            owner.writeTrace(`WKWebViewWrapper.loadUrl("${src}") -> ios.loadRequest("${nsRequestWithUrl}"`);
             ios.loadRequest(nsRequestWithUrl);
         }
     }
