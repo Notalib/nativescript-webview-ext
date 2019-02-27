@@ -278,7 +278,6 @@ function initializeWebViewClient(): void {
                 return;
             }
 
-            console.log({title});
             owner._titleChanged(title);
         }
 
