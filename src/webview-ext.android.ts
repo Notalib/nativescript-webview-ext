@@ -281,6 +281,61 @@ function initializeWebViewClient(): void {
             owner._titleChanged(title);
         }
 
+        public onJsAlert(view: android.webkit.WebView, url: string, message: string, result: android.webkit.JsResult): boolean {
+            const owner = this.owner.get();
+            if (!owner) {
+                return false;
+            }
+
+            let gotResponse = false;
+            return owner._webAlert(message, () => {
+                if (!gotResponse) {
+                    result.confirm();
+                }
+                gotResponse = true;
+            });
+        }
+
+        public onJsConfirm(view: android.webkit.WebView, url: string, message: string, result: android.webkit.JsResult): boolean {
+            const owner = this.owner.get();
+            if (!owner) {
+                return false;
+            }
+
+            let gotResponse = false;
+            return owner._webConfirm(message, (confirmed: boolean) => {
+                if (!gotResponse) {
+                    if (confirmed) {
+                        result.confirm();
+                    } else {
+                        result.cancel();
+                    }
+                }
+
+                gotResponse = true;
+            });
+        }
+
+        public onJsPrompt(view: android.webkit.WebView, url: string, message: string, defaultValue: string, result: android.webkit.JsPromptResult): boolean {
+            const owner = this.owner.get();
+            if (!owner) {
+                return false;
+            }
+
+            let gotResponse = false;
+            return owner._webPrompt(message, defaultValue, (message: string) => {
+                if (!gotResponse) {
+                    if (message) {
+                        result.confirm(message);
+                    } else {
+                        result.confirm();
+                    }
+                }
+
+                gotResponse = true;
+            });
+        }
+
         public onConsoleMessage(...args: any): boolean {
             if (arguments.length !== 1) {
                 return false;

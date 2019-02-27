@@ -49,6 +49,9 @@ export enum EventNames {
     ShouldOverrideUrlLoading = "shouldOverrideUrlLoading",
     LoadProgress = "loadProgress",
     TitleChanged = "titleChange",
+    WebAlert = "webAlert",
+    WebConfirm = "webConfirm",
+    WebPrompt = "webPrompt",
 }
 
 export interface LoadJavaScriptResource {
@@ -121,6 +124,31 @@ export interface TitleChangedEventData extends EventData {
     eventName: EventNames.LoadProgress;
     url: string;
     title: string;
+}
+
+export interface WebAlertEventData extends EventData {
+    object: WebViewExtBase;
+    eventName: EventNames.WebAlert;
+    url: string;
+    message: string;
+    callback: () => void;
+}
+
+export interface WebPromptEventData extends EventData {
+    object: WebViewExtBase;
+    eventName: EventNames.WebPrompt;
+    url: string;
+    message: string;
+    defaultText?: string;
+    callback: (response?: string) => void;
+}
+
+export interface WebConfirmEventData extends EventData {
+    object: WebViewExtBase;
+    eventName: EventNames.WebConfirm;
+    url: string;
+    message: string;
+    callback: (response: boolean) => void;
 }
 
 /**
@@ -199,6 +227,15 @@ export class WebViewExtBase extends ContainerView {
 
     public static get titleChangedEvent() {
         return EventNames.TitleChanged;
+    }
+    public static get webAlertEvent() {
+        return EventNames.WebAlert;
+    }
+    public static get webConfirmEvent() {
+        return EventNames.WebConfirm;
+    }
+    public static get webPromptEvent() {
+        return EventNames.WebPrompt;
     }
 
     /**
@@ -405,6 +442,58 @@ export class WebViewExtBase extends ContainerView {
         } as TitleChangedEventData;
 
         this.notify(args);
+    }
+
+    public _webAlert(message: string, callback: () => void) {
+        if (!this.hasListeners(WebViewExtBase.webAlertEvent)) {
+            return false;
+        }
+
+        const args = {
+            eventName: WebViewExtBase.webAlertEvent,
+            object: this,
+            message,
+            url: this.src,
+            callback,
+        } as WebAlertEventData;
+
+        this.notify(args);
+        return true;
+    }
+
+    public _webConfirm(message: string, callback: (response: boolean) => void) {
+        if (!this.hasListeners(WebViewExtBase.webConfirmEvent)) {
+            return false;
+        }
+
+        const args = {
+            eventName: WebViewExtBase.webConfirmEvent,
+            object: this,
+            message,
+            url: this.src,
+            callback,
+        } as WebConfirmEventData;
+
+        this.notify(args);
+        return true;
+    }
+
+    public _webPrompt(message: string, defaultText: string, callback: (response: string) => void) {
+        if (!this.hasListeners(WebViewExtBase.webPromptEvent)) {
+            return false;
+        }
+
+        const args = {
+            eventName: WebViewExtBase.webPromptEvent,
+            object: this,
+            message,
+            defaultText,
+            url: this.src,
+            callback,
+        } as WebPromptEventData;
+
+        this.notify(args);
+        return true;
     }
 
     /**

@@ -1,9 +1,9 @@
 {
     "compilerOptions": {
-        "module": "commonjs",
         "target": "es5",
-        "experimentalDecorators": true,
+        "module": "commonjs",
         "emitDecoratorMetadata": true,
+        "experimentalDecorators": true,
         "noEmitHelpers": true,
         "noEmitOnError": true,
         "lib": [

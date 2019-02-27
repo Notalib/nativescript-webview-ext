@@ -166,7 +166,23 @@ export class WKUIDelegateImpl extends NSObject implements WKUIDelegate {
         frame: WKFrameInfo,
         completionHandler: () => void,
     ): void {
-        throw new Error("Not implemented");
+        const owner = this.owner.get();
+        if (!owner) {
+            return;
+        }
+
+        let gotResponse = false;
+        const handled = owner._webAlert(message, () => {
+            if (!gotResponse) {
+                completionHandler();
+            }
+
+            gotResponse = true;
+        });
+
+        if (!handled) {
+            completionHandler();
+        }
     }
 
     /**
@@ -178,7 +194,23 @@ export class WKUIDelegateImpl extends NSObject implements WKUIDelegate {
         frame: WKFrameInfo,
         completionHandler: (p1: boolean) => void,
     ): void {
-        throw new Error("Not implemented");
+        const owner = this.owner.get();
+        if (!owner) {
+            return;
+        }
+
+        let gotResponse = false;
+        const handled = owner._webConfirm(message, (confirmed: boolean) => {
+            if (!gotResponse) {
+                completionHandler(confirmed);
+            }
+
+            gotResponse = true;
+        });
+
+        if (!handled) {
+            completionHandler(null);
+        }
     }
 
     /**
@@ -186,12 +218,28 @@ export class WKUIDelegateImpl extends NSObject implements WKUIDelegate {
      */
     public webViewRunJavaScriptTextInputPanelWithPromptDefaultTextInitiatedByFrameCompletionHandler(
         webView: WKWebView,
-        prompt: string,
+        message: string,
         defaultText: string,
         frame: WKFrameInfo,
         completionHandler: (p1: string) => void,
     ): void {
-        throw new Error("Not implemented");
+        const owner = this.owner.get();
+        if (!owner) {
+            return;
+        }
+
+        let gotResponse = false;
+        const handled = owner._webPrompt(message, defaultText, (response: string) => {
+            if (!gotResponse) {
+                completionHandler(response);
+            }
+
+            gotResponse = true;
+        });
+
+        if (!handled) {
+            completionHandler(null);
+        }
     }
 }
 
@@ -231,6 +279,7 @@ export class WKWebViewWrapper implements IOSWebViewWrapper {
         }
 
         const configuration = WKWebViewConfiguration.new();
+        configuration.dataDetectorTypes = WKDataDetectorTypes.All;
         this.wkWebViewConfiguration = configuration;
 
         const messageHandler = WKScriptMessageHandlerImpl.initWithOwner(this.owner);
@@ -248,6 +297,8 @@ export class WKWebViewWrapper implements IOSWebViewWrapper {
             frame: CGRectZero,
             configuration,
         });
+
+        webview.UIDelegate = WKUIDelegateImpl.initWithOwner(this.owner);
 
         return webview;
     }
