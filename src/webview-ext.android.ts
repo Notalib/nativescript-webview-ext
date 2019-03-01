@@ -4,6 +4,7 @@ import * as fs from "tns-core-modules/file-system";
 import {
     androidSDK,
     builtInZoomControlsProperty,
+    CacheMode,
     cacheModeProperty,
     databaseStorageProperty,
     debugModeProperty,
@@ -34,8 +35,6 @@ const extToMimeType = new Map<string, string>([
 ]);
 
 const extToBinaryEncoding = new Set<string>(["gif", "jpeg", "jpg", "otf", "png", "ttf"]);
-
-type CacheMode = "default" | "cache_first" | "no_cache" | "cache_only" | "normal";
 
 //#region android_native_classes
 let cacheModeMap: Map<CacheMode, number>;
@@ -428,7 +427,7 @@ export class WebViewExt extends WebViewExtBase {
 
     public readonly instance = ++instanceNo;
 
-    public android: android.webkit.WebView;
+    public android: AndroidWebView;
 
     public createNativeView() {
         const nativeView = new android.webkit.WebView(this._context) as AndroidWebView;

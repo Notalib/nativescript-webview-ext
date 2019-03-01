@@ -9,6 +9,8 @@ declare const CustomUrlSchemeHandler: any;
 
 const { isAndroid, isIOS } = platform;
 
+export type CacheMode = "default" | "cache_first" | "no_cache" | "cache_only" | "normal";
+
 export const androidSDK = isAndroid && Number(platform.device.sdkVersion);
 export const useWKWebView = isIOS && typeof CustomUrlSchemeHandler !== "undefined";
 
@@ -22,7 +24,7 @@ export const builtInZoomControlsProperty = new Property<WebViewExtBase, boolean>
     defaultValue: true,
     valueConverter: booleanConverter,
 });
-export const cacheModeProperty = new Property<WebViewExtBase, string>({
+export const cacheModeProperty = new Property<WebViewExtBase, CacheMode>({
     name: "cacheMode",
     defaultValue: "default",
 });
