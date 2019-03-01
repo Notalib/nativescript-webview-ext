@@ -434,7 +434,6 @@ export class WebViewExt extends WebViewExtBase {
         const nativeView = new android.webkit.WebView(this._context) as AndroidWebView;
         const settings = nativeView.getSettings();
         settings.setJavaScriptEnabled(true);
-        settings.setBuiltInZoomControls(true);
 
         // Needed for XHRRequests
         settings.setAllowUniversalAccessFromFileURLs(true);

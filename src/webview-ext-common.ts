@@ -1,6 +1,6 @@
 import * as fs from "tns-core-modules/file-system";
 import * as platform from "tns-core-modules/platform";
-import { ContainerView, CSSType, EventData, Property, traceEnabled, traceMessageType, traceWrite } from "tns-core-modules/ui/core/view";
+import { booleanConverter, ContainerView, CSSType, EventData, Property, traceEnabled, traceMessageType, traceWrite } from "tns-core-modules/ui/core/view";
 import { fetchPolyfill, promisePolyfill, webViewBridge } from "./nativescript-webview-bridge-loader";
 
 export * from "tns-core-modules/ui//core/view";
@@ -12,8 +12,16 @@ const { isAndroid, isIOS } = platform;
 export const androidSDK = isAndroid && Number(platform.device.sdkVersion);
 export const useWKWebView = isIOS && typeof CustomUrlSchemeHandler !== "undefined";
 
-export const autoInjectJSBridgeProperty = new Property<WebViewExtBase, boolean>({ name: "autoInjectJSBridge", defaultValue: true });
-export const builtInZoomControlsProperty = new Property<WebViewExtBase, boolean>({ name: "builtInZoomControls", defaultValue: false });
+export const autoInjectJSBridgeProperty = new Property<WebViewExtBase, boolean>({
+    name: "autoInjectJSBridge",
+    defaultValue: true,
+    valueConverter: booleanConverter,
+});
+export const builtInZoomControlsProperty = new Property<WebViewExtBase, boolean>({
+    name: "builtInZoomControls",
+    defaultValue: true,
+    valueConverter: booleanConverter,
+});
 export const cacheModeProperty = new Property<WebViewExtBase, string>({
     name: "cacheMode",
     defaultValue: "default",
@@ -21,19 +29,27 @@ export const cacheModeProperty = new Property<WebViewExtBase, string>({
 export const databaseStorageProperty = new Property<WebViewExtBase, boolean>({
     name: "databaseStorage",
     defaultValue: false,
+    valueConverter: booleanConverter,
 });
 export const domStorageProperty = new Property<WebViewExtBase, boolean>({
     name: "domStorage",
     defaultValue: false,
+    valueConverter: booleanConverter,
 });
 export const debugModeProperty = new Property<WebViewExtBase, boolean>({
     name: "debugMode",
     defaultValue: false,
+    valueConverter: booleanConverter,
 });
-export const displayZoomControlsProperty = new Property<WebViewExtBase, boolean>({ name: "displayZoomControls", defaultValue: false });
+export const displayZoomControlsProperty = new Property<WebViewExtBase, boolean>({
+    name: "displayZoomControls",
+    defaultValue: true,
+    valueConverter: booleanConverter,
+});
 export const supportZoomProperty = new Property<WebViewExtBase, boolean>({
     name: "supportZoom",
     defaultValue: false,
+    valueConverter: booleanConverter,
 });
 export const srcProperty = new Property<WebViewExtBase, string>({
     name: "src",
@@ -41,6 +57,7 @@ export const srcProperty = new Property<WebViewExtBase, string>({
 export const scrollBounceProperty = new Property<WebViewExtBase, boolean>({
     name: "scrollBounce",
     defaultValue: true,
+    valueConverter: booleanConverter,
 });
 
 export enum EventNames {

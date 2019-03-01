@@ -229,10 +229,10 @@ export class WebViewExt extends WebViewExtBase {
     }
 
     [scrollBounceProperty.getDefault]() {
-        return this.nativeWrapper.scrollBounce;
+        return !!this.nativeWrapper.scrollBounce;
     }
 
     [scrollBounceProperty.setNative](enabled: boolean) {
-        this.nativeWrapper.scrollBounce = enabled;
+        this.nativeWrapper.scrollBounce = !!enabled;
     }
 }

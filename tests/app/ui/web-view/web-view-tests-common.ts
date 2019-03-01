@@ -21,20 +21,20 @@ function timeoutPromise(delay = 100) {
 }
 
 // HTML test files
-const emptyHTMLFile = "~/ui/web-view/assets/html/empty.html";
-const javascriptCallsFile = "~/ui/web-view/assets/html/javascript-calls.html";
-const javascriptCallsXLocalFile = "~/ui/web-view/assets/html/javascript-calls-x-local.html";
-const cssNotPredefinedFile = "~/ui/web-view/assets/html/css-not-predefined.html";
-const cssPreDefinedlinkFile = "~/ui/web-view/assets/html/css-predefined-link-tags.html";
+export const emptyHTMLFile = "~/ui/web-view/assets/html/empty.html";
+export const javascriptCallsFile = "~/ui/web-view/assets/html/javascript-calls.html";
+export const javascriptCallsXLocalFile = "~/ui/web-view/assets/html/javascript-calls-x-local.html";
+export const cssNotPredefinedFile = "~/ui/web-view/assets/html/css-not-predefined.html";
+export const cssPreDefinedlinkFile = "~/ui/web-view/assets/html/css-predefined-link-tags.html";
 
 // Resource loads
-const localStyleSheetCssNAME = "local-stylesheet.css";
-const localStyleSheetCssFile = "~/ui/web-view/assets/css/local-stylesheet.css";
+export const localStyleSheetCssNAME = "local-stylesheet.css";
+export const localStyleSheetCssFile = "~/ui/web-view/assets/css/local-stylesheet.css";
 
-const localJavaScriptName = "local-javascript.js";
-const localJavaScriptFile = "~/ui/web-view/assets/js/local-javascript.js";
+export const localJavaScriptName = "local-javascript.js";
+export const localJavaScriptFile = "~/ui/web-view/assets/js/local-javascript.js";
 
-const jsGetElementStyleSheet = `
+export const jsGetElementStyleSheet = `
 (function() {
     const els = document.getElementsByClassName('red');
     if (!els.length) {
@@ -58,7 +58,7 @@ const jsGetElementStyleSheet = `
 })();
 `;
 
-export class WebViewTest extends testModule.UITest<WebViewExt> {
+export class WebViewCommonTest extends testModule.UITest<WebViewExt> {
     public create(): WebViewExt {
         // >> declare-webview
         const webView = new WebViewExt();
@@ -747,8 +747,4 @@ export class WebViewTest extends testModule.UITest<WebViewExt> {
         }
         // << webview-x-localfile-fetch
     }
-}
-
-export function createTestCase(): WebViewTest {
-    return new WebViewTest();
 }
