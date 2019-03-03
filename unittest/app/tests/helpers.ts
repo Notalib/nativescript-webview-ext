@@ -1,25 +1,39 @@
 import * as fs from "tns-core-modules/file-system";
 import { EventData, View } from "tns-core-modules/ui/page/page";
 
-const baseUrl = `${fs.knownFolders.currentApp().path}/assets/html/`;
+const currentAppPath = `${fs.knownFolders.currentApp().path}`;
+
+export function resolveFilePath(path: string) {
+    if (path.startsWith("~/")) {
+        return `${currentAppPath}/${path.substr(2)}`;
+    }
+
+    return path;
+}
+
+export async function loadFile(path: string) {
+    const realPath = resolveFilePath(path);
+
+    return await fs.File.fromPath(realPath).readText();
+}
 
 // HTML test files
-export const testFile = `${baseUrl}/html/test.html`;
-export const testWithSpacesFile = `${baseUrl}/html/test with spaces.html`;
-export const emptyHTMLFile = `${baseUrl}/html/empty.html`;
-export const javascriptCallsFile = `${baseUrl}/html/javascript-calls.html`;
-export const javascriptCallsXLocalFile = `${baseUrl}/html/javascript-calls-x-local.html`;
-export const cssNotPredefinedFile = `${baseUrl}/html/css-not-predefined.html`;
-export const cssPreDefinedlinkFile = `${baseUrl}/html/css-predefined-link-tags.html`;
+export const testFile = `~/assets/html/test.html`;
+export const testWithSpacesFile = `~/assets/html/test with spaces.html`;
+export const emptyHTMLFile = `~/assets/html/empty.html`;
+export const javascriptCallsFile = `~/assets/html/javascript-calls.html`;
+export const javascriptCallsXLocalFile = `~/assets/html/javascript-calls-x-local.html`;
+export const cssNotPredefinedFile = `~/assets/html/css-not-predefined.html`;
+export const cssPreDefinedlinkFile = `~/assets/html/css-predefined-link-tags.html`;
 
 export const emptyHTMLXLocalSource = "x-local://empty.html";
 
 // Resource loads
 export const localStyleSheetCssNAME = `local-stylesheet.css`;
-export const localStyleSheetCssFile = `${baseUrl}/css/local-stylesheet.css`;
+export const localStyleSheetCssFile = `~/assets/css/local-stylesheet.css`;
 
 export const localJavaScriptName = `local-javascript.js`;
-export const localJavaScriptFile = `${baseUrl}/js/local-javascript.js`;
+export const localJavaScriptFile = `~/assets/js/local-javascript.js`;
 
 export const jsGetElementStyleSheet = `
 (function() {
