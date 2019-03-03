@@ -71,6 +71,7 @@ export enum EventNames {
     WebAlert = "webAlert",
     WebConfirm = "webConfirm",
     WebPrompt = "webPrompt",
+    WebConsole = "webConsole",
 }
 
 export interface LoadJavaScriptResource {
@@ -170,6 +171,17 @@ export interface WebConfirmEventData extends EventData {
     callback: (response: boolean) => void;
 }
 
+export interface WebConsoleEventData extends EventData {
+    object: WebViewExtBase;
+    eventName: EventNames.WebConsole;
+    url: string;
+    data: {
+        lineNo: number;
+        message: string;
+        level: string
+    };
+}
+
 /**
  * Event data containing information for the loading events of a WebView.
  */
@@ -255,6 +267,9 @@ export class WebViewExtBase extends ContainerView {
     }
     public static get webPromptEvent() {
         return EventNames.WebPrompt;
+    }
+    public static get webConsoleEvent() {
+        return EventNames.WebConsole;
     }
 
     /**
@@ -510,6 +525,26 @@ export class WebViewExtBase extends ContainerView {
             url: this.src,
             callback,
         } as WebPromptEventData;
+
+        this.notify(args);
+        return true;
+    }
+
+    public _webConsole(message: string, lineNo: number, level: string) {
+        if (!this.hasListeners(WebViewExtBase.webConsoleEvent)) {
+            return false;
+        }
+
+        const args = {
+            eventName: WebViewExtBase.webConsoleEvent,
+            object: this,
+            data: {
+                message,
+                lineNo,
+                level,
+            },
+            url: this.src,
+        } as WebConsoleEventData;
 
         this.notify(args);
         return true;

@@ -367,14 +367,8 @@ function initializeWebViewClient(): void {
                     }
                 }
 
-                owner.notify({
-                    eventName: "webConsole",
-                    data: {
-                        lineNo,
-                        message,
-                        level,
-                    },
-                } as any);
+
+                return owner._webConsole(message, lineNo, level);
             }
 
             return false;
