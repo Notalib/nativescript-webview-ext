@@ -17,6 +17,10 @@ export async function loadFile(path: string) {
     return await fs.File.fromPath(realPath).readText();
 }
 
+export function timeoutPromise(delay = 100) {
+    return new Promise((resolve) => setTimeout(resolve, delay));
+}
+
 // HTML test files
 export const testFile = `~/assets/html/test.html`;
 export const testWithSpacesFile = `~/assets/html/test with spaces.html`;

@@ -69,6 +69,22 @@ describe("Load files", () => {
         });
     });
 
+    it("Load UpperCase Src", async () => {
+        // >> webview-UPPER_CASE
+        const event = eventAsPromise<LoadFinishedEventData>(webView, WebViewExt.loadFinishedEvent);
+
+        const targetSrc = "HTTPS://github.com/";
+        webView.src = targetSrc;
+
+        // >> (hide)
+        const args = await event;
+        expect(args.error).toBeUndefined();
+        expect(url.parse(args.url)).toEqual(url.parse(targetSrc));
+        // << (hide)
+
+        // << webview-UPPER_CASE
+    });
+
     describe("Load local files", () => {
         it("test.html", async () => {
             const targetSrc = testFile;
