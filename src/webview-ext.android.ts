@@ -367,7 +367,6 @@ function initializeWebViewClient(): void {
                     }
                 }
 
-
                 return owner._webConsole(message, lineNo, level);
             }
 
@@ -427,6 +426,9 @@ export class WebViewExt extends WebViewExtBase {
         const nativeView = new android.webkit.WebView(this._context) as AndroidWebView;
         const settings = nativeView.getSettings();
         settings.setJavaScriptEnabled(true);
+        settings.setBuiltInZoomControls(!!this.builtInZoomControls);
+        settings.setSupportZoom(!!this.supportZoom);
+        settings.setDisplayZoomControls(!!this.displayZoomControls);
 
         // Needed for XHRRequests
         settings.setAllowUniversalAccessFromFileURLs(true);

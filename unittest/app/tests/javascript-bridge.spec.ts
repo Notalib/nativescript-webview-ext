@@ -1,19 +1,8 @@
-import { LoadFinishedEventData, WebViewExt } from "@nota/nativescript-webview-ext";
+import { WebViewExt } from "@nota/nativescript-webview-ext";
+import { ActionBar } from "tns-core-modules/ui/action-bar/action-bar";
 import * as frameModule from "tns-core-modules/ui/frame";
 import { Page } from "tns-core-modules/ui/page";
-import * as url from "url";
-import {
-    eventAsPromise,
-    testFile,
-    resolveFilePath,
-    testWithSpacesFile,
-    loadFile,
-    emptyHTMLXLocalSource,
-    emptyHTMLFile,
-    javascriptCallsFile,
-    timeoutPromise,
-} from "./helpers";
-import { ActionBar } from "tns-core-modules/ui/action-bar/action-bar";
+import { eventAsPromise, javascriptCallsFile, timeoutPromise } from "./helpers";
 
 describe("JavaScript Bridge", () => {
     let currentPage: Page;

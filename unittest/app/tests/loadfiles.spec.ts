@@ -1,9 +1,9 @@
 import { LoadFinishedEventData, WebViewExt } from "@nota/nativescript-webview-ext";
+import { ActionBar } from "tns-core-modules/ui/action-bar/action-bar";
 import * as frameModule from "tns-core-modules/ui/frame";
 import { Page } from "tns-core-modules/ui/page";
 import * as url from "url";
-import { eventAsPromise, testFile, resolveFilePath, testWithSpacesFile, loadFile, emptyHTMLXLocalSource, emptyHTMLFile } from "./helpers";
-import { ActionBar } from "tns-core-modules/ui/action-bar/action-bar";
+import { emptyHTMLFile, emptyHTMLXLocalSource, eventAsPromise, loadFile, resolveFilePath, testFile, testWithSpacesFile } from "./helpers";
 
 describe("Load files", () => {
     let currentPage: Page;
@@ -47,11 +47,9 @@ describe("Load files", () => {
 
             webView.src = targetSrc;
 
-            // >> (hide)
             const args = await event;
             expect(args.error).toBeUndefined();
             expect(url.parse(args.url)).toEqual(url.parse(targetSrc));
-            // << (hide)
 
             // << webview-external-url
         });
@@ -60,10 +58,8 @@ describe("Load files", () => {
             // >> webview-existing-url-via-promise
             const args = await webView.loadUrl(targetSrc);
 
-            // >> (hide)
             expect(args.error).toBeUndefined();
             expect(url.parse(args.url)).toEqual(url.parse(targetSrc));
-            // << (hide)
 
             // << webview-existing-url-via-promise
         });
@@ -76,11 +72,9 @@ describe("Load files", () => {
         const targetSrc = "HTTPS://github.com/";
         webView.src = targetSrc;
 
-        // >> (hide)
         const args = await event;
         expect(args.error).toBeUndefined();
         expect(url.parse(args.url)).toEqual(url.parse(targetSrc));
-        // << (hide)
 
         // << webview-UPPER_CASE
     });
@@ -95,14 +89,13 @@ describe("Load files", () => {
             // >> webview-localfile
             webView.src = targetSrc;
 
-            // >> (hide)
             const args = await event;
             expect(args.error).toBeUndefined();
             expect(url.parse(args.url)).toEqual(url.parse(expectedSrc));
 
             const actualTitle = await webView.getTitle();
             expect(actualTitle).toBe(expectedTitle);
-            // << (hide)
+
             // << webview-localfile
         });
 
@@ -115,14 +108,13 @@ describe("Load files", () => {
             // >> webview-localfile-with-space
             webView.src = targetSrc;
 
-            // >> (hide)
             const args = await event;
             expect(args.error).toBeUndefined();
             expect(url.parse(args.url)).toEqual(url.parse(expectedSrc));
 
             const actualTitle = await webView.getTitle();
             expect(actualTitle).toBe(expectedTitle);
-            // << (hide)
+
             // << webview-localfile-with-space
         });
     });
@@ -137,13 +129,11 @@ describe("Load files", () => {
             // >> webview-string
             webView.src = targetSrc;
 
-            // >> (hide)
             const args = await event;
             expect(args.error).toBeUndefined();
 
             const actualTitle = await webView.getTitle();
             expect(actualTitle).toBe(expectedTitle);
-            // << (hide)
 
             // << webview-string
         });
@@ -153,12 +143,10 @@ describe("Load files", () => {
             // >> webview-existing-url-via-promise
             const args = await webView.loadUrl(targetSrc);
 
-            // >> (hide)
             expect(args.error).toBeUndefined();
 
             const actualTitle = await webView.getTitle();
             expect(actualTitle).toBe(expectedTitle);
-            // << (hide)
 
             // << webview-existing-url-via-promise
         });
@@ -174,13 +162,11 @@ describe("Load files", () => {
             webView.registerLocalResource("empty.html", emptyHTMLFile);
             webView.src = targetSrc;
 
-            // >> (hide)
             const args = await event;
             expect(args.error).toBeUndefined();
 
             const actualTitle = await webView.getTitle();
             expect(actualTitle).toBe(expectedTitle);
-            // << (hide)
 
             // << webview-x-localfile
         });
@@ -189,12 +175,10 @@ describe("Load files", () => {
             webView.registerLocalResource("empty.html", emptyHTMLFile);
             const args = await webView.loadUrl(targetSrc);
 
-            // >> (hide)
             expect(args.error).toBeUndefined();
 
             const actualTitle = await webView.getTitle();
             expect(actualTitle).toBe(expectedTitle);
-            // << (hide)
 
             // << webview-x-localfile-promise
         });
