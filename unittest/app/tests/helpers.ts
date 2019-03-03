@@ -3,12 +3,16 @@ import { EventData, View } from "tns-core-modules/ui/page/page";
 
 const currentAppPath = `${fs.knownFolders.currentApp().path}`;
 
-export function resolveFilePath(path: string) {
-    if (path.startsWith("~/")) {
-        return `${currentAppPath}/${path.substr(2)}`;
+export function resolveFilePath(filepath: string) {
+    if (filepath.startsWith("~")) {
+        filepath = filepath.substr(1);
     }
 
-    return path;
+    if (filepath.startsWith("file://")) {
+        filepath = filepath.replace(/^file:\/\//, "");
+    }
+
+    return fs.path.join(currentAppPath, filepath);
 }
 
 export async function loadFile(path: string) {

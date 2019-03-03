@@ -1,11 +1,11 @@
 import { WebViewExt } from "@nota/nativescript-webview-ext";
 import { ActionBar } from "tns-core-modules/ui/action-bar/action-bar";
 import * as frameModule from "tns-core-modules/ui/frame";
-import { isAndroid, Page } from "tns-core-modules/ui/page";
-import * as url from "url";
+import { isAndroid, isIOS, Page } from "tns-core-modules/ui/page";
+import * as utils from "tns-core-modules/utils/utils";
 import { emptyHTMLFile, eventAsPromise } from "./helpers";
 
-describe("Load files", () => {
+describe("Platform", () => {
     let currentPage: Page;
     let webView: WebViewExt;
     const topmost = frameModule.topmost();
@@ -129,4 +129,20 @@ function androidTest(getWebView: () => WebViewExt) {
         expect(androidWebView.getSettings().getDisplayZoomControls()).toBe(expected);
         // << webview-built-in-zoom-controls
     });
+}
+
+function iOS(getWebView: () => WebViewExt) {
+    if (!isIOS) {
+        return;
+    }
+
+    iOS_SafeArea(getWebView);
+}
+
+function iOS_SafeArea(getWebView: () => WebViewExt) {
+    if (utils.ios.MajorVersion <= 10) {
+        return;
+    }
+
+    // TODO: Import from tests/app/ui/web-view/web-view-safe-area-tests.ts
 }

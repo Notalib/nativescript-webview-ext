@@ -4,7 +4,7 @@ import * as frameModule from "tns-core-modules/ui/frame";
 import { Page } from "tns-core-modules/ui/page";
 import { emptyHTMLFile, eventAsPromise, javascriptCallsXLocalFile, localJavaScriptFile, localJavaScriptName } from "./helpers";
 
-describe("Load files", () => {
+describe("Auto load", () => {
     let currentPage: Page;
     let webView: WebViewExt;
     const topmost = frameModule.topmost();
@@ -87,8 +87,8 @@ describe("Load files", () => {
         expect(args.error).toBeUndefined();
 
         const actualTitle = await webView.getTitle();
-        const messageArgs = await Promise.all([messageEvent1, messageEvent2, messageEvent3]);
         expect(actualTitle).toBe(expectedTitle);
+        const messageArgs = await Promise.all([messageEvent1, messageEvent2, messageEvent3]);
 
         for (const { data } of messageArgs) {
             expect(data).toBe(expectedMessage);
