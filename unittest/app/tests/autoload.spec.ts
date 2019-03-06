@@ -101,11 +101,9 @@ describe("Auto load", () => {
         const expectedTitle = "Blank";
 
         // >> webview-autoload-javascript
-
         webView.autoLoadJavaScriptFile(localJavaScriptName, localJavaScriptFile);
 
         const args1 = await webView.loadUrl(javascriptCallsXLocalFile);
-
         expect(args1.error).toBeUndefined();
 
         const actualTitle1 = await webView.getTitle();

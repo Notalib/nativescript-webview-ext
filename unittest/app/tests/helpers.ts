@@ -1,5 +1,7 @@
+import * as nsApp from "tns-core-modules/application";
 import * as fs from "tns-core-modules/file-system";
 import { EventData, View } from "tns-core-modules/ui/page/page";
+import * as utils from "tns-core-modules/utils/utils";
 
 const currentAppPath = `${fs.knownFolders.currentApp().path}`;
 
@@ -76,4 +78,79 @@ export function eventAsPromise<T extends EventData>(view: View, eventName: strin
 
         view.on(eventName, cb);
     });
+}
+
+export interface PageOptions {
+    actionBar: boolean;
+    actionBarFlat: boolean;
+    actionBarHidden: boolean;
+    tabBar: boolean;
+}
+
+export const DefaultPageOptions: PageOptions = {
+    actionBar: false,
+    actionBarFlat: false,
+    actionBarHidden: false,
+    tabBar: false,
+};
+
+export const layout = {
+    left(view: View): number {
+        return round(utils.layout.toDevicePixels(view.getLocationInWindow().x));
+    },
+    top(view: View): number {
+        return round(utils.layout.toDevicePixels(view.getLocationInWindow().y));
+    },
+    right(view: View): number {
+        return this.left(view) + this.width(view);
+    },
+    bottom(view: View): number {
+        return this.top(view) + this.height(view);
+    },
+
+    height(view: View): number {
+        return round(utils.layout.toDevicePixels(view.getActualSize().height));
+    },
+
+    width(view: View): number {
+        return round(utils.layout.toDevicePixels(view.getActualSize().width));
+    },
+};
+
+export function time(): number {
+    if (global.android) {
+        return java.lang.System.nanoTime() / 1000000; // 1 ms = 1000000 ns
+    } else {
+        return CACurrentMediaTime() * 1000;
+    }
+}
+
+export function waitUntilReady(isReady: () => boolean, timeoutSec: number = 3, shouldThrow: boolean = true) {
+    if (!isReady) {
+        return;
+    }
+
+    if (nsApp.ios) {
+        const timeoutMs = timeoutSec * 1000;
+        let totalWaitTime = 0;
+        while (true) {
+            const begin = time();
+            const currentRunLoop = utils.ios.getter(NSRunLoop, NSRunLoop.currentRunLoop);
+            currentRunLoop.limitDateForMode(currentRunLoop.currentMode);
+            if (isReady()) {
+                break;
+            }
+
+            totalWaitTime += time() - begin;
+            if (totalWaitTime >= timeoutMs) {
+                if (shouldThrow) {
+                    throw new Error("waitUntilReady Timeout.");
+                } else {
+                    break;
+                }
+            }
+        }
+    } else if (nsApp.android) {
+        // doModalAndroid(isReady, timeoutSec, shouldThrow);
+    }
 }
