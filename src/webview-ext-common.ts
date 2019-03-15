@@ -178,7 +178,7 @@ export interface WebConsoleEventData extends EventData {
     data: {
         lineNo: number;
         message: string;
-        level: string
+        level: string;
     };
 }
 
