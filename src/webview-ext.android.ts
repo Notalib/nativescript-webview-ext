@@ -4,6 +4,7 @@ import * as fs from "tns-core-modules/file-system";
 import {
     androidSDK,
     builtInZoomControlsProperty,
+    CacheMode,
     cacheModeProperty,
     databaseStorageProperty,
     debugModeProperty,
@@ -35,8 +36,6 @@ const extToMimeType = new Map<string, string>([
 
 const extToBinaryEncoding = new Set<string>(["gif", "jpeg", "jpg", "otf", "png", "ttf"]);
 
-type CacheMode = "default" | "cache_first" | "no_cache" | "cache_only";
-
 //#region android_native_classes
 let cacheModeMap: Map<CacheMode, number>;
 
@@ -60,6 +59,7 @@ function initializeWebViewClient(): void {
         ["cache_only", android.webkit.WebSettings.LOAD_CACHE_ONLY],
         ["default", android.webkit.WebSettings.LOAD_DEFAULT],
         ["no_cache", android.webkit.WebSettings.LOAD_NO_CACHE],
+        ["normal", android.webkit.WebSettings.LOAD_NORMAL],
     ]);
 
     class WebViewExtClientImpl extends android.webkit.WebViewClient {
@@ -71,7 +71,10 @@ function initializeWebViewClient(): void {
             return global.__native(this);
         }
 
-        public shouldOverrideUrlLoading(view: android.webkit.WebView, request: any) {
+        /**
+         * Give the host application a chance to take control when a URL is about to be loaded in the current WebView.
+         */
+        public shouldOverrideUrlLoading(view: android.webkit.WebView, request: string | android.webkit.WebResourceRequest) {
             const owner = this.owner.get();
             if (!owner) {
                 console.warn("WebViewExtClientImpl.shouldOverrideUrlLoading(...) - no owner");
@@ -119,8 +122,10 @@ function initializeWebViewClient(): void {
                 return super.shouldInterceptRequest(view, request);
             }
 
-            let url = request as string;
-            if (typeof request === "object") {
+            let url: string;
+            if (typeof request === "string") {
+                url = request;
+            } else if (typeof request === "object") {
                 url = request.getUrl().toString();
             }
 
@@ -159,14 +164,17 @@ function initializeWebViewClient(): void {
                 return response;
             }
 
-            const r = response as any;
-            if (!r.getResponseHeaders) {
+            if (!response.getResponseHeaders) {
                 return response;
             }
 
-            const responseHeaders = (r.getResponseHeaders() as java.util.HashMap<string, string>) || new java.util.HashMap<string, string>();
+            let responseHeaders = response.getResponseHeaders() as java.util.HashMap<string, string>;
+            if (!responseHeaders) {
+                responseHeaders = new java.util.HashMap<string, string>();
+            }
+
             responseHeaders.put("Access-Control-Allow-Origin", "*");
-            r.setResponseHeaders(responseHeaders);
+            response.setResponseHeaders(responseHeaders);
 
             return response;
         }
@@ -175,11 +183,11 @@ function initializeWebViewClient(): void {
             super.onPageStarted(view, url, favicon);
             const owner = this.owner.get();
             if (!owner) {
-                console.warn("WebViewExtClientImpl.onPageStarted(...) - no owner");
+                console.warn(`WebViewExtClientImpl.onPageStarted("${view}", "${url}", "${favicon}") - no owner`);
                 return;
             }
 
-            owner.writeTrace(`WebViewClientClass.onPageStarted("${url}", "${favicon}")`);
+            owner.writeTrace(`WebViewClientClass.onPageStarted("${view}", "${url}", "${favicon}")`);
             owner._onLoadStarted(url);
         }
 
@@ -187,20 +195,20 @@ function initializeWebViewClient(): void {
             super.onPageFinished(view, url);
             const owner = this.owner.get();
             if (!owner) {
-                console.warn("WebViewExtClientImpl.onPageFinished(...) - no owner");
+                console.warn(`WebViewExtClientImpl.onPageFinished("${view}", ${url}") - no owner`);
                 return;
             }
 
-            owner.writeTrace(`WebViewClientClass.onPageFinished("${url}")`);
+            owner.writeTrace(`WebViewClientClass.onPageFinished("${view}", ${url}")`);
             owner._onLoadFinished(url).catch(() => void 0);
         }
 
         public onReceivedError() {
             if (arguments.length === 4) {
-                const [view, errorCode, description, failingUrl] = Array.from(arguments) as [android.webkit.WebView, number, string, string];
+                const [view, errorCode, description, failingUrl] = [...arguments] as [android.webkit.WebView, number, string, string];
                 this.onReceivedErrorBeforeAPI23(view, errorCode, description, failingUrl);
             } else {
-                const [view, request, error] = Array.from(arguments) as [android.webkit.WebView, any, any];
+                const [view, request, error] = [...arguments] as [android.webkit.WebView, any, any];
                 this.onReceivedErrorAPI23(view, request, error);
             }
         }
@@ -249,6 +257,83 @@ function initializeWebViewClient(): void {
             return global.__native(this);
         }
 
+        public onGeolocationPermissionsHidePrompt(): void {
+            return super.onGeolocationPermissionsHidePrompt();
+        }
+
+        public onProgressChanged(view: AndroidWebView, newProgress: number) {
+            const owner = this.owner.get();
+            if (!owner) {
+                return;
+            }
+
+            owner._loadProgress(newProgress);
+        }
+
+        public onReceivedTitle(view: AndroidWebView, title: string) {
+            const owner = this.owner.get();
+            if (!owner) {
+                return;
+            }
+
+            owner._titleChanged(title);
+        }
+
+        public onJsAlert(view: android.webkit.WebView, url: string, message: string, result: android.webkit.JsResult): boolean {
+            const owner = this.owner.get();
+            if (!owner) {
+                return false;
+            }
+
+            let gotResponse = false;
+            return owner._webAlert(message, () => {
+                if (!gotResponse) {
+                    result.confirm();
+                }
+                gotResponse = true;
+            });
+        }
+
+        public onJsConfirm(view: android.webkit.WebView, url: string, message: string, result: android.webkit.JsResult): boolean {
+            const owner = this.owner.get();
+            if (!owner) {
+                return false;
+            }
+
+            let gotResponse = false;
+            return owner._webConfirm(message, (confirmed: boolean) => {
+                if (!gotResponse) {
+                    if (confirmed) {
+                        result.confirm();
+                    } else {
+                        result.cancel();
+                    }
+                }
+
+                gotResponse = true;
+            });
+        }
+
+        public onJsPrompt(view: android.webkit.WebView, url: string, message: string, defaultValue: string, result: android.webkit.JsPromptResult): boolean {
+            const owner = this.owner.get();
+            if (!owner) {
+                return false;
+            }
+
+            let gotResponse = false;
+            return owner._webPrompt(message, defaultValue, (message: string) => {
+                if (!gotResponse) {
+                    if (message) {
+                        result.confirm(message);
+                    } else {
+                        result.confirm();
+                    }
+                }
+
+                gotResponse = true;
+            });
+        }
+
         public onConsoleMessage(...args: any): boolean {
             if (arguments.length !== 1) {
                 return false;
@@ -281,14 +366,7 @@ function initializeWebViewClient(): void {
                     }
                 }
 
-                owner.notify({
-                    eventName: "webConsole",
-                    data: {
-                        lineNo,
-                        message,
-                        level,
-                    },
-                } as any);
+                return owner._webConsole(message, lineNo, level);
             }
 
             return false;
@@ -344,7 +422,7 @@ export class WebViewExt extends WebViewExtBase {
 
     public readonly instance = ++instanceNo;
 
-    public android: android.webkit.WebView;
+    public android: AndroidWebView;
 
     public createNativeView() {
         const nativeView = new android.webkit.WebView(this._context) as AndroidWebView;
@@ -355,6 +433,7 @@ export class WebViewExt extends WebViewExtBase {
 
         settings.setBuiltInZoomControls(!!this.builtInZoomControls);
         settings.setDisplayZoomControls(!!this.displayZoomControls);
+        settings.setSupportZoom(!!this.supportZoom);
 
         // Needed for XHRRequests with x-local://
         settings.setAllowUniversalAccessFromFileURLs(true);
@@ -616,7 +695,7 @@ export class WebViewExt extends WebViewExtBase {
 
         const settings = this.nativeViewProtected.getSettings();
         const cacheModeInt = settings.getCacheMode();
-        for (const [key, value] of Array.from(cacheModeMap)) {
+        for (const [key, value] of cacheModeMap) {
             if (value === cacheModeInt) {
                 return key;
             }
@@ -631,7 +710,7 @@ export class WebViewExt extends WebViewExtBase {
         }
 
         const settings = this.nativeViewProtected.getSettings();
-        for (const [key, nativeValue] of Array.from(cacheModeMap)) {
+        for (const [key, nativeValue] of cacheModeMap) {
             if (key === cacheMode) {
                 settings.setCacheMode(nativeValue);
                 return;

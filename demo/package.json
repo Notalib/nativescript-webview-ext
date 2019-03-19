@@ -3,26 +3,26 @@
     "name": "hugo",
     "id": "dk.nota.webviewdemo",
     "tns-android": {
-      "version": "5.1.0"
+      "version": "5.2.0"
     },
     "tns-ios": {
-      "version": "5.1.0"
+      "version": "5.2.0"
     }
   },
   "dependencies": {
     "@nota/nativescript-webview-ext": "file://../src",
     "lodash": "^4.17.11",
     "nativescript-theme-core": "^1.0.4",
-    "tns-core-modules": "~5.1.0",
+    "tns-core-modules": "~5.2.0",
     "url": "^0.11.0"
   },
   "devDependencies": {
     "@types/lodash": "^4.14.119",
     "http-server": "^0.11.1",
-    "nativescript-dev-typescript": "^0.7.6",
-    "tns-platform-declarations": "~5.1.0",
-    "tslint": "^5.12.1",
-    "typescript": "~3.1.6"
+    "nativescript-dev-typescript": "^0.8.0",
+    "tns-platform-declarations": "~5.2.0",
+    "tslint": "^5.13.0",
+    "typescript": "~3.3.0"
   },
   "scripts": {
     "build.plugin": "cd ../src && npm run build",

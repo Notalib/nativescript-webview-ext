@@ -147,6 +147,102 @@ export class WKScriptMessageHandlerImpl extends NSObject implements WKScriptMess
     }
 }
 
+export class WKUIDelegateImpl extends NSObject implements WKUIDelegate {
+    public static ObjCProtocols = [WKUIDelegate];
+    public owner: WeakRef<WebViewExtBase>;
+
+    public static initWithOwner(owner: WeakRef<WebViewExtBase>): WKUIDelegateImpl {
+        const delegate = <WKUIDelegateImpl>WKUIDelegateImpl.new();
+        delegate.owner = owner;
+        return delegate;
+    }
+
+    /**
+     * Handle alerts from the webview
+     */
+    public webViewRunJavaScriptAlertPanelWithMessageInitiatedByFrameCompletionHandler(
+        webView: WKWebView,
+        message: string,
+        frame: WKFrameInfo,
+        completionHandler: () => void,
+    ): void {
+        const owner = this.owner.get();
+        if (!owner) {
+            return;
+        }
+
+        let gotResponse = false;
+        const handled = owner._webAlert(message, () => {
+            if (!gotResponse) {
+                completionHandler();
+            }
+
+            gotResponse = true;
+        });
+
+        if (!handled) {
+            completionHandler();
+        }
+    }
+
+    /**
+     * Handle confirm dialogs from the webview
+     */
+    public webViewRunJavaScriptConfirmPanelWithMessageInitiatedByFrameCompletionHandler(
+        webView: WKWebView,
+        message: string,
+        frame: WKFrameInfo,
+        completionHandler: (p1: boolean) => void,
+    ): void {
+        const owner = this.owner.get();
+        if (!owner) {
+            return;
+        }
+
+        let gotResponse = false;
+        const handled = owner._webConfirm(message, (confirmed: boolean) => {
+            if (!gotResponse) {
+                completionHandler(confirmed);
+            }
+
+            gotResponse = true;
+        });
+
+        if (!handled) {
+            completionHandler(null);
+        }
+    }
+
+    /**
+     * Handle prompt dialogs from the webview
+     */
+    public webViewRunJavaScriptTextInputPanelWithPromptDefaultTextInitiatedByFrameCompletionHandler(
+        webView: WKWebView,
+        message: string,
+        defaultText: string,
+        frame: WKFrameInfo,
+        completionHandler: (p1: string) => void,
+    ): void {
+        const owner = this.owner.get();
+        if (!owner) {
+            return;
+        }
+
+        let gotResponse = false;
+        const handled = owner._webPrompt(message, defaultText, (response: string) => {
+            if (!gotResponse) {
+                completionHandler(response);
+            }
+
+            gotResponse = true;
+        });
+
+        if (!handled) {
+            completionHandler(null);
+        }
+    }
+}
+
 export class WKWebViewWrapper implements IOSWebViewWrapper {
     protected wkWebViewConfiguration: WKWebViewConfiguration;
     protected wkNavigationDelegate: WKNavigationDelegateImpl;
@@ -183,6 +279,7 @@ export class WKWebViewWrapper implements IOSWebViewWrapper {
         }
 
         const configuration = WKWebViewConfiguration.new();
+        configuration.dataDetectorTypes = WKDataDetectorTypes.All;
         this.wkWebViewConfiguration = configuration;
 
         const messageHandler = WKScriptMessageHandlerImpl.initWithOwner(this.owner);
@@ -200,6 +297,8 @@ export class WKWebViewWrapper implements IOSWebViewWrapper {
             frame: CGRectZero,
             configuration,
         });
+
+        webview.UIDelegate = WKUIDelegateImpl.initWithOwner(this.owner);
 
         return webview;
     }

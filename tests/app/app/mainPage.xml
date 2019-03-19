@@ -1,3 +1,0 @@
-<Page navigatedTo="onNavigatedTo">
-    <Label text="Running non-UI tests..." />
-</Page>

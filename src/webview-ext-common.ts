@@ -1,6 +1,6 @@
 import * as fs from "tns-core-modules/file-system";
 import * as platform from "tns-core-modules/platform";
-import { ContainerView, CSSType, EventData, Property, traceEnabled, traceMessageType, traceWrite } from "tns-core-modules/ui/core/view";
+import { booleanConverter, ContainerView, CSSType, EventData, Property, traceEnabled, traceMessageType, traceWrite } from "tns-core-modules/ui/core/view";
 import { fetchPolyfill, promisePolyfill, webViewBridge } from "./nativescript-webview-bridge-loader";
 
 export * from "tns-core-modules/ui//core/view";
@@ -9,31 +9,49 @@ declare const CustomUrlSchemeHandler: any;
 
 const { isAndroid, isIOS } = platform;
 
+export type CacheMode = "default" | "cache_first" | "no_cache" | "cache_only" | "normal";
+
 export const androidSDK = isAndroid && Number(platform.device.sdkVersion);
 export const useWKWebView = isIOS && typeof CustomUrlSchemeHandler !== "undefined";
 
-export const autoInjectJSBridgeProperty = new Property<WebViewExtBase, boolean>({ name: "autoInjectJSBridge", defaultValue: true });
-export const builtInZoomControlsProperty = new Property<WebViewExtBase, boolean>({ name: "builtInZoomControls", defaultValue: false });
-export const cacheModeProperty = new Property<WebViewExtBase, string>({
+export const autoInjectJSBridgeProperty = new Property<WebViewExtBase, boolean>({
+    name: "autoInjectJSBridge",
+    defaultValue: true,
+    valueConverter: booleanConverter,
+});
+export const builtInZoomControlsProperty = new Property<WebViewExtBase, boolean>({
+    name: "builtInZoomControls",
+    defaultValue: true,
+    valueConverter: booleanConverter,
+});
+export const cacheModeProperty = new Property<WebViewExtBase, CacheMode>({
     name: "cacheMode",
     defaultValue: "default",
 });
 export const databaseStorageProperty = new Property<WebViewExtBase, boolean>({
     name: "databaseStorage",
     defaultValue: false,
+    valueConverter: booleanConverter,
 });
 export const domStorageProperty = new Property<WebViewExtBase, boolean>({
     name: "domStorage",
     defaultValue: false,
+    valueConverter: booleanConverter,
 });
 export const debugModeProperty = new Property<WebViewExtBase, boolean>({
     name: "debugMode",
     defaultValue: false,
+    valueConverter: booleanConverter,
 });
-export const displayZoomControlsProperty = new Property<WebViewExtBase, boolean>({ name: "displayZoomControls", defaultValue: false });
+export const displayZoomControlsProperty = new Property<WebViewExtBase, boolean>({
+    name: "displayZoomControls",
+    defaultValue: true,
+    valueConverter: booleanConverter,
+});
 export const supportZoomProperty = new Property<WebViewExtBase, boolean>({
     name: "supportZoom",
     defaultValue: false,
+    valueConverter: booleanConverter,
 });
 export const srcProperty = new Property<WebViewExtBase, string>({
     name: "src",
@@ -41,12 +59,19 @@ export const srcProperty = new Property<WebViewExtBase, string>({
 export const scrollBounceProperty = new Property<WebViewExtBase, boolean>({
     name: "scrollBounce",
     defaultValue: true,
+    valueConverter: booleanConverter,
 });
 
 export enum EventNames {
     LoadFinished = "loadFinished",
     LoadStarted = "loadStarted",
     ShouldOverrideUrlLoading = "shouldOverrideUrlLoading",
+    LoadProgress = "loadProgress",
+    TitleChanged = "titleChange",
+    WebAlert = "webAlert",
+    WebConfirm = "webConfirm",
+    WebPrompt = "webPrompt",
+    WebConsole = "webConsole",
 }
 
 export interface LoadJavaScriptResource {
@@ -107,10 +132,62 @@ export interface ShouldOverrideUrlLoadEventData extends LoadEventData {
 /** BackForward compat for spelling error... */
 export interface ShouldOverideUrlLoadEventData extends ShouldOverrideUrlLoadEventData {}
 
+export interface LoadProgressEventData extends EventData {
+    object: WebViewExtBase;
+    eventName: EventNames.LoadProgress;
+    url: string;
+    progress: number;
+}
+
+export interface TitleChangedEventData extends EventData {
+    object: WebViewExtBase;
+    eventName: EventNames.LoadProgress;
+    url: string;
+    title: string;
+}
+
+export interface WebAlertEventData extends EventData {
+    object: WebViewExtBase;
+    eventName: EventNames.WebAlert;
+    url: string;
+    message: string;
+    callback: () => void;
+}
+
+export interface WebPromptEventData extends EventData {
+    object: WebViewExtBase;
+    eventName: EventNames.WebPrompt;
+    url: string;
+    message: string;
+    defaultText?: string;
+    callback: (response?: string) => void;
+}
+
+export interface WebConfirmEventData extends EventData {
+    object: WebViewExtBase;
+    eventName: EventNames.WebConfirm;
+    url: string;
+    message: string;
+    callback: (response: boolean) => void;
+}
+
+export interface WebConsoleEventData extends EventData {
+    object: WebViewExtBase;
+    eventName: EventNames.WebConsole;
+    url: string;
+    data: {
+        lineNo: number;
+        message: string;
+        level: string
+    };
+}
+
 /**
  * Event data containing information for the loading events of a WebView.
  */
 export interface WebViewEventData extends EventData {
+    object: WebViewExtBase;
+
     data?: any;
 }
 
@@ -173,6 +250,26 @@ export class WebViewExtBase extends ContainerView {
     /** String value used when hooking to shouldOverrideUrlLoading event */
     public static get shouldOverrideUrlLoadingEvent() {
         return EventNames.ShouldOverrideUrlLoading;
+    }
+
+    public static get loadProgressEvent() {
+        return EventNames.LoadProgress;
+    }
+
+    public static get titleChangedEvent() {
+        return EventNames.TitleChanged;
+    }
+    public static get webAlertEvent() {
+        return EventNames.WebAlert;
+    }
+    public static get webConfirmEvent() {
+        return EventNames.WebConfirm;
+    }
+    public static get webPromptEvent() {
+        return EventNames.WebPrompt;
+    }
+    public static get webConsoleEvent() {
+        return EventNames.WebConsole;
     }
 
     /**
@@ -299,6 +396,8 @@ export class WebViewExtBase extends ContainerView {
         }
 
         this.notify(args);
+
+        this.getTitle().then((title) => this._titleChanged(title));
         return args;
     }
 
@@ -355,6 +454,100 @@ export class WebViewExtBase extends ContainerView {
         }
 
         return args.cancel;
+    }
+
+    public _loadProgress(progress: number) {
+        const args = {
+            eventName: WebViewExtBase.loadProgressEvent,
+            object: this,
+            progress,
+            url: this.src,
+        } as LoadProgressEventData;
+
+        this.notify(args);
+    }
+
+    public _titleChanged(title: string) {
+        const args = {
+            eventName: WebViewExtBase.loadProgressEvent,
+            object: this,
+            title,
+            url: this.src,
+        } as TitleChangedEventData;
+
+        this.notify(args);
+    }
+
+    public _webAlert(message: string, callback: () => void) {
+        if (!this.hasListeners(WebViewExtBase.webAlertEvent)) {
+            return false;
+        }
+
+        const args = {
+            eventName: WebViewExtBase.webAlertEvent,
+            object: this,
+            message,
+            url: this.src,
+            callback,
+        } as WebAlertEventData;
+
+        this.notify(args);
+        return true;
+    }
+
+    public _webConfirm(message: string, callback: (response: boolean) => void) {
+        if (!this.hasListeners(WebViewExtBase.webConfirmEvent)) {
+            return false;
+        }
+
+        const args = {
+            eventName: WebViewExtBase.webConfirmEvent,
+            object: this,
+            message,
+            url: this.src,
+            callback,
+        } as WebConfirmEventData;
+
+        this.notify(args);
+        return true;
+    }
+
+    public _webPrompt(message: string, defaultText: string, callback: (response: string) => void) {
+        if (!this.hasListeners(WebViewExtBase.webPromptEvent)) {
+            return false;
+        }
+
+        const args = {
+            eventName: WebViewExtBase.webPromptEvent,
+            object: this,
+            message,
+            defaultText,
+            url: this.src,
+            callback,
+        } as WebPromptEventData;
+
+        this.notify(args);
+        return true;
+    }
+
+    public _webConsole(message: string, lineNo: number, level: string) {
+        if (!this.hasListeners(WebViewExtBase.webConsoleEvent)) {
+            return false;
+        }
+
+        const args = {
+            eventName: WebViewExtBase.webConsoleEvent,
+            object: this,
+            data: {
+                message,
+                lineNo,
+                level,
+            },
+            url: this.src,
+        } as WebConsoleEventData;
+
+        this.notify(args);
+        return true;
     }
 
     /**
@@ -997,6 +1190,16 @@ export interface WebViewExtBase {
      * Raised when a loadFinished event occurs.
      */
     on(event: EventNames.LoadFinished, callback: (args: LoadFinishedEventData) => void, thisArg?: any);
+
+    /**
+     * Raised when a loadProgress event occurs.
+     */
+    on(event: EventNames.LoadProgress, callback: (args: LoadProgressEventData) => void, thisArg?: any);
+
+    /**
+     * Raised when a titleChanged event occurs.
+     */
+    on(event: EventNames.TitleChanged, callback: (args: TitleChangedEventData) => void, thisArg?: any);
 }
 
 autoInjectJSBridgeProperty.register(WebViewExtBase);
