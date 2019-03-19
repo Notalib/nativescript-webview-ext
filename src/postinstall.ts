@@ -8,8 +8,7 @@ const podFilePath = `${__dirname}/platforms/ios/Podfile`;
 const podSpecFilePath = `${__dirname}/platforms/ios/NotaWebViewExt/NotaWebViewExt.podspec`;
 
 async function writePodFile() {
-    const content = `platform :ios, '9.0'
-
+    const content = `
 pod "NotaWebViewExt", :path => "${__dirname}/platforms/ios/NotaWebViewExt/"
 `;
 
