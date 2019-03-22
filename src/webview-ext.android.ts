@@ -250,6 +250,8 @@ function initializeWebViewClient(): void {
 
     class WebChromeViewExtClientImpl extends android.webkit.WebChromeClient {
         private owner: WeakRef<WebViewExt>;
+        private showCustomViewCallback?: android.webkit.WebChromeClient.CustomViewCallback;
+
         constructor(owner: WebViewExt) {
             super();
 
@@ -257,8 +259,46 @@ function initializeWebViewClient(): void {
             return global.__native(this);
         }
 
-        public onGeolocationPermissionsHidePrompt(): void {
-            return super.onGeolocationPermissionsHidePrompt();
+        public onShowCustomView(view: AndroidWebView) {
+            const owner = this.owner.get();
+            if (!owner) {
+                return;
+            }
+
+            let callback: android.webkit.WebChromeClient.CustomViewCallback;
+
+            if (arguments.length === 3) {
+                callback = arguments[2];
+            } else if (arguments.length === 2) {
+                callback = arguments[1];
+            } else {
+                return;
+            }
+
+            if (owner._onEnterFullscreen(() => this.hideCustomView())) {
+                this.showCustomViewCallback = callback;
+            } else {
+                callback.onCustomViewHidden();
+            }
+        }
+
+        private hideCustomView() {
+            if (this.showCustomViewCallback) {
+                this.showCustomViewCallback.onCustomViewHidden();
+            }
+
+            this.showCustomViewCallback = null;
+        }
+
+        public onHideCustomView() {
+            this.showCustomViewCallback = null;
+
+            const owner = this.owner.get();
+            if (!owner) {
+                return;
+            }
+
+            owner._onExitFullscreen();
         }
 
         public onProgressChanged(view: AndroidWebView, newProgress: number) {
@@ -279,7 +319,7 @@ function initializeWebViewClient(): void {
             owner._titleChanged(title);
         }
 
-        public onJsAlert(view: android.webkit.WebView, url: string, message: string, result: android.webkit.JsResult): boolean {
+        public onJsAlert(view: AndroidWebView, url: string, message: string, result: android.webkit.JsResult): boolean {
             const owner = this.owner.get();
             if (!owner) {
                 return false;
@@ -294,7 +334,7 @@ function initializeWebViewClient(): void {
             });
         }
 
-        public onJsConfirm(view: android.webkit.WebView, url: string, message: string, result: android.webkit.JsResult): boolean {
+        public onJsConfirm(view: AndroidWebView, url: string, message: string, result: android.webkit.JsResult): boolean {
             const owner = this.owner.get();
             if (!owner) {
                 return false;
@@ -314,7 +354,7 @@ function initializeWebViewClient(): void {
             });
         }
 
-        public onJsPrompt(view: android.webkit.WebView, url: string, message: string, defaultValue: string, result: android.webkit.JsPromptResult): boolean {
+        public onJsPrompt(view: AndroidWebView, url: string, message: string, defaultValue: string, result: android.webkit.JsPromptResult): boolean {
             const owner = this.owner.get();
             if (!owner) {
                 return false;
@@ -334,7 +374,7 @@ function initializeWebViewClient(): void {
             });
         }
 
-        public onConsoleMessage(...args: any): boolean {
+        public onConsoleMessage(): boolean {
             if (arguments.length !== 1) {
                 return false;
             }
@@ -344,7 +384,7 @@ function initializeWebViewClient(): void {
                 return false;
             }
 
-            const consoleMessage = args[0] as android.webkit.ConsoleMessage;
+            const consoleMessage = arguments[0] as android.webkit.ConsoleMessage;
 
             if (consoleMessage instanceof android.webkit.ConsoleMessage) {
                 const message = consoleMessage.message();

@@ -72,6 +72,8 @@ export enum EventNames {
     WebConfirm = "webConfirm",
     WebPrompt = "webPrompt",
     WebConsole = "webConsole",
+    EnterFullscreen = "enterFullscreen",
+    ExitFullscreen = "exitFullscreen"
 }
 
 export interface LoadJavaScriptResource {
@@ -90,12 +92,14 @@ export interface InjectExecuteJavaScript {
     name: string;
 }
 
+export interface WebViewExtEventData extends EventData {
+    object: WebViewExtBase;
+}
+
 /**
  * Event data containing information for the loading events of a WebView.
  */
-export interface LoadEventData extends EventData {
-    object: WebViewExtBase;
-
+export interface LoadEventData extends WebViewExtEventData {
     /**
      * Gets the url of the web-view.
      */
@@ -132,30 +136,26 @@ export interface ShouldOverrideUrlLoadEventData extends LoadEventData {
 /** BackForward compat for spelling error... */
 export interface ShouldOverideUrlLoadEventData extends ShouldOverrideUrlLoadEventData {}
 
-export interface LoadProgressEventData extends EventData {
-    object: WebViewExtBase;
+export interface LoadProgressEventData extends WebViewExtEventData {
     eventName: EventNames.LoadProgress;
     url: string;
     progress: number;
 }
 
-export interface TitleChangedEventData extends EventData {
-    object: WebViewExtBase;
+export interface TitleChangedEventData extends WebViewExtEventData {
     eventName: EventNames.LoadProgress;
     url: string;
     title: string;
 }
 
-export interface WebAlertEventData extends EventData {
-    object: WebViewExtBase;
+export interface WebAlertEventData extends WebViewExtEventData {
     eventName: EventNames.WebAlert;
     url: string;
     message: string;
     callback: () => void;
 }
 
-export interface WebPromptEventData extends EventData {
-    object: WebViewExtBase;
+export interface WebPromptEventData extends WebViewExtEventData {
     eventName: EventNames.WebPrompt;
     url: string;
     message: string;
@@ -163,16 +163,14 @@ export interface WebPromptEventData extends EventData {
     callback: (response?: string) => void;
 }
 
-export interface WebConfirmEventData extends EventData {
-    object: WebViewExtBase;
+export interface WebConfirmEventData extends WebViewExtEventData {
     eventName: EventNames.WebConfirm;
     url: string;
     message: string;
     callback: (response: boolean) => void;
 }
 
-export interface WebConsoleEventData extends EventData {
-    object: WebViewExtBase;
+export interface WebConsoleEventData extends WebViewExtEventData {
     eventName: EventNames.WebConsole;
     url: string;
     data: {
@@ -185,11 +183,21 @@ export interface WebConsoleEventData extends EventData {
 /**
  * Event data containing information for the loading events of a WebView.
  */
-export interface WebViewEventData extends EventData {
-    object: WebViewExtBase;
-
+export interface WebViewEventData extends WebViewExtEventData {
     data?: any;
 }
+
+export interface EnterFullscreenEventData extends WebViewExtEventData {
+    eventName: EventNames.EnterFullscreen;
+    url: string;
+    exitFullscreen(): void;
+}
+
+export interface ExitFullscreenEventData extends WebViewExtEventData {
+    eventName: EventNames.ExitFullscreen;
+    url: string;
+}
+
 
 /**
  * Represents navigation type
@@ -270,6 +278,12 @@ export class WebViewExtBase extends ContainerView {
     }
     public static get webConsoleEvent() {
         return EventNames.WebConsole;
+    }
+    public static get enterFullscreenEvent() {
+        return EventNames.EnterFullscreen;
+    }
+    public static get exitFullscreenEvent() {
+        return EventNames.ExitFullscreen;
     }
 
     /**
@@ -545,6 +559,33 @@ export class WebViewExtBase extends ContainerView {
             },
             url: this.src,
         } as WebConsoleEventData;
+
+        this.notify(args);
+        return true;
+    }
+
+    public _onEnterFullscreen(exitFullscreen: () => void) {
+        if (!this.hasListeners(WebViewExtBase.enterFullscreenEvent)) {
+            return false;
+        }
+
+        const args = {
+            eventName: WebViewExtBase.enterFullscreenEvent,
+            object: this,
+            exitFullscreen,
+            url: this.src,
+        } as EnterFullscreenEventData;
+
+        this.notify(args);
+        return true;
+    }
+
+    public _onExitFullscreen() {
+        const args = {
+            eventName: WebViewExtBase.exitFullscreenEvent,
+            object: this,
+            url: this.src,
+        } as ExitFullscreenEventData;
 
         this.notify(args);
         return true;
