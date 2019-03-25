@@ -141,7 +141,7 @@ export interface LoadProgressEventData extends EventData {
 
 export interface TitleChangedEventData extends EventData {
     object: WebViewExtBase;
-    eventName: EventNames.LoadProgress;
+    eventName: EventNames.TitleChanged;
     url: string;
     title: string;
 }
@@ -469,7 +469,7 @@ export class WebViewExtBase extends ContainerView {
 
     public _titleChanged(title: string) {
         const args = {
-            eventName: WebViewExtBase.loadProgressEvent,
+            eventName: WebViewExtBase.titleChangedEvent,
             object: this,
             title,
             url: this.src,
