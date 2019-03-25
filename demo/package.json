@@ -13,18 +13,21 @@
     "@nota/nativescript-webview-ext": "file://../src",
     "lodash": "^4.17.11",
     "nativescript-theme-core": "^1.0.4",
-    "tns-core-modules": "~5.2.0",
+    "tns-core-modules": "~5.2.2",
     "url": "^0.11.0"
   },
   "devDependencies": {
     "@types/lodash": "^4.14.119",
     "http-server": "^0.11.1",
-    "nativescript-dev-typescript": "^0.8.0",
-    "tns-platform-declarations": "~5.2.0",
+    "nativescript-dev-typescript": "^0.9.0",
+    "nativescript-dev-webpack": "^0.20.3",
+    "prettier": "^1.16.4",
+    "tns-platform-declarations": "~5.2.2",
     "tslint": "^5.13.0",
-    "typescript": "~3.3.0"
+    "typescript": "~3.1.6"
   },
   "scripts": {
+    "format": "prettier --write --config ../.prettierrc.json 'app/**/*.ts' 'app/**/*.css' 'app/**/*.html'",
     "build.plugin": "cd ../src && npm run build",
     "ci.tslint": "npm run build.plugin && npm i && tslint --config '../tslint.json' 'app/**/*.ts' --exclude '**/node_modules/**'"
   }

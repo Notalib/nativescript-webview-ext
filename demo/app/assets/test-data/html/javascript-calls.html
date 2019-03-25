@@ -1,43 +1,43 @@
 <!DOCTYPE html>
 <html>
-  <head>
-    <script>
-      function callFromNativeScript() {
-        console.log('got a message from nativescript');
+    <head>
+        <script>
+            function callFromNativeScript() {
+                console.log("got a message from nativescript");
 
-        window.nsWebViewBridge.emit('gotMessage', { huba: "hop" });
-      }
+                window.nsWebViewBridge.emit("gotMessage", { huba: "hop" });
+            }
 
-      function getNumber() {
-        return 42;
-      }
+            function getNumber() {
+                return 42;
+            }
 
-      function getNumberFloat() {
-        return 3.14;
-      }
+            function getNumberFloat() {
+                return 3.14;
+            }
 
-      function getBoolean() {
-        return false;
-      }
+            function getBoolean() {
+                return false;
+            }
 
-      function getString() {
-        return 'string result from webview JS function';
-      }
+            function getString() {
+                return "string result from webview JS function";
+            }
 
-      function getArray() {
-        return [1.5, true, "hello"];
-      }
+            function getArray() {
+                return [1.5, true, "hello"];
+            }
 
-      function getObject() {
-        return { prop: "test", name: "object-test", values: [ 42, 3.14 ] };
-      }
-    </script>
-  </head>
-  <body>
-    <p class="red">RED</p>
-    <div>
-      <h1>Should overide url?</h1>
-      <a href="http://google.com">Go to google - should not load</a>
-    </div>
-  </body>
+            function getObject() {
+                return { prop: "test", name: "object-test", values: [42, 3.14] };
+            }
+        </script>
+    </head>
+    <body>
+        <p class="red">RED</p>
+        <div>
+            <h1>Should overide url?</h1>
+            <a href="http://google.com">Go to google - should not load</a>
+        </div>
+    </body>
 </html>
