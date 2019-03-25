@@ -116,6 +116,21 @@ export class WKNavigationDelegateImpl extends NSObject implements WKNavigationDe
         owner.writeTrace(`WKNavigationDelegateClass.webViewDidFailNavigationWithError("${error.localizedDescription}")`);
         owner._onLoadFinished(src, error.localizedDescription).catch(() => void 0);
     }
+
+    public webViewDidFailProvisionalNavigationWithError(webView: WKWebView, navigation: WKNavigation, error: NSError): void {
+        const owner = this.owner.get();
+        if (!owner) {
+            return;
+        }
+
+        let src = owner.src;
+        if (webView.URL && webView.URL.absoluteString) {
+            src = webView.URL.absoluteString;
+        }
+
+        owner.writeTrace(`WKNavigationDelegateClass.webViewDidFailProvisionalNavigationWithError(${error.localizedDescription}`);
+        owner._onLoadFinished(src, error.localizedDescription);
+    }
 }
 
 export class WKScriptMessageHandlerImpl extends NSObject implements WKScriptMessageHandler {
