@@ -42,7 +42,6 @@ let cacheModeMap: Map<CacheMode, number>;
 export interface AndroidWebViewClient extends android.webkit.WebViewClient {}
 
 export interface AndroidWebView extends android.webkit.WebView {
-    client: AndroidWebViewClient | null;
     bridgeInterface?: dk.nota.webviewinterface.WebViewBridgeInterface;
 }
 
@@ -388,14 +387,17 @@ function initializeWebViewClient(): void {
         public emitEventToNativeScript(eventName: string, data: string) {
             const owner = this.owner.get();
             if (!owner) {
-                console.warn("WebViewExtClientImpl.onReceivedErrorBeforeAPI23(...) - no owner");
+                console.warn(`WebViewExtClientImpl.emitEventToNativeScript("${eventName}") - no owner`);
                 return;
             }
 
             try {
                 owner.onWebViewEvent(eventName, JSON.parse(data));
                 return;
-            } catch {}
+            } catch (err) {
+                owner.writeTrace(`WebViewExtClientImpl.emitEventToNativeScript("${eventName}") - couldn't parse data: ${data} err: ${err}`);
+            }
+
             owner.onWebViewEvent(eventName, data);
         }
     }
@@ -425,12 +427,15 @@ export class WebViewExt extends WebViewExtBase {
     public createNativeView() {
         const nativeView = new android.webkit.WebView(this._context) as AndroidWebView;
         const settings = nativeView.getSettings();
-        settings.setJavaScriptEnabled(true);
-        settings.setBuiltInZoomControls(!!this.builtInZoomControls);
-        settings.setSupportZoom(!!this.supportZoom);
-        settings.setDisplayZoomControls(!!this.displayZoomControls);
 
-        // Needed for XHRRequests
+        // Needed for the bridge library
+        settings.setJavaScriptEnabled(true);
+
+        settings.setBuiltInZoomControls(!!this.builtInZoomControls);
+        settings.setDisplayZoomControls(!!this.displayZoomControls);
+        settings.setSupportZoom(!!this.supportZoom);
+
+        // Needed for XHRRequests with x-local://
         settings.setAllowUniversalAccessFromFileURLs(true);
         return nativeView;
     }
@@ -444,9 +449,9 @@ export class WebViewExt extends WebViewExtBase {
         }
 
         const client = new WebViewExtClient(this);
+        const chromeClient = new WebChromeViewExtClient(this);
         nativeView.setWebViewClient(client);
-        nativeView.setWebChromeClient(new WebChromeViewExtClient(this));
-        nativeView.client = client;
+        nativeView.setWebChromeClient(chromeClient);
 
         const bridgeInterface = new WebViewBridgeInterface(this);
         nativeView.addJavascriptInterface(bridgeInterface, "androidWebViewBridge");
