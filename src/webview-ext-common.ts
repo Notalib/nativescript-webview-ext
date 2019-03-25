@@ -176,7 +176,7 @@ export interface WebConsoleEventData extends WebViewExtEventData {
     data: {
         lineNo: number;
         message: string;
-        level: string
+        level: string;
     };
 }
 
