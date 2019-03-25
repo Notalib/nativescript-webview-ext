@@ -1174,32 +1174,68 @@ export interface WebViewExtBase {
      * @param thisArg - An optional parameter which will be used as `this` context for callback execution.
      */
     on(eventNames: string, callback: (data: WebViewEventData) => void, thisArg?: any);
+    once(eventNames: string, callback: (data: WebViewEventData) => void, thisArg?: any);
 
     /**
      * Raised before the webview requests an URL.
      * Can be cancelled by settings args.cancel = true in your event handler.
      */
     on(event: EventNames.ShouldOverrideUrlLoading, callback: (args: ShouldOverrideUrlLoadEventData) => void, thisArg?: any);
+    once(event: EventNames.ShouldOverrideUrlLoading, callback: (args: ShouldOverrideUrlLoadEventData) => void, thisArg?: any);
 
     /**
      * Raised when a loadStarted event occurs.
      */
     on(event: EventNames.LoadStarted, callback: (args: LoadStartedEventData) => void, thisArg?: any);
+    once(event: EventNames.LoadStarted, callback: (args: LoadStartedEventData) => void, thisArg?: any);
 
     /**
      * Raised when a loadFinished event occurs.
      */
     on(event: EventNames.LoadFinished, callback: (args: LoadFinishedEventData) => void, thisArg?: any);
+    once(event: EventNames.LoadFinished, callback: (args: LoadFinishedEventData) => void, thisArg?: any);
 
     /**
      * Raised when a loadProgress event occurs.
      */
     on(event: EventNames.LoadProgress, callback: (args: LoadProgressEventData) => void, thisArg?: any);
+    once(event: EventNames.LoadProgress, callback: (args: LoadProgressEventData) => void, thisArg?: any);
 
     /**
      * Raised when a titleChanged event occurs.
      */
     on(event: EventNames.TitleChanged, callback: (args: TitleChangedEventData) => void, thisArg?: any);
+    once(event: EventNames.TitleChanged, callback: (args: TitleChangedEventData) => void, thisArg?: any);
+
+    /**
+     * Override web alerts to replace them.
+     * Call args.cancel() on close.
+     * NOTE: Not supported on UIWebView
+     */
+    on(event: EventNames.WebAlert, callback: (args: WebAlertEventData) => void, thisArg?: any);
+    once(event: EventNames.WebAlert, callback: (args: WebAlertEventData) => void, thisArg?: any);
+
+    /**
+     * Override web confirm dialogs to replace them.
+     * Call args.cancel(res) on close.
+     * NOTE: Not supported on UIWebView
+     */
+    on(event: EventNames.WebConfirm, callback: (args: WebConfirmEventData) => void, thisArg?: any);
+    once(event: EventNames.WebConfirm, callback: (args: WebConfirmEventData) => void, thisArg?: any);
+
+    /**
+     * Override web confirm prompts to replace them.
+     * Call args.cancel(res) on close.
+     * NOTE: Not supported on UIWebView
+     */
+    on(event: EventNames.WebPrompt, callback: (args: WebPromptEventData) => void, thisArg?: any);
+    once(event: EventNames.WebPrompt, callback: (args: WebPromptEventData) => void, thisArg?: any);
+
+    /**
+     * Get Android WebView console entries.
+     */
+    on(event: EventNames.WebConsole, callback: (args: WebConsoleEventData) => void, thisArg?: any);
+    once(event: EventNames.WebConsole, callback: (args: WebConsoleEventData) => void, thisArg?: any);
 }
 
 autoInjectJSBridgeProperty.register(WebViewExtBase);

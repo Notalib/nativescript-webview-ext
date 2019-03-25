@@ -187,17 +187,13 @@ export class WKUIDelegateImpl extends NSObject implements WKUIDelegate {
         }
 
         let gotResponse = false;
-        const handled = owner._webAlert(message, () => {
+        owner._webAlert(message, () => {
             if (!gotResponse) {
                 completionHandler();
             }
 
             gotResponse = true;
         });
-
-        if (!handled) {
-            completionHandler();
-        }
     }
 
     /**
@@ -215,17 +211,13 @@ export class WKUIDelegateImpl extends NSObject implements WKUIDelegate {
         }
 
         let gotResponse = false;
-        const handled = owner._webConfirm(message, (confirmed: boolean) => {
+        owner._webConfirm(message, (confirmed: boolean) => {
             if (!gotResponse) {
                 completionHandler(confirmed);
             }
 
             gotResponse = true;
         });
-
-        if (!handled) {
-            completionHandler(null);
-        }
     }
 
     /**
@@ -244,17 +236,13 @@ export class WKUIDelegateImpl extends NSObject implements WKUIDelegate {
         }
 
         let gotResponse = false;
-        const handled = owner._webPrompt(message, defaultText, (response: string) => {
+        owner._webPrompt(message, defaultText, (response: string) => {
             if (!gotResponse) {
                 completionHandler(response);
             }
 
             gotResponse = true;
         });
-
-        if (!handled) {
-            completionHandler(null);
-        }
     }
 }
 

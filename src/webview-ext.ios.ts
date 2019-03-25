@@ -2,7 +2,7 @@
 
 import { profile } from "tns-core-modules/profiling";
 import { traceMessageType } from "tns-core-modules/ui/core/view";
-
+import { alert, confirm, prompt } from "tns-core-modules/ui/dialogs";
 import { autoInjectJSBridgeProperty, IOSWebViewWrapper, scrollBounceProperty, useWKWebView, WebViewExtBase } from "./webview-ext-common";
 import { UIWebViewWrapper } from "./webview-ext.uiwebview";
 import { WKWebViewWrapper } from "./webview-ext.wkwebview";
@@ -133,6 +133,48 @@ export class WebViewExt extends WebViewExtBase {
 
     public reload() {
         return this.nativeWrapper.reload();
+    }
+
+    public _webAlert(message: string, callback: () => void) {
+        if (!super._webAlert(message, callback)) {
+            alert({
+                message,
+            })
+                .then(() => callback())
+                .catch(() => callback());
+        }
+
+        return true;
+    }
+
+    public _webConfirm(message: string, callback: (response: boolean) => void) {
+        if (!super._webConfirm(message, callback)) {
+            confirm({
+                message,
+            })
+                .then((res) => callback(res))
+                .catch(() => callback(null));
+        }
+        return true;
+    }
+
+    public _webPrompt(message: string, defaultText: string, callback: (response: string) => void) {
+        if (!super._webPrompt(message, defaultText, callback)) {
+            prompt({
+                message,
+                defaultText,
+            })
+                .then((res) => {
+                    if (res.result) {
+                        callback(res.text);
+                    } else {
+                        callback(null);
+                    }
+                })
+                .catch(() => callback(null));
+        }
+
+        return true;
     }
 
     public registerLocalResource(resourceName: string, path: string) {
