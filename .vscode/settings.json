@@ -3,6 +3,22 @@
     "editor.formatOnSave": true,
     "files.trimTrailingWhitespace": true
   },
+  "[javascript]": {
+    "editor.formatOnSave": true,
+    "files.trimTrailingWhitespace": true
+  },
+  "[css]": {
+    "editor.formatOnSave": true,
+    "files.trimTrailingWhitespace": true
+  },
+  "[scss]": {
+    "editor.formatOnSave": true,
+    "files.trimTrailingWhitespace": true
+  },
+  "[html]": {
+    "editor.formatOnSave": true,
+    "files.trimTrailingWhitespace": true
+  },
   "files.watcherExclude": {
     "{demo,unittest}/platforms": true,
     "{demo,unittest}/platforms/**/*": true,
