@@ -648,10 +648,6 @@ export class WebViewExtBase extends ContainerView {
         }
     }
 
-    [debugModeProperty.getDefault]() {
-        return false;
-    }
-
     public resolveLocalResourceFilePath(filepath: string): string | void {
         if (!filepath) {
             this.writeTrace("WebViewExt.resolveLocalResourceFilePath() no filepath", traceMessageType.error);
@@ -936,8 +932,9 @@ export class WebViewExtBase extends ContainerView {
         await this.executeJavaScript<void>(scriptCode, false);
     }
 
-    protected ensurePolyfills() {
-        return this.ensurePromiseSupport().then(() => this.ensureFetchSupport());
+    protected async ensurePolyfills() {
+        await this.ensurePromiseSupport();
+        await this.ensureFetchSupport();
     }
 
     /**
@@ -1017,9 +1014,8 @@ export class WebViewExtBase extends ContainerView {
             const tmpPromiseEvent = (args: any) => {
                 clearTimeout(timer);
 
-                this.off(eventName);
-
                 const { data, err } = args.data || ({} as any);
+
                 // Was it a success? No 'err' received.
                 if (typeof err === "undefined") {
                     resolve(data);
@@ -1042,7 +1038,7 @@ export class WebViewExtBase extends ContainerView {
                 reject(new Error(err));
             };
 
-            this.on(eventName, tmpPromiseEvent);
+            this.once(eventName, tmpPromiseEvent);
 
             this.executeJavaScript(promiseScriptCode, false);
 
