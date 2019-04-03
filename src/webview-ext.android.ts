@@ -42,6 +42,8 @@ let cacheModeMap: Map<CacheMode, number>;
 export interface AndroidWebViewClient extends android.webkit.WebViewClient {}
 
 export interface AndroidWebView extends android.webkit.WebView {
+    client: AndroidWebViewClient | null;
+    chromeClient: android.webkit.WebChromeClient | null;
     bridgeInterface?: dk.nota.webviewinterface.WebViewBridgeInterface;
 }
 
@@ -451,7 +453,10 @@ export class WebViewExt extends WebViewExtBase {
         const client = new WebViewExtClient(this);
         const chromeClient = new WebChromeViewExtClient(this);
         nativeView.setWebViewClient(client);
+        nativeView.client = client;
+
         nativeView.setWebChromeClient(chromeClient);
+        nativeView.chromeClient = chromeClient;
 
         const bridgeInterface = new WebViewBridgeInterface(this);
         nativeView.addJavascriptInterface(bridgeInterface, "androidWebViewBridge");
@@ -461,6 +466,8 @@ export class WebViewExt extends WebViewExtBase {
     public disposeNativeView() {
         const nativeView = this.nativeViewProtected;
         if (nativeView) {
+            nativeView.client = null;
+            nativeView.chromeClient = null;
             nativeView.destroy();
         }
 
