@@ -269,7 +269,7 @@ export class UIWebViewWrapper implements IOSWebViewWrapper {
         ios.reload();
     }
 
-    public executeJavaScript(scriptCode: string): Promise<any> {
+    public executeJavaScript(scriptCode: string): Promise<string> {
         const ios = this.ios;
         if (!ios) {
             return Promise.reject(new Error("WebView is missing"));

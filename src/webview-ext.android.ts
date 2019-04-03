@@ -2,7 +2,6 @@
 
 import * as fs from "tns-core-modules/file-system";
 import {
-    androidSDK,
     builtInZoomControlsProperty,
     CacheMode,
     cacheModeProperty,
@@ -162,7 +161,7 @@ function initializeWebViewClient(): void {
             owner.writeTrace(`WebViewClientClass.shouldInterceptRequest("${url}") - file: "${filepath}" mimeType:${mimeType} encoding:${encoding}`);
 
             const response = new android.webkit.WebResourceResponse(mimeType, encoding, stream);
-            if (androidSDK < 21) {
+            if (android.os.Build.VERSION.SDK_INT < 21) {
                 return response;
             }
 
@@ -474,6 +473,14 @@ export class WebViewExt extends WebViewExtBase {
         super.disposeNativeView();
     }
 
+    public async ensurePromiseSupport() {
+        if (android.os.Build.VERSION.SDK_INT >= 21) {
+            return;
+        }
+
+        return await super.ensurePromiseSupport();
+    }
+
     public _loadUrl(src: string) {
         const nativeView = this.nativeViewProtected;
         if (!nativeView) {
@@ -594,8 +601,8 @@ export class WebViewExt extends WebViewExtBase {
     }
 
     public async executeJavaScript<T>(scriptCode: string): Promise<T> {
-        if (androidSDK < 19) {
-            this.writeTrace(`WebViewExt<android>.executeJavaScript() -> SDK:${androidSDK} not supported`, traceMessageType.error);
+        if (android.os.Build.VERSION.SDK_INT < 19) {
+            this.writeTrace(`WebViewExt<android>.executeJavaScript() -> SDK:${android.os.Build.VERSION.SDK_INT} not supported`, traceMessageType.error);
             return Promise.reject(new UnsupportedSDKError(19));
         }
 
@@ -638,7 +645,7 @@ export class WebViewExt extends WebViewExtBase {
     }
 
     public zoomBy(zoomFactor: number) {
-        if (androidSDK < 21) {
+        if (android.os.Build.VERSION.SDK_INT < 21) {
             this.writeTrace(`WebViewExt<android>.zoomBy - not supported on this SDK`);
             return;
         }
@@ -648,7 +655,7 @@ export class WebViewExt extends WebViewExtBase {
         }
 
         if (zoomFactor >= 0.01 && zoomFactor <= 100) {
-            return (this.nativeViewProtected as any).zoomBy(zoomFactor);
+            return this.nativeViewProtected.zoomBy(zoomFactor);
         }
 
         throw new Error(`ZoomBy only accepts values between 0.01 and 100 both inclusive`);
@@ -659,7 +666,7 @@ export class WebViewExt extends WebViewExtBase {
     }
 
     [debugModeProperty.setNative](enabled: boolean) {
-        (android.webkit.WebView as any).setWebContentsDebuggingEnabled(!!enabled);
+        android.webkit.WebView.setWebContentsDebuggingEnabled(!!enabled);
     }
 
     [builtInZoomControlsProperty.getDefault]() {
