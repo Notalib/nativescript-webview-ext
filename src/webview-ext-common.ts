@@ -1,18 +1,10 @@
 import * as fs from "tns-core-modules/file-system";
-import * as platform from "tns-core-modules/platform";
 import { booleanConverter, ContainerView, CSSType, EventData, Property, traceEnabled, traceMessageType, traceWrite } from "tns-core-modules/ui/core/view";
 import { fetchPolyfill, promisePolyfill, webViewBridge } from "./nativescript-webview-bridge-loader";
 
-export * from "tns-core-modules/ui//core/view";
-
-declare const CustomUrlSchemeHandler: any;
-
-const { isAndroid, isIOS } = platform;
+export * from "tns-core-modules/ui/core/view";
 
 export type CacheMode = "default" | "cache_first" | "no_cache" | "cache_only" | "normal";
-
-export const androidSDK = isAndroid && Number(platform.device.sdkVersion);
-export const useWKWebView = isIOS && typeof CustomUrlSchemeHandler !== "undefined";
 
 export const autoInjectJSBridgeProperty = new Property<WebViewExtBase, boolean>({
     name: "autoInjectJSBridge",
@@ -912,7 +904,7 @@ export class WebViewExtBase extends ContainerView {
      * Inject the promise-polyfill if needed.
      */
     protected async ensurePromiseSupport() {
-        if (androidSDK >= 21 || WebViewExtBase.isPromiseSupported) {
+        if (WebViewExtBase.isPromiseSupported) {
             return;
         }
 
