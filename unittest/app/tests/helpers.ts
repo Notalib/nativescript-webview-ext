@@ -73,11 +73,20 @@ export function eventAsPromise<T extends EventData>(view: View, eventName: strin
     return new Promise<T>((resolve) => {
         const cb = (args: T) => {
             resolve(args);
-            view.off(eventName);
         };
 
-        view.on(eventName, cb);
+        view.once(eventName, cb);
     });
+}
+
+export async function waitForLoadedView<T extends View>(view: T) {
+    if (view.isLoaded) {
+        return view;
+    }
+
+    await eventAsPromise(view, View.loadedEvent);
+
+    return view;
 }
 
 export interface PageOptions {

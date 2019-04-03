@@ -19,48 +19,57 @@ export const autoInjectJSBridgeProperty = new Property<WebViewExtBase, boolean>(
     defaultValue: true,
     valueConverter: booleanConverter,
 });
+
 export const builtInZoomControlsProperty = new Property<WebViewExtBase, boolean>({
     name: "builtInZoomControls",
     defaultValue: true,
     valueConverter: booleanConverter,
 });
+
 export const cacheModeProperty = new Property<WebViewExtBase, CacheMode>({
     name: "cacheMode",
     defaultValue: "default",
 });
+
 export const databaseStorageProperty = new Property<WebViewExtBase, boolean>({
     name: "databaseStorage",
     defaultValue: false,
     valueConverter: booleanConverter,
 });
+
 export const domStorageProperty = new Property<WebViewExtBase, boolean>({
     name: "domStorage",
     defaultValue: false,
     valueConverter: booleanConverter,
 });
+
 export const debugModeProperty = new Property<WebViewExtBase, boolean>({
     name: "debugMode",
     defaultValue: false,
     valueConverter: booleanConverter,
 });
+
 export const displayZoomControlsProperty = new Property<WebViewExtBase, boolean>({
     name: "displayZoomControls",
     defaultValue: true,
     valueConverter: booleanConverter,
 });
+
 export const supportZoomProperty = new Property<WebViewExtBase, boolean>({
     name: "supportZoom",
     defaultValue: false,
     valueConverter: booleanConverter,
 });
+
 export const srcProperty = new Property<WebViewExtBase, string>({
     name: "src",
 });
+
 export const scrollBounceProperty = new Property<WebViewExtBase, boolean>({
     name: "scrollBounce",
-    defaultValue: true,
     valueConverter: booleanConverter,
 });
+
 export const scalesPageToFitProperty = new Property<WebViewExtBase, boolean>({
     name: "scalesPageToFit",
     defaultValue: false,
