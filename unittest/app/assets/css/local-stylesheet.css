@@ -1,14 +1,15 @@
 .red {
-  margin: 0;
-  padding: 0;
-  font-weight: bolder;
-  background-color: blue;
-  color: green;
-  font-size: 20pt;
+    margin: 0;
+    padding: 0;
+    font-weight: bolder;
+    background-color: blue;
+    color: green;
+    font-size: 20pt;
 }
 
-body, html {
-  margin: 0;
-  padding: 0;
-  background-color: purple;
+body,
+html {
+    margin: 0;
+    padding: 0;
+    background-color: purple;
 }

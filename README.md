@@ -21,6 +21,7 @@ Supports Android 19+ and iOS9+.
 * Polyfills:
     * Promise
     * Fetch API (overrides Native API on Android to support x-local:// and file://)
+* Allows `alert`, `confirm` and `prompt` with `WkWebView`.
 * Supports:
     * Android 19+
     * iOS 9+
@@ -65,14 +66,15 @@ The custom `NSURLProtocol` used with UIWebView is shared with all instances of t
 | readonly isWkWebView | true / false | Is the native webview an WKWebView? True if `iOS >=11` |
 | src | | Load src |
 | autoInjectJSBridge | true / false | Should the window.nsWebViewBridge be injected on `loadFinishedEvent`? Defaults to true |
-| debugMode | true / false | Android: Enable chrome debugger for webview on Android. Note: Applies to all webviews in App |
-| scrollBounce | true / false | iOS: Should the scrollView bounce? Defaults to true. |
 | builtInZoomControls | true / false | Android: Is the built-in zoom mechanisms being used |
-| displayZoomControls | true / false | Android: displays on-screen zoom controls when using the built-in zoom mechanisms |
-| databaseStorage | true / false | Android: Enable/Disabled database storage API. Note: It affects all webviews in the process. |
-| domStorage | true / false | Android: Enable/Disabled DOM Storage API. E.g localStorage |
-| supportZoom: | true / false | Android: should the webview support zoom |
 | cacheMode | default / no_cache / cache_first / cache_only | Android: Set caching mode. |
+| databaseStorage | true / false | Android: Enable/Disabled database storage API. Note: It affects all webviews in the process. |
+| debugMode | true / false | Android: Enable chrome debugger for webview on Android. Note: Applies to all webviews in App |
+| displayZoomControls | true / false | Android: displays on-screen zoom controls when using the built-in zoom mechanisms |
+| domStorage | true / false | Android: Enable/Disabled DOM Storage API. E.g localStorage |
+| scalesPageToFit | UIWebView: Should webpage scale to fit the view? Defaults to false |
+| scrollBounce | true / false | iOS: Should the scrollView bounce? Defaults to true. |
+| supportZoom | true / false | Android: should the webview support zoom |
 
 | Function | Description |
 | --- | --- |
@@ -95,9 +97,15 @@ The custom `NSURLProtocol` used with UIWebView is shared with all instances of t
 ## Events
 | Event | Description |
 | --- | --- |
-| 'shouldOverrideUrlLoading' | Raised before the webview requests an URL. Can cancelled by setting args.cancel = true in the `ShouldOverrideUrlLoadEventData` |
-| 'loadStarted' | Raised when a loadStarted event occurs. args is an `LoadStartedEventData` |
-| 'loadFinished' | Raised when a loadFinished event occurs. args is an `LoadFinishedEventData` |
+| loadFinished | Raised when a loadFinished event occurs. args is a `LoadFinishedEventData` |
+| loadProgress | Android only: Raised duing page load to indicate the progress. args is a `LoadProgressEventData` |
+| loadStarted | Raised when a loadStarted event occurs. args is a `LoadStartedEventData` |
+| shouldOverrideUrlLoading | Raised before the webview requests an URL. Can cancelled by setting args.cancel = true in the `ShouldOverrideUrlLoadEventData` |
+| titleChanged | Document title changed |
+| webAlert | Raised when `window.alert` is triggered inside the webview, needed to use customs dialogs for web alerts. args in a `WebAlertEventData`. `args.callback()` must be called to indicate alert is closed. **NOTE:** Not supported by UIWebView |
+| webConfirm | Raised when `window.confirm` is triggered inside the webview, needed to use customs dialogs for web confirm boxes. args in a `webConfirmEvent`. `args.callback(boolean)` must be called to indicate confirm box is closed. **NOTE:** Not supported by UIWebView |
+| webConsole | Android only: Raised when a line is added to the web console. args is a `WebConsoleEventData`. |
+| webPrompt | Raised when `window.prompt` is triggered inside the webview, needed to use customs dialogs for web prompt boxes. args in a `webConfirmEvent`. `args.callback(string | null)` must be called to indicate prompt box is closed. **NOTE:** Not supported by UIWebView |
 | Events emitted from the webview | Raised when nsWebViewBridge.emit(...) is called inside the webview. args in an `WebViewEventData` |
 
 ### WebView
@@ -119,14 +127,11 @@ Inside the WebView we have the `nsWebViewBridge` for sending events between the 
 
 ### Android
 * Settings
-    * Cache mode?
-    * AppCache and AppCAchePath?
+    * AppCache?
     * User agent?
 
 #### iOS
-* Options for native scrollView.
-* Disable/Enable scroll bounce.
-* UIWebView? scalesPageToFit.
+* Settings?
 
 ## License
 

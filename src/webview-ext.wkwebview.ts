@@ -3,17 +3,18 @@
 
 import * as fs from "tns-core-modules/file-system";
 import { metadataViewPort, webViewBridge } from "./nativescript-webview-bridge-loader";
+import { WebViewExt } from "./webview-ext";
 import { IOSWebViewWrapper, NavigationType, traceMessageType, WebViewExtBase } from "./webview-ext-common";
 
 export class WKNavigationDelegateImpl extends NSObject implements WKNavigationDelegate {
     public static ObjCProtocols = [WKNavigationDelegate];
-    public static initWithOwner(owner: WeakRef<WebViewExtBase>): WKNavigationDelegateImpl {
+    public static initWithOwner(owner: WeakRef<WebViewExt>): WKNavigationDelegateImpl {
         const handler = <WKNavigationDelegateImpl>WKNavigationDelegateImpl.new();
         handler.owner = owner;
         return handler;
     }
 
-    private owner: WeakRef<WebViewExtBase>;
+    private owner: WeakRef<WebViewExt>;
 
     public webViewDecidePolicyForNavigationActionDecisionHandler(webView: WKWebView, navigationAction: WKNavigationAction, decisionHandler: any): void {
         const owner = this.owner.get();
@@ -164,11 +165,12 @@ export class WKScriptMessageHandlerImpl extends NSObject implements WKScriptMess
 
 export class WKUIDelegateImpl extends NSObject implements WKUIDelegate {
     public static ObjCProtocols = [WKUIDelegate];
-    public owner: WeakRef<WebViewExtBase>;
+    public owner: WeakRef<WebViewExt>;
 
-    public static initWithOwner(owner: WeakRef<WebViewExtBase>): WKUIDelegateImpl {
+    public static initWithOwner(owner: WeakRef<WebViewExt>): WKUIDelegateImpl {
         const delegate = <WKUIDelegateImpl>WKUIDelegateImpl.new();
         delegate.owner = owner;
+        console.log(delegate);
         return delegate;
     }
 
@@ -187,17 +189,13 @@ export class WKUIDelegateImpl extends NSObject implements WKUIDelegate {
         }
 
         let gotResponse = false;
-        const handled = owner._webAlert(message, () => {
+        owner._webAlert(message, () => {
             if (!gotResponse) {
                 completionHandler();
             }
 
             gotResponse = true;
         });
-
-        if (!handled) {
-            completionHandler();
-        }
     }
 
     /**
@@ -207,7 +205,7 @@ export class WKUIDelegateImpl extends NSObject implements WKUIDelegate {
         webView: WKWebView,
         message: string,
         frame: WKFrameInfo,
-        completionHandler: (p1: boolean) => void,
+        completionHandler: (confirmed: boolean) => void,
     ): void {
         const owner = this.owner.get();
         if (!owner) {
@@ -215,17 +213,13 @@ export class WKUIDelegateImpl extends NSObject implements WKUIDelegate {
         }
 
         let gotResponse = false;
-        const handled = owner._webConfirm(message, (confirmed: boolean) => {
+        owner._webConfirm(message, (confirmed: boolean) => {
             if (!gotResponse) {
                 completionHandler(confirmed);
             }
 
             gotResponse = true;
         });
-
-        if (!handled) {
-            completionHandler(null);
-        }
     }
 
     /**
@@ -236,7 +230,7 @@ export class WKUIDelegateImpl extends NSObject implements WKUIDelegate {
         message: string,
         defaultText: string,
         frame: WKFrameInfo,
-        completionHandler: (p1: string) => void,
+        completionHandler: (response: string) => void,
     ): void {
         const owner = this.owner.get();
         if (!owner) {
@@ -244,23 +238,20 @@ export class WKUIDelegateImpl extends NSObject implements WKUIDelegate {
         }
 
         let gotResponse = false;
-        const handled = owner._webPrompt(message, defaultText, (response: string) => {
+        owner._webPrompt(message, defaultText, (response: string) => {
             if (!gotResponse) {
                 completionHandler(response);
             }
 
             gotResponse = true;
         });
-
-        if (!handled) {
-            completionHandler(null);
-        }
     }
 }
 
 export class WKWebViewWrapper implements IOSWebViewWrapper {
     protected wkWebViewConfiguration: WKWebViewConfiguration;
     protected wkNavigationDelegate: WKNavigationDelegateImpl;
+    protected wkUIDelegate: WKUIDelegateImpl;
     protected wkCustomUrlSchemeHandler: CustomUrlSchemeHandler;
     protected wkUserContentController: WKUserContentController;
     protected wkUserScriptInjectWebViewBridge: Promise<WKUserScript> | void;
@@ -270,7 +261,7 @@ export class WKWebViewWrapper implements IOSWebViewWrapper {
         wkUserScript: WKUserScript;
     }>;
 
-    public owner: WeakRef<WebViewExtBase>;
+    public owner: WeakRef<WebViewExt>;
     public get ios(): WKWebView | void {
         const owner = this.owner.get();
         return owner && owner.ios;
@@ -283,7 +274,7 @@ export class WKWebViewWrapper implements IOSWebViewWrapper {
         return owner && owner.autoInjectJSBridge;
     }
 
-    constructor(owner: WebViewExtBase) {
+    constructor(owner: WebViewExt) {
         this.owner = new WeakRef(owner);
     }
 
@@ -313,13 +304,12 @@ export class WKWebViewWrapper implements IOSWebViewWrapper {
             configuration,
         });
 
-        webview.UIDelegate = WKUIDelegateImpl.initWithOwner(this.owner);
-
         return webview;
     }
 
     public initNativeView() {
         this.wkNavigationDelegate = WKNavigationDelegateImpl.initWithOwner(this.owner);
+        this.wkUIDelegate = WKUIDelegateImpl.initWithOwner(this.owner);
 
         this.loadWKUserScripts();
     }
@@ -327,12 +317,14 @@ export class WKWebViewWrapper implements IOSWebViewWrapper {
     public disposeNativeView() {
         this.wkNavigationDelegate = null;
         this.wkCustomUrlSchemeHandler = null;
+        this.wkUIDelegate = null;
     }
 
     public onLoaded() {
         const ios = this.ios;
         if (ios) {
             ios.navigationDelegate = this.wkNavigationDelegate;
+            ios.UIDelegate = this.wkUIDelegate;
         }
     }
 
@@ -340,6 +332,7 @@ export class WKWebViewWrapper implements IOSWebViewWrapper {
         const ios = this.ios;
         if (ios) {
             ios.navigationDelegate = null;
+            ios.UIDelegate = null;
         }
     }
 
@@ -625,5 +618,13 @@ export class WKWebViewWrapper implements IOSWebViewWrapper {
         }
 
         return ios.scrollView.bounces;
+    }
+
+    public set scalesPageToFit(enable: boolean) {
+        // Unsupported
+    }
+
+    public get scalesPageToFit() {
+        return false;
     }
 }

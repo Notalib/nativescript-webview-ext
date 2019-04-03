@@ -1,64 +1,70 @@
 import * as fs from "tns-core-modules/file-system";
-import * as platform from "tns-core-modules/platform";
 import { booleanConverter, ContainerView, CSSType, EventData, Property, traceEnabled, traceMessageType, traceWrite } from "tns-core-modules/ui/core/view";
 import { fetchPolyfill, promisePolyfill, webViewBridge } from "./nativescript-webview-bridge-loader";
 
-export * from "tns-core-modules/ui//core/view";
-
-declare const CustomUrlSchemeHandler: any;
-
-const { isAndroid, isIOS } = platform;
+export * from "tns-core-modules/ui/core/view";
 
 export type CacheMode = "default" | "cache_first" | "no_cache" | "cache_only" | "normal";
-
-export const androidSDK = isAndroid && Number(platform.device.sdkVersion);
-export const useWKWebView = isIOS && typeof CustomUrlSchemeHandler !== "undefined";
 
 export const autoInjectJSBridgeProperty = new Property<WebViewExtBase, boolean>({
     name: "autoInjectJSBridge",
     defaultValue: true,
     valueConverter: booleanConverter,
 });
+
 export const builtInZoomControlsProperty = new Property<WebViewExtBase, boolean>({
     name: "builtInZoomControls",
     defaultValue: true,
     valueConverter: booleanConverter,
 });
+
 export const cacheModeProperty = new Property<WebViewExtBase, CacheMode>({
     name: "cacheMode",
     defaultValue: "default",
 });
+
 export const databaseStorageProperty = new Property<WebViewExtBase, boolean>({
     name: "databaseStorage",
     defaultValue: false,
     valueConverter: booleanConverter,
 });
+
 export const domStorageProperty = new Property<WebViewExtBase, boolean>({
     name: "domStorage",
     defaultValue: false,
     valueConverter: booleanConverter,
 });
+
 export const debugModeProperty = new Property<WebViewExtBase, boolean>({
     name: "debugMode",
     defaultValue: false,
     valueConverter: booleanConverter,
 });
+
 export const displayZoomControlsProperty = new Property<WebViewExtBase, boolean>({
     name: "displayZoomControls",
     defaultValue: true,
     valueConverter: booleanConverter,
 });
+
 export const supportZoomProperty = new Property<WebViewExtBase, boolean>({
     name: "supportZoom",
     defaultValue: false,
     valueConverter: booleanConverter,
 });
+
 export const srcProperty = new Property<WebViewExtBase, string>({
     name: "src",
 });
+
 export const scrollBounceProperty = new Property<WebViewExtBase, boolean>({
     name: "scrollBounce",
-    defaultValue: true,
+    valueConverter: booleanConverter,
+});
+
+export const scalesPageToFitProperty = new Property<WebViewExtBase, boolean>({
+    name: "scalesPageToFit",
+    defaultValue: false,
     valueConverter: booleanConverter,
 });
 
@@ -73,7 +79,7 @@ export enum EventNames {
     WebPrompt = "webPrompt",
     WebConsole = "webConsole",
     EnterFullscreen = "enterFullscreen",
-    ExitFullscreen = "exitFullscreen"
+    ExitFullscreen = "exitFullscreen",
 }
 
 export interface LoadJavaScriptResource {
@@ -197,7 +203,6 @@ export interface ExitFullscreenEventData extends WebViewExtEventData {
     eventName: EventNames.ExitFullscreen;
     url: string;
 }
-
 
 /**
  * Represents navigation type
@@ -342,6 +347,11 @@ export class WebViewExtBase extends ContainerView {
      */
     public scrollBounce: boolean;
 
+    /**
+     * iOS(UIWebView): If true, the webpage is scaled to fit and the user can zoom in and zoom out. If false, user zooming is disabled. The default value is false.
+     */
+    public scalesPageToFit: boolean;
+
     public cacheMode: "default" | "no_cache" | "cache_first" | "cache_only";
 
     /**
@@ -483,7 +493,7 @@ export class WebViewExtBase extends ContainerView {
 
     public _titleChanged(title: string) {
         const args = {
-            eventName: WebViewExtBase.loadProgressEvent,
+            eventName: WebViewExtBase.titleChangedEvent,
             object: this,
             title,
             url: this.src,
@@ -687,10 +697,6 @@ export class WebViewExtBase extends ContainerView {
             this._loadData(src);
             this.writeTrace(`WebViewExt.src = "${originSrc}" - LoadData("${src}")`);
         }
-    }
-
-    [debugModeProperty.getDefault]() {
-        return false;
     }
 
     public resolveLocalResourceFilePath(filepath: string): string | void {
@@ -953,7 +959,7 @@ export class WebViewExtBase extends ContainerView {
      * Inject the promise-polyfill if needed.
      */
     protected async ensurePromiseSupport() {
-        if (androidSDK >= 21 || WebViewExtBase.isPromiseSupported) {
+        if (WebViewExtBase.isPromiseSupported) {
             return;
         }
 
@@ -977,8 +983,9 @@ export class WebViewExtBase extends ContainerView {
         await this.executeJavaScript<void>(scriptCode, false);
     }
 
-    protected ensurePolyfills() {
-        return this.ensurePromiseSupport().then(() => this.ensureFetchSupport());
+    protected async ensurePolyfills() {
+        await this.ensurePromiseSupport();
+        await this.ensureFetchSupport();
     }
 
     /**
@@ -1058,9 +1065,8 @@ export class WebViewExtBase extends ContainerView {
             const tmpPromiseEvent = (args: any) => {
                 clearTimeout(timer);
 
-                this.off(eventName);
-
                 const { data, err } = args.data || ({} as any);
+
                 // Was it a success? No 'err' received.
                 if (typeof err === "undefined") {
                     resolve(data);
@@ -1083,7 +1089,7 @@ export class WebViewExtBase extends ContainerView {
                 reject(new Error(err));
             };
 
-            this.on(eventName, tmpPromiseEvent);
+            this.once(eventName, tmpPromiseEvent);
 
             this.executeJavaScript(promiseScriptCode, false);
 
@@ -1215,32 +1221,68 @@ export interface WebViewExtBase {
      * @param thisArg - An optional parameter which will be used as `this` context for callback execution.
      */
     on(eventNames: string, callback: (data: WebViewEventData) => void, thisArg?: any);
+    once(eventNames: string, callback: (data: WebViewEventData) => void, thisArg?: any);
 
     /**
      * Raised before the webview requests an URL.
      * Can be cancelled by settings args.cancel = true in your event handler.
      */
     on(event: EventNames.ShouldOverrideUrlLoading, callback: (args: ShouldOverrideUrlLoadEventData) => void, thisArg?: any);
+    once(event: EventNames.ShouldOverrideUrlLoading, callback: (args: ShouldOverrideUrlLoadEventData) => void, thisArg?: any);
 
     /**
      * Raised when a loadStarted event occurs.
      */
     on(event: EventNames.LoadStarted, callback: (args: LoadStartedEventData) => void, thisArg?: any);
+    once(event: EventNames.LoadStarted, callback: (args: LoadStartedEventData) => void, thisArg?: any);
 
     /**
      * Raised when a loadFinished event occurs.
      */
     on(event: EventNames.LoadFinished, callback: (args: LoadFinishedEventData) => void, thisArg?: any);
+    once(event: EventNames.LoadFinished, callback: (args: LoadFinishedEventData) => void, thisArg?: any);
 
     /**
      * Raised when a loadProgress event occurs.
      */
     on(event: EventNames.LoadProgress, callback: (args: LoadProgressEventData) => void, thisArg?: any);
+    once(event: EventNames.LoadProgress, callback: (args: LoadProgressEventData) => void, thisArg?: any);
 
     /**
      * Raised when a titleChanged event occurs.
      */
     on(event: EventNames.TitleChanged, callback: (args: TitleChangedEventData) => void, thisArg?: any);
+    once(event: EventNames.TitleChanged, callback: (args: TitleChangedEventData) => void, thisArg?: any);
+
+    /**
+     * Override web alerts to replace them.
+     * Call args.cancel() on close.
+     * NOTE: Not supported on UIWebView
+     */
+    on(event: EventNames.WebAlert, callback: (args: WebAlertEventData) => void, thisArg?: any);
+    once(event: EventNames.WebAlert, callback: (args: WebAlertEventData) => void, thisArg?: any);
+
+    /**
+     * Override web confirm dialogs to replace them.
+     * Call args.cancel(res) on close.
+     * NOTE: Not supported on UIWebView
+     */
+    on(event: EventNames.WebConfirm, callback: (args: WebConfirmEventData) => void, thisArg?: any);
+    once(event: EventNames.WebConfirm, callback: (args: WebConfirmEventData) => void, thisArg?: any);
+
+    /**
+     * Override web confirm prompts to replace them.
+     * Call args.cancel(res) on close.
+     * NOTE: Not supported on UIWebView
+     */
+    on(event: EventNames.WebPrompt, callback: (args: WebPromptEventData) => void, thisArg?: any);
+    once(event: EventNames.WebPrompt, callback: (args: WebPromptEventData) => void, thisArg?: any);
+
+    /**
+     * Get Android WebView console entries.
+     */
+    on(event: EventNames.WebConsole, callback: (args: WebConsoleEventData) => void, thisArg?: any);
+    once(event: EventNames.WebConsole, callback: (args: WebConsoleEventData) => void, thisArg?: any);
 }
 
 autoInjectJSBridgeProperty.register(WebViewExtBase);
@@ -1253,6 +1295,7 @@ domStorageProperty.register(WebViewExtBase);
 srcProperty.register(WebViewExtBase);
 supportZoomProperty.register(WebViewExtBase);
 scrollBounceProperty.register(WebViewExtBase);
+scalesPageToFitProperty.register(WebViewExtBase);
 
 /**
  * IOS uses a bridge class to map calls to UIWebView or WKWebView
@@ -1305,7 +1348,17 @@ export interface IOSWebViewWrapper {
     goForward(): void;
     reload(): void;
 
+    /**
+     * Should WebViewBridge be inject on loadFinished?
+     * WKWebView uses WKUserScripts for this.
+     */
     readonly shouldInjectWebViewBridge: boolean;
+
+    /**
+     * Enable/Disable auto injection of scripts.
+     */
     enableAutoInject(enable: boolean): void;
+
     scrollBounce: boolean;
+    scalesPageToFit: boolean;
 }

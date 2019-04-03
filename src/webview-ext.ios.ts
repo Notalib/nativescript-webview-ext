@@ -2,12 +2,14 @@
 
 import { profile } from "tns-core-modules/profiling";
 import { traceMessageType } from "tns-core-modules/ui/core/view";
-
-import { autoInjectJSBridgeProperty, IOSWebViewWrapper, scrollBounceProperty, useWKWebView, WebViewExtBase } from "./webview-ext-common";
+import { alert, confirm, prompt } from "tns-core-modules/ui/dialogs";
+import { autoInjectJSBridgeProperty, IOSWebViewWrapper, scalesPageToFitProperty, scrollBounceProperty, WebViewExtBase } from "./webview-ext-common";
 import { UIWebViewWrapper } from "./webview-ext.uiwebview";
 import { WKWebViewWrapper } from "./webview-ext.wkwebview";
 
 export * from "./webview-ext-common";
+
+export const useWKWebView = typeof CustomUrlSchemeHandler !== "undefined";
 
 export class WebViewExt extends WebViewExtBase {
     protected nativeWrapper: IOSWebViewWrapper;
@@ -135,22 +137,59 @@ export class WebViewExt extends WebViewExtBase {
         return this.nativeWrapper.reload();
     }
 
+    public _webAlert(message: string, callback: () => void) {
+        if (!super._webAlert(message, callback)) {
+            alert(message)
+                .then(() => callback())
+                .catch(() => callback());
+        }
+
+        return true;
+    }
+
+    public _webConfirm(message: string, callback: (response: boolean) => void) {
+        if (!super._webConfirm(message, callback)) {
+            confirm(message)
+                .then((res) => callback(res))
+                .catch(() => callback(null));
+        }
+        return true;
+    }
+
+    public _webPrompt(message: string, defaultText: string, callback: (response: string) => void) {
+        if (!super._webPrompt(message, defaultText, callback)) {
+            prompt(message, defaultText)
+                .then((res) => {
+                    if (res.result) {
+                        callback(res.text);
+                    } else {
+                        callback(null);
+                    }
+                })
+                .catch(() => callback(null));
+        }
+
+        return true;
+    }
+
     public registerLocalResource(resourceName: string, path: string) {
+        const cls = `WebViewExt<${this}.ios>.registerLocalResource("${resourceName}", "${path}")`;
         resourceName = this.fixLocalResourceName(resourceName);
 
         const filepath = this.resolveLocalResourceFilePath(path);
         if (!filepath) {
-            this.writeTrace(`WebViewExt<ios>.registerLocalResource("${resourceName}", "${path}") -> file doesn't exist`, traceMessageType.error);
+            this.writeTrace(`${cls} -> file doesn't exist`, traceMessageType.error);
             return;
         }
 
-        this.writeTrace(`WebViewExt<ios>.registerLocalResource("${resourceName}", "${path}") -> file: "${filepath}"`);
+        this.writeTrace(`${cls} -> file: "${filepath}"`);
 
         this.nativeWrapper.registerLocalResourceForNative(resourceName, filepath);
     }
 
     public unregisterLocalResource(resourceName: string) {
-        this.writeTrace(`WebViewExt<ios>.unregisterLocalResource("${resourceName}")`);
+        const cls = `WebViewExt<${this}.ios>.unregisterLocalResource("${resourceName}")`;
+        this.writeTrace(cls);
 
         resourceName = this.fixLocalResourceName(resourceName);
 
@@ -159,21 +198,23 @@ export class WebViewExt extends WebViewExtBase {
 
     public getRegisteredLocalResource(resourceName: string) {
         resourceName = this.fixLocalResourceName(resourceName);
+        const cls = `WebViewExt<${this}.ios>.getRegisteredLocalResource("${resourceName}")`;
 
         let result = this.nativeWrapper.getRegisteredLocalResourceFromNative(resourceName);
 
-        this.writeTrace(`WebViewExt<android>.getRegisteredLocalResource("${resourceName}") -> "${result}"`);
+        this.writeTrace(`${cls} -> "${result}"`);
         return result;
     }
 
     public async onUIWebViewEvent(url: string) {
+        const cls = `WebViewExt<${this}.ios>.onUIWebViewEvent("${url}")`;
         if (!this.isUIWebView) {
-            this.writeTrace(`WebViewExt.onUIWebViewEvent("${url}") - only works for UIWebView`, traceMessageType.error);
+            this.writeTrace(`${cls} - only works for UIWebView`, traceMessageType.error);
             return;
         }
 
         if (!url.startsWith("js2ios")) {
-            this.writeTrace(`WebViewExt.onUIWebViewEvent("${url}") - only supports js2ios-scheme`, traceMessageType.error);
+            this.writeTrace(`${cls} - only supports js2ios-scheme`, traceMessageType.error);
             return;
         }
 
@@ -184,7 +225,7 @@ export class WebViewExt extends WebViewExtBase {
 
             this.onWebViewEvent(eventName, data);
         } catch (err) {
-            this.writeTrace(`WebViewExt.onUIWebViewEvent("${url})" - "${err}"`, traceMessageType.error);
+            this.writeTrace(`${cls} - "${err}"`, traceMessageType.error);
         }
     }
 
@@ -234,5 +275,13 @@ export class WebViewExt extends WebViewExtBase {
 
     [scrollBounceProperty.setNative](enabled: boolean) {
         this.nativeWrapper.scrollBounce = !!enabled;
+    }
+
+    [scalesPageToFitProperty.getDefault]() {
+        return !!this.nativeWrapper.scalesPageToFit;
+    }
+
+    [scalesPageToFitProperty.setNative](enabled: boolean) {
+        this.nativeWrapper.scalesPageToFit = !!enabled;
     }
 }

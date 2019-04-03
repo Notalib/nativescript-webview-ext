@@ -6,13 +6,13 @@ import {
     cssNotPredefinedFile,
     cssPreDefinedlinkFile,
     eventAsPromise,
+    javascriptCallsXLocalFile,
     jsGetElementStyleSheet,
+    localJavaScriptFile,
+    localJavaScriptName,
     localStyleSheetCssFile,
     localStyleSheetCssNAME,
     timeoutPromise,
-    localJavaScriptName,
-    localJavaScriptFile,
-    javascriptCallsXLocalFile,
 } from "./helpers";
 
 describe("Inject files", () => {
