@@ -2,11 +2,11 @@
   "nativescript": {
     "name": "hugo",
     "id": "dk.nota.webviewdemo",
-    "tns-ios": {
-      "version": "5.3.1"
-    },
     "tns-android": {
       "version": "5.3.0"
+    },
+    "tns-ios": {
+      "version": "5.3.1"
     }
   },
   "dependencies": {
@@ -17,14 +17,18 @@
     "url": "^0.11.0"
   },
   "devDependencies": {
-    "@types/lodash": "^4.14.119",
+    "@types/lodash": "^4.14.123",
+    "ajv": "6.9.2",
     "http-server": "^0.11.1",
-    "nativescript-dev-typescript": "^0.8.0",
-    "tns-platform-declarations": "~5.2.0",
-    "tslint": "^5.13.0",
-    "typescript": "~3.3.0"
+    "nativescript-dev-typescript": "^0.9.0",
+    "nativescript-dev-webpack": "^0.21.0",
+    "prettier": "^1.16.4",
+    "tns-platform-declarations": "~5.3.0",
+    "tslint": "^5.15.0",
+    "typescript": "~3.1.6"
   },
   "scripts": {
+    "format": "prettier --write --config ../.prettierrc.json 'app/**/*.ts' 'app/**/*.css' 'app/**/*.html'",
     "build.plugin": "cd ../src && npm run build",
     "ci.tslint": "npm run build.plugin && npm i && tslint --config '../tslint.json' 'app/**/*.ts' --exclude '**/node_modules/**'"
   }

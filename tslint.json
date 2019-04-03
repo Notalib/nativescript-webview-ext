@@ -1,4 +1,10 @@
 {
+    "linterOptions": {
+        "exclude": [
+            "**/platforms",
+            "**/node_modules"
+        ]
+    },
     "rules": {
         "class-name": true,
         "comment-format": [
