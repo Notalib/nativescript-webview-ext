@@ -11,46 +11,60 @@ export const autoInjectJSBridgeProperty = new Property<WebViewExtBase, boolean>(
     defaultValue: true,
     valueConverter: booleanConverter,
 });
+
 export const builtInZoomControlsProperty = new Property<WebViewExtBase, boolean>({
     name: "builtInZoomControls",
     defaultValue: true,
     valueConverter: booleanConverter,
 });
+
 export const cacheModeProperty = new Property<WebViewExtBase, CacheMode>({
     name: "cacheMode",
     defaultValue: "default",
 });
+
 export const databaseStorageProperty = new Property<WebViewExtBase, boolean>({
     name: "databaseStorage",
     defaultValue: false,
     valueConverter: booleanConverter,
 });
+
 export const domStorageProperty = new Property<WebViewExtBase, boolean>({
     name: "domStorage",
     defaultValue: false,
     valueConverter: booleanConverter,
 });
+
 export const debugModeProperty = new Property<WebViewExtBase, boolean>({
     name: "debugMode",
     defaultValue: false,
     valueConverter: booleanConverter,
 });
+
 export const displayZoomControlsProperty = new Property<WebViewExtBase, boolean>({
     name: "displayZoomControls",
     defaultValue: true,
     valueConverter: booleanConverter,
 });
+
 export const supportZoomProperty = new Property<WebViewExtBase, boolean>({
     name: "supportZoom",
     defaultValue: false,
     valueConverter: booleanConverter,
 });
+
 export const srcProperty = new Property<WebViewExtBase, string>({
     name: "src",
 });
+
 export const scrollBounceProperty = new Property<WebViewExtBase, boolean>({
     name: "scrollBounce",
-    defaultValue: true,
+    valueConverter: booleanConverter,
+});
+
+export const scalesPageToFitProperty = new Property<WebViewExtBase, boolean>({
+    name: "scalesPageToFit",
+    defaultValue: false,
     valueConverter: booleanConverter,
 });
 
@@ -319,6 +333,11 @@ export class WebViewExtBase extends ContainerView {
      * iOS: Should the scrollView bounce? Defaults to true.
      */
     public scrollBounce: boolean;
+
+    /**
+     * iOS(UIWebView): If true, the webpage is scaled to fit and the user can zoom in and zoom out. If false, user zooming is disabled. The default value is false.
+     */
+    public scalesPageToFit: boolean;
 
     public cacheMode: "default" | "no_cache" | "cache_first" | "cache_only";
 
@@ -1204,6 +1223,7 @@ domStorageProperty.register(WebViewExtBase);
 srcProperty.register(WebViewExtBase);
 supportZoomProperty.register(WebViewExtBase);
 scrollBounceProperty.register(WebViewExtBase);
+scalesPageToFitProperty.register(WebViewExtBase);
 
 /**
  * IOS uses a bridge class to map calls to UIWebView or WKWebView
@@ -1256,7 +1276,17 @@ export interface IOSWebViewWrapper {
     goForward(): void;
     reload(): void;
 
+    /**
+     * Should WebViewBridge be inject on loadFinished?
+     * WKWebView uses WKUserScripts for this.
+     */
     readonly shouldInjectWebViewBridge: boolean;
+
+    /**
+     * Enable/Disable auto injection of scripts.
+     */
     enableAutoInject(enable: boolean): void;
+
     scrollBounce: boolean;
+    scalesPageToFit: boolean;
 }

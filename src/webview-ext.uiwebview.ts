@@ -318,6 +318,24 @@ export class UIWebViewWrapper implements IOSWebViewWrapper {
             return false;
         }
 
-        return ios.scrollView.bounces;
+        return !!ios.scrollView.bounces;
+    }
+
+    public set scalesPageToFit(enable: boolean) {
+        const ios = this.ios;
+        if (!ios) {
+            return;
+        }
+
+        ios.scalesPageToFit = !!enable;
+    }
+
+    public get scalesPageToFit() {
+        const ios = this.ios;
+        if (!ios) {
+            return false;
+        }
+
+        return !!ios.scalesPageToFit;
     }
 }

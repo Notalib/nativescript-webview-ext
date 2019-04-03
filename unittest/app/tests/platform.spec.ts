@@ -5,7 +5,7 @@ import * as frameModule from "tns-core-modules/ui/frame";
 import { isAndroid, isIOS, Page, View } from "tns-core-modules/ui/page";
 import { TabView, TabViewItem } from "tns-core-modules/ui/tab-view";
 import * as utils from "tns-core-modules/utils/utils";
-import { DefaultPageOptions, emptyHTMLFile, eventAsPromise, layout, PageOptions, waitUntilReady } from "./helpers";
+import { DefaultPageOptions, emptyHTMLFile, eventAsPromise, layout, PageOptions, waitForLoadedView, waitUntilReady } from "./helpers";
 
 describe("Platform", () => {
     let currentPage: Page;
@@ -31,6 +31,17 @@ describe("Platform", () => {
         webView = new WebViewExt();
     });
 
+    function getWebView() {
+        return webView;
+    }
+
+    function getPage() {
+        return currentPage;
+    }
+
+    android_Tests(getWebView, getPage);
+    iOS_Tests(getWebView, getPage);
+
     afterEach(() => {
         currentPage.content = null;
         webView = null;
@@ -43,17 +54,6 @@ describe("Platform", () => {
 
         topmost.goBack(topmost.backStack[0]);
     });
-
-    function getWebView() {
-        return webView;
-    }
-
-    function getPage() {
-        return currentPage;
-    }
-
-    android_Tests(getWebView, getPage);
-    iOS_Tests(getWebView, getPage);
 });
 
 function android_Tests(getWebView: () => WebViewExt, getPage: () => Page) {
@@ -67,12 +67,11 @@ function android_Tests(getWebView: () => WebViewExt, getPage: () => Page) {
         currentPage.content = getWebView();
     });
 
-    afterEach(() => (currentPage = null));
-
     it("builtInZoomControls", async () => {
         const webView = getWebView();
-        // >> webview-built-in-zoom-controls
+        waitForLoadedView(webView);
 
+        // >> webview-built-in-zoom-controls
         const androidWebView = webView.android as android.webkit.WebView;
         const args = await webView.loadUrl(emptyHTMLFile);
 
@@ -111,6 +110,8 @@ function android_Tests(getWebView: () => WebViewExt, getPage: () => Page) {
 
     it("displayZoomControls", async () => {
         const webView = getWebView();
+        waitForLoadedView(webView);
+
         // >> webview-built-in-zoom-controls
         const androidWebView = webView.android as android.webkit.WebView;
         const args = await webView.loadUrl(emptyHTMLFile);
@@ -148,6 +149,8 @@ function android_Tests(getWebView: () => WebViewExt, getPage: () => Page) {
         expect(androidWebView.getSettings().getDisplayZoomControls()).toBe(expected);
         // << webview-built-in-zoom-controls
     });
+
+    afterEach(() => (currentPage = null));
 }
 
 function iOS_Tests(getWebView: () => WebViewExt, getPage: () => Page) {
@@ -155,7 +158,93 @@ function iOS_Tests(getWebView: () => WebViewExt, getPage: () => Page) {
         return;
     }
 
-    iOS_SafeArea(getWebView, getPage);
+    describe("iOS", () => {
+        iOS_UIWebView(getWebView, getPage);
+        iOS_SafeArea(getWebView, getPage);
+
+        describe("Both", () => {
+            let currentPage: Page;
+            beforeEach(() => {
+                currentPage = getPage();
+                currentPage.content = getWebView();
+            });
+
+            it("scrollBounce = true", async () => {
+                const webView = getWebView();
+                waitForLoadedView(webView);
+
+                webView.scrollBounce = true;
+
+                await webView.loadUrl(emptyHTMLFile);
+
+                const nativeView = webView.ios as UIWebView | WKWebView;
+
+                expect(nativeView.scrollView).toBeDefined();
+                expect(nativeView.scrollView.bounces).toBe(true);
+            });
+
+            it("scrollBounce = false", async () => {
+                const webView = getWebView();
+                waitForLoadedView(webView);
+
+                webView.scrollBounce = false;
+                await webView.loadUrl(emptyHTMLFile);
+
+                const nativeView = webView.ios as UIWebView | WKWebView;
+
+                expect(nativeView.scrollView).toBeDefined();
+                expect(nativeView.scrollView.bounces).toBe(false);
+            });
+
+            afterEach(() => {
+                currentPage = null;
+            });
+        });
+    });
+}
+
+function iOS_UIWebView(getWebView: () => WebViewExt, getPage: () => Page) {
+    if (utils.ios.MajorVersion >= 11) {
+        return;
+    }
+
+    describe("UIWebView", () => {
+        let currentPage: Page;
+        beforeEach(() => {
+            currentPage = getPage();
+            currentPage.content = getWebView();
+        });
+
+        it("scalesPageToFit = true", async () => {
+            const webView = getWebView();
+            waitForLoadedView(webView);
+
+            webView.scalesPageToFit = true;
+
+            await webView.loadUrl(emptyHTMLFile);
+
+            const uiWebView = webView.ios as UIWebView;
+
+            expect(uiWebView.scalesPageToFit).toBe(true);
+        });
+
+        it("scalesPageToFit = false", async () => {
+            const webView = getWebView();
+            waitForLoadedView(webView);
+
+            webView.scalesPageToFit = false;
+
+            await webView.loadUrl(emptyHTMLFile);
+
+            const uiWebView = webView.ios as UIWebView;
+
+            expect(uiWebView.scalesPageToFit).toBe(false);
+        });
+
+        afterEach(() => {
+            currentPage = null;
+        });
+    });
 }
 
 function iOS_SafeArea(getWebView: () => WebViewExt, getPage: () => Page) {
