@@ -66,14 +66,15 @@ The custom `NSURLProtocol` used with UIWebView is shared with all instances of t
 | readonly isWkWebView | true / false | Is the native webview an WKWebView? True if `iOS >=11` |
 | src | | Load src |
 | autoInjectJSBridge | true / false | Should the window.nsWebViewBridge be injected on `loadFinishedEvent`? Defaults to true |
-| debugMode | true / false | Android: Enable chrome debugger for webview on Android. Note: Applies to all webviews in App |
-| scrollBounce | true / false | iOS: Should the scrollView bounce? Defaults to true. |
 | builtInZoomControls | true / false | Android: Is the built-in zoom mechanisms being used |
-| displayZoomControls | true / false | Android: displays on-screen zoom controls when using the built-in zoom mechanisms |
-| databaseStorage | true / false | Android: Enable/Disabled database storage API. Note: It affects all webviews in the process. |
-| domStorage | true / false | Android: Enable/Disabled DOM Storage API. E.g localStorage |
-| supportZoom: | true / false | Android: should the webview support zoom |
 | cacheMode | default / no_cache / cache_first / cache_only | Android: Set caching mode. |
+| databaseStorage | true / false | Android: Enable/Disabled database storage API. Note: It affects all webviews in the process. |
+| debugMode | true / false | Android: Enable chrome debugger for webview on Android. Note: Applies to all webviews in App |
+| displayZoomControls | true / false | Android: displays on-screen zoom controls when using the built-in zoom mechanisms |
+| domStorage | true / false | Android: Enable/Disabled DOM Storage API. E.g localStorage |
+| scalesPageToFit | UIWebView: Should webpage scale to fit the view? Defaults to false |
+| scrollBounce | true / false | iOS: Should the scrollView bounce? Defaults to true. |
+| supportZoom | true / false | Android: should the webview support zoom |
 
 | Function | Description |
 | --- | --- |
@@ -126,14 +127,11 @@ Inside the WebView we have the `nsWebViewBridge` for sending events between the 
 
 ### Android
 * Settings
-    * Cache mode?
-    * AppCache and AppCAchePath?
+    * AppCache?
     * User agent?
 
 #### iOS
-* Options for native scrollView.
-* Disable/Enable scroll bounce.
-* UIWebView? scalesPageToFit.
+* Settings?
 
 ## License
 

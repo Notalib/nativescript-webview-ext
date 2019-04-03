@@ -614,4 +614,12 @@ export class WKWebViewWrapper implements IOSWebViewWrapper {
 
         return ios.scrollView.bounces;
     }
+
+    public set scalesPageToFit(enable: boolean) {
+        // Unsupported
+    }
+
+    public get scalesPageToFit() {
+        return false;
+    }
 }
