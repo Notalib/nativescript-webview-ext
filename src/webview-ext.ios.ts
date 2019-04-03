@@ -139,9 +139,7 @@ export class WebViewExt extends WebViewExtBase {
 
     public _webAlert(message: string, callback: () => void) {
         if (!super._webAlert(message, callback)) {
-            alert({
-                message,
-            })
+            alert(message)
                 .then(() => callback())
                 .catch(() => callback());
         }
@@ -151,9 +149,7 @@ export class WebViewExt extends WebViewExtBase {
 
     public _webConfirm(message: string, callback: (response: boolean) => void) {
         if (!super._webConfirm(message, callback)) {
-            confirm({
-                message,
-            })
+            confirm(message)
                 .then((res) => callback(res))
                 .catch(() => callback(null));
         }
@@ -162,10 +158,7 @@ export class WebViewExt extends WebViewExtBase {
 
     public _webPrompt(message: string, defaultText: string, callback: (response: string) => void) {
         if (!super._webPrompt(message, defaultText, callback)) {
-            prompt({
-                message,
-                defaultText,
-            })
+            prompt(message, defaultText)
                 .then((res) => {
                     if (res.result) {
                         callback(res.text);
