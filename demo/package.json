@@ -2,18 +2,18 @@
   "nativescript": {
     "name": "hugo",
     "id": "dk.nota.webviewdemo",
-    "tns-android": {
-      "version": "5.2.0"
-    },
     "tns-ios": {
-      "version": "5.2.0"
+      "version": "5.3.1"
+    },
+    "tns-android": {
+      "version": "5.3.0"
     }
   },
   "dependencies": {
     "@nota/nativescript-webview-ext": "file://../src",
     "lodash": "^4.17.11",
     "nativescript-theme-core": "^1.0.4",
-    "tns-core-modules": "~5.2.0",
+    "tns-core-modules": "^5.3.1",
     "url": "^0.11.0"
   },
   "devDependencies": {
