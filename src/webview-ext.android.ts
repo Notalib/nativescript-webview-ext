@@ -116,11 +116,11 @@ function initializeWebViewClient(): void {
             return false;
         }
 
-        public shouldInterceptRequest(view: android.webkit.WebView, request: any) {
+        public shouldInterceptRequest(view: android.webkit.WebView, request: string | android.webkit.WebResourceRequest) {
             const owner = this.owner.get();
             if (!owner) {
                 console.warn("WebViewExtClientImpl.shouldInterceptRequest(...) - no owner");
-                return super.shouldInterceptRequest(view, request);
+                return super.shouldInterceptRequest(view, request as android.webkit.WebResourceRequest);
             }
 
             let url: string;
@@ -132,22 +132,22 @@ function initializeWebViewClient(): void {
 
             if (typeof url !== "string") {
                 owner.writeTrace(`WebViewClientClass.shouldInterceptRequest("${url}") - is not a string`);
-                return super.shouldInterceptRequest(view, request);
+                return super.shouldInterceptRequest(view, request as android.webkit.WebResourceRequest);
             }
 
             if (!url.startsWith(owner.interceptScheme)) {
-                return super.shouldInterceptRequest(view, request);
+                return super.shouldInterceptRequest(view, request as android.webkit.WebResourceRequest);
             }
 
             const filepath = owner.getRegisteredLocalResource(url);
             if (!filepath) {
                 owner.writeTrace(`WebViewClientClass.shouldInterceptRequest("${url}") - no matching file`);
-                return super.shouldInterceptRequest(view, request);
+                return super.shouldInterceptRequest(view, request as android.webkit.WebResourceRequest);
             }
 
             if (!fs.File.exists(filepath)) {
                 owner.writeTrace(`WebViewClientClass.shouldInterceptRequest("${url}") - file: "${filepath}" doesn't exists`);
-                return super.shouldInterceptRequest(view, request);
+                return super.shouldInterceptRequest(view, request as android.webkit.WebResourceRequest);
             }
 
             const tnsFile = fs.File.fromPath(filepath);
@@ -161,15 +161,11 @@ function initializeWebViewClient(): void {
             owner.writeTrace(`WebViewClientClass.shouldInterceptRequest("${url}") - file: "${filepath}" mimeType:${mimeType} encoding:${encoding}`);
 
             const response = new android.webkit.WebResourceResponse(mimeType, encoding, stream);
-            if (android.os.Build.VERSION.SDK_INT < 21) {
+            if (android.os.Build.VERSION.SDK_INT < 21 || !response.getResponseHeaders) {
                 return response;
             }
 
-            if (!response.getResponseHeaders) {
-                return response;
-            }
-
-            let responseHeaders = response.getResponseHeaders() as java.util.HashMap<string, string>;
+            let responseHeaders = response.getResponseHeaders();
             if (!responseHeaders) {
                 responseHeaders = new java.util.HashMap<string, string>();
             }
@@ -291,6 +287,7 @@ function initializeWebViewClient(): void {
                 if (!gotResponse) {
                     result.confirm();
                 }
+
                 gotResponse = true;
             });
         }
@@ -436,6 +433,11 @@ export class WebViewExt extends WebViewExtBase {
         settings.setDisplayZoomControls(!!this.displayZoomControls);
         settings.setSupportZoom(!!this.supportZoom);
 
+        if (android.os.Build.VERSION.SDK_INT >= 21) {
+            // Needed for x-local in https-sites
+            settings.setMixedContentMode(android.webkit.WebSettings.MIXED_CONTENT_COMPATIBILITY_MODE);
+        }
+
         // Needed for XHRRequests with x-local://
         settings.setAllowUniversalAccessFromFileURLs(true);
         return nativeView;
@@ -443,7 +445,9 @@ export class WebViewExt extends WebViewExtBase {
 
     public initNativeView() {
         super.initNativeView();
+
         initializeWebViewClient();
+
         const nativeView = this.nativeViewProtected;
         if (!nativeView) {
             return;

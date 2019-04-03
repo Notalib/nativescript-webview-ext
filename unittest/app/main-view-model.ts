@@ -1,7 +1,6 @@
 import { Observable } from "tns-core-modules/data/observable";
 
 export class HelloWorldModel extends Observable {
-
     private _counter: number;
     private _message: string;
 
