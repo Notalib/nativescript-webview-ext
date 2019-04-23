@@ -2,7 +2,7 @@
 /// <reference path="./platforms/ios/NotaWebViewExt.d.ts" />
 
 import * as fs from "tns-core-modules/file-system";
-import { metadataViewPort, webViewBridge } from "./nativescript-webview-bridge-loader";
+import { webViewBridge } from "./nativescript-webview-bridge-loader";
 import { WebViewExt } from "./webview-ext";
 import { IOSWebViewWrapper, NavigationType, traceMessageType, WebViewExtBase } from "./webview-ext-common";
 
@@ -508,6 +508,29 @@ export class WKWebViewWrapper implements IOSWebViewWrapper {
         this.removeNamedWKUserScript(href);
     }
 
+    public resetViewPortCode() {
+        this.wkUserScriptViewPortCode = null;
+
+        this.loadWKUserScripts();
+
+        this.generateViewPortCode().then((scriptCode) => this.executeJavaScript(scriptCode));
+    }
+
+    protected async generateViewPortCode() {
+        const noopCode = `(function(){})()`;
+        const owner = this.owner.get();
+        if (!owner) {
+            return noopCode;
+        }
+
+        const scriptCode = await owner.generateViewPortCode();
+        if (scriptCode) {
+            return scriptCode;
+        }
+
+        return noopCode;
+    }
+
     /**
      * iOS11+
      *
@@ -517,7 +540,7 @@ export class WKWebViewWrapper implements IOSWebViewWrapper {
      */
     protected loadWKUserScripts(autoInjectJSBridge = this.autoInjectJSBridge) {
         if (!this.wkUserScriptViewPortCode) {
-            this.wkUserScriptViewPortCode = this.makeWKUserScriptPromise(metadataViewPort);
+            this.wkUserScriptViewPortCode = this.makeWKUserScriptPromise(this.generateViewPortCode());
         }
 
         this.wkUserContentController.removeAllUserScripts();

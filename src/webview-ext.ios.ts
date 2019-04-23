@@ -22,6 +22,8 @@ export class WebViewExt extends WebViewExtBase {
         return useWKWebView;
     }
 
+    public viewPortSize = useWKWebView ? { initialScale: 1.0 } : false;
+
     public createNativeView() {
         if (useWKWebView) {
             this.nativeWrapper = new WKWebViewWrapper(this);
@@ -51,6 +53,15 @@ export class WebViewExt extends WebViewExtBase {
 
         // WkWebView handles injecting the bridge via WKUserScripts
         return this.ensurePolyfills();
+    }
+
+    protected async injectViewPortMeta() {
+        this.nativeWrapper.resetViewPortCode();
+        if (useWKWebView) {
+            return null;
+        }
+
+        return await super.injectViewPortMeta();
     }
 
     public async executeJavaScript<T>(scriptCode: string, stringifyResult = true): Promise<T> {
