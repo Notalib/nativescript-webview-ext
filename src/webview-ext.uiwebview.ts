@@ -339,7 +339,7 @@ export class UIWebViewWrapper implements IOSWebViewWrapper {
         return !!ios.scalesPageToFit;
     }
 
-    public resetViewPortCode() {
+    public async resetViewPortCode() {
         // Ignore
     }
 }

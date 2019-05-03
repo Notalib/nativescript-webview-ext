@@ -508,19 +508,20 @@ export class WKWebViewWrapper implements IOSWebViewWrapper {
         this.removeNamedWKUserScript(href);
     }
 
-    public resetViewPortCode() {
+    public async resetViewPortCode() {
         this.wkUserScriptViewPortCode = null;
 
-        this.loadWKUserScripts();
-
-        this.generateViewPortCode().then((scriptCode) => this.executeJavaScript(scriptCode));
+        const viewPortScriptCode = await this.generateViewPortCode();
+        if (viewPortScriptCode) {
+            this.executeJavaScript(viewPortScriptCode);
+            this.loadWKUserScripts();
+        }
     }
 
     protected async generateViewPortCode() {
-        const noopCode = `(function(){})()`;
         const owner = this.owner.get();
         if (!owner) {
-            return noopCode;
+            return null;
         }
 
         const scriptCode = await owner.generateViewPortCode();
@@ -528,7 +529,7 @@ export class WKWebViewWrapper implements IOSWebViewWrapper {
             return scriptCode;
         }
 
-        return noopCode;
+        return null;
     }
 
     /**
@@ -545,9 +546,7 @@ export class WKWebViewWrapper implements IOSWebViewWrapper {
 
         this.wkUserContentController.removeAllUserScripts();
 
-        const wkUserScriptViewPortCode = this.wkUserScriptViewPortCode;
-
-        this.addUserScriptFromPromise(wkUserScriptViewPortCode);
+        this.addUserScriptFromPromise(this.wkUserScriptViewPortCode);
         if (!autoInjectJSBridge) {
             return;
         }
@@ -562,17 +561,29 @@ export class WKWebViewWrapper implements IOSWebViewWrapper {
         }
     }
 
-    protected async makeWKUserScriptPromise(scriptCodePromise: Promise<string>) {
+    protected async makeWKUserScriptPromise(scriptCodePromise: Promise<string | null>): Promise<WKUserScript | null> {
         const scriptCode = await scriptCodePromise;
+        if (!scriptCode) {
+            return null;
+        }
+
         return this.createWkUserScript(scriptCode);
     }
 
-    protected async addUserScriptFromPromise(userScriptPromise: Promise<WKUserScript>) {
+    protected async addUserScriptFromPromise(userScriptPromise: Promise<WKUserScript | null>) {
         const userScript = await userScriptPromise;
+        if (!userScript) {
+            return;
+        }
+
         return this.addUserScript(userScript);
     }
 
-    protected addUserScript(userScript: WKUserScript) {
+    protected addUserScript(userScript: WKUserScript | null) {
+        if (!userScript) {
+            return;
+        }
+
         this.wkUserContentController.addUserScript(userScript);
     }
 

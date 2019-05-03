@@ -1228,7 +1228,7 @@ export class WebViewExtBase extends ContainerView {
 
         const scriptCodeTmpl = await metadataViewPort;
 
-        let viewPortCode = JSON.stringify(this.viewPortSize || {});
+        const viewPortCode = JSON.stringify(this.viewPortSize || {});
 
         return scriptCodeTmpl.replace('"<%= VIEW_PORT %>"', viewPortCode);
     }
@@ -1446,7 +1446,7 @@ export interface IOSWebViewWrapper {
     autoLoadJavaScriptFile(resourceName: string, filepath: string): Promise<void>;
     removeAutoLoadJavaScriptFile(resourceName: string): void;
 
-    resetViewPortCode(): void;
+    resetViewPortCode(): Promise<void>;
 
     // WebView calls and properties
     stopLoading(): void;
