@@ -2,7 +2,7 @@
 /// <reference path="./platforms/ios/NotaWebViewExt.d.ts" />
 
 import * as fs from "tns-core-modules/file-system";
-import { metadataViewPort, webViewBridge } from "./nativescript-webview-bridge-loader";
+import { webViewBridge } from "./nativescript-webview-bridge-loader";
 import { WebViewExt } from "./webview-ext";
 import { IOSWebViewWrapper, NavigationType, traceMessageType, WebViewExtBase } from "./webview-ext-common";
 
@@ -508,6 +508,30 @@ export class WKWebViewWrapper implements IOSWebViewWrapper {
         this.removeNamedWKUserScript(href);
     }
 
+    public async resetViewPortCode() {
+        this.wkUserScriptViewPortCode = null;
+
+        const viewPortScriptCode = await this.generateViewPortCode();
+        if (viewPortScriptCode) {
+            this.executeJavaScript(viewPortScriptCode);
+            this.loadWKUserScripts();
+        }
+    }
+
+    protected async generateViewPortCode() {
+        const owner = this.owner.get();
+        if (!owner) {
+            return null;
+        }
+
+        const scriptCode = await owner.generateViewPortCode();
+        if (scriptCode) {
+            return scriptCode;
+        }
+
+        return null;
+    }
+
     /**
      * iOS11+
      *
@@ -517,14 +541,12 @@ export class WKWebViewWrapper implements IOSWebViewWrapper {
      */
     protected loadWKUserScripts(autoInjectJSBridge = this.autoInjectJSBridge) {
         if (!this.wkUserScriptViewPortCode) {
-            this.wkUserScriptViewPortCode = this.makeWKUserScriptPromise(metadataViewPort);
+            this.wkUserScriptViewPortCode = this.makeWKUserScriptPromise(this.generateViewPortCode());
         }
 
         this.wkUserContentController.removeAllUserScripts();
 
-        const wkUserScriptViewPortCode = this.wkUserScriptViewPortCode;
-
-        this.addUserScriptFromPromise(wkUserScriptViewPortCode);
+        this.addUserScriptFromPromise(this.wkUserScriptViewPortCode);
         if (!autoInjectJSBridge) {
             return;
         }
@@ -539,17 +561,29 @@ export class WKWebViewWrapper implements IOSWebViewWrapper {
         }
     }
 
-    protected async makeWKUserScriptPromise(scriptCodePromise: Promise<string>) {
+    protected async makeWKUserScriptPromise(scriptCodePromise: Promise<string | null>): Promise<WKUserScript | null> {
         const scriptCode = await scriptCodePromise;
+        if (!scriptCode) {
+            return null;
+        }
+
         return this.createWkUserScript(scriptCode);
     }
 
-    protected async addUserScriptFromPromise(userScriptPromise: Promise<WKUserScript>) {
+    protected async addUserScriptFromPromise(userScriptPromise: Promise<WKUserScript | null>) {
         const userScript = await userScriptPromise;
+        if (!userScript) {
+            return;
+        }
+
         return this.addUserScript(userScript);
     }
 
-    protected addUserScript(userScript: WKUserScript) {
+    protected addUserScript(userScript: WKUserScript | null) {
+        if (!userScript) {
+            return;
+        }
+
         this.wkUserContentController.addUserScript(userScript);
     }
 

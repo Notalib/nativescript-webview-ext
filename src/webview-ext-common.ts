@@ -1,8 +1,16 @@
 import * as fs from "tns-core-modules/file-system";
 import { booleanConverter, ContainerView, CSSType, EventData, Property, traceEnabled, traceMessageType, traceWrite } from "tns-core-modules/ui/core/view";
-import { fetchPolyfill, promisePolyfill, webViewBridge } from "./nativescript-webview-bridge-loader";
+import { fetchPolyfill, metadataViewPort, promisePolyfill, webViewBridge } from "./nativescript-webview-bridge-loader";
 
 export * from "tns-core-modules/ui/core/view";
+export interface ViewPortProperties {
+    width?: number | "device-width";
+    height?: number | "device-height";
+    initialScale?: number;
+    maximumScale?: number;
+    minimumScale?: number;
+    userScalable?: boolean;
+}
 
 export type CacheMode = "default" | "cache_first" | "no_cache" | "cache_only" | "normal";
 
@@ -68,16 +76,119 @@ export const scalesPageToFitProperty = new Property<WebViewExtBase, boolean>({
     valueConverter: booleanConverter,
 });
 
+export type ViewPortValue = boolean | ViewPortProperties;
+export const viewPortProperty = new Property<WebViewExtBase, ViewPortValue>({
+    name: "viewPortSize",
+    defaultValue: false,
+    valueConverter(value: string | ViewPortProperties): ViewPortValue {
+        const defaultViewPort: ViewPortProperties = {
+            initialScale: 1.0,
+        };
+
+        const valueLowerCaseStr = `${value || ""}`.toLowerCase();
+        if (valueLowerCaseStr === "false") {
+            return false;
+        } else if (valueLowerCaseStr === "true" || valueLowerCaseStr === "") {
+            return defaultViewPort;
+        }
+
+        let viewPortInputValues = { ...defaultViewPort };
+
+        if (typeof value === "object") {
+            viewPortInputValues = { ...value };
+        } else if (typeof value === "string") {
+            try {
+                viewPortInputValues = JSON.parse(value) as ViewPortProperties;
+            } catch (err) {
+                for (const part of value.split(",").map((v) => v.trim())) {
+                    if (!part) {
+                        continue;
+                    }
+
+                    const [key, v] = part.split("=").map((v) => v.trim());
+                    if (!key || !v) {
+                        continue;
+                    }
+
+                    const lcValue = `${v}`.toLowerCase();
+                    switch (key) {
+                        case "user-scalable":
+                        case "userScalable": {
+                            switch (lcValue) {
+                                case "yes":
+                                case "true": {
+                                    viewPortInputValues.userScalable = true;
+                                    break;
+                                }
+                                case "no":
+                                case "false": {
+                                    viewPortInputValues.userScalable = false;
+                                    break;
+                                }
+                            }
+                            break;
+                        }
+
+                        case "width": {
+                            if (lcValue === "device-width") {
+                                viewPortInputValues.width = "device-width";
+                            } else {
+                                viewPortInputValues.width = Number(v);
+                            }
+                            break;
+                        }
+
+                        case "height": {
+                            if (lcValue === "device-height") {
+                                viewPortInputValues.height = "device-height";
+                            } else {
+                                viewPortInputValues.height = Number(v);
+                            }
+                            break;
+                        }
+
+                        case "minimumScale":
+                        case "minimum-scale": {
+                            viewPortInputValues.minimumScale = Number(v);
+                            break;
+                        }
+                        case "maximumScale":
+                        case "maximum-scale": {
+                            viewPortInputValues.maximumScale = Number(v);
+                            break;
+                        }
+                        case "initialScale":
+                        case "initial-scale": {
+                            viewPortInputValues.initialScale = Number(v);
+                            break;
+                        }
+                    }
+                }
+            }
+        }
+
+        const { initialScale = defaultViewPort.initialScale, width, height, userScalable, minimumScale, maximumScale } = viewPortInputValues;
+        return {
+            initialScale,
+            width,
+            height,
+            userScalable,
+            minimumScale,
+            maximumScale,
+        };
+    },
+});
+
 export enum EventNames {
     LoadFinished = "loadFinished",
+    LoadProgress = "loadProgress",
     LoadStarted = "loadStarted",
     ShouldOverrideUrlLoading = "shouldOverrideUrlLoading",
-    LoadProgress = "loadProgress",
     TitleChanged = "titleChange",
     WebAlert = "webAlert",
     WebConfirm = "webConfirm",
-    WebPrompt = "webPrompt",
     WebConsole = "webConsole",
+    WebPrompt = "webPrompt",
 }
 
 export interface LoadJavaScriptResource {
@@ -338,6 +449,14 @@ export class WebViewExtBase extends ContainerView {
      * iOS(UIWebView): If true, the webpage is scaled to fit and the user can zoom in and zoom out. If false, user zooming is disabled. The default value is false.
      */
     public scalesPageToFit: boolean;
+
+    /**
+     * Set viewport metadata for the webview.
+     * Set to false to disable.
+     *
+     * **Note**: WkWebView defaults initial-scale=1.0.
+     */
+    public viewPortSize: ViewPortValue;
 
     public cacheMode: "default" | "no_cache" | "cache_first" | "cache_only";
 
@@ -656,6 +775,12 @@ export class WebViewExtBase extends ContainerView {
         } else {
             this._loadData(src);
             this.writeTrace(`WebViewExt.src = "${originSrc}" - LoadData("${src}")`);
+        }
+    }
+
+    [viewPortProperty.setNative](value: ViewPortProperties) {
+        if (this.src) {
+            this.injectViewPortMeta();
         }
     }
 
@@ -1084,6 +1209,28 @@ export class WebViewExtBase extends ContainerView {
         const scriptCode = await webViewBridge;
         await this.executeJavaScript(scriptCode, false);
         await this.ensurePolyfills();
+        await this.injectViewPortMeta();
+    }
+
+    protected async injectViewPortMeta(): Promise<void> {
+        const scriptCode = await this.generateViewPortCode();
+        if (!scriptCode) {
+            return;
+        }
+
+        await this.executeJavaScript(scriptCode, false);
+    }
+
+    public async generateViewPortCode(): Promise<string | null> {
+        if (this.viewPortSize === false) {
+            return null;
+        }
+
+        const scriptCodeTmpl = await metadataViewPort;
+
+        const viewPortCode = JSON.stringify(this.viewPortSize || {});
+
+        return scriptCodeTmpl.replace('"<%= VIEW_PORT %>"', viewPortCode);
     }
 
     /**
@@ -1256,6 +1403,7 @@ srcProperty.register(WebViewExtBase);
 supportZoomProperty.register(WebViewExtBase);
 scrollBounceProperty.register(WebViewExtBase);
 scalesPageToFitProperty.register(WebViewExtBase);
+viewPortProperty.register(WebViewExtBase);
 
 /**
  * IOS uses a bridge class to map calls to UIWebView or WKWebView
@@ -1297,6 +1445,8 @@ export interface IOSWebViewWrapper {
     removeAutoLoadStyleSheetFile(resourceName: string): void;
     autoLoadJavaScriptFile(resourceName: string, filepath: string): Promise<void>;
     removeAutoLoadJavaScriptFile(resourceName: string): void;
+
+    resetViewPortCode(): Promise<void>;
 
     // WebView calls and properties
     stopLoading(): void;

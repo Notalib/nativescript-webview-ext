@@ -2,6 +2,6 @@
   xmlns:ui="@nota/nativescript-webview-ext">
   <GridLayout class="p-2" rows="auto, *" columns="*">
     <Button row="0" text="Run Tests" tap="runTests" class="btn btn-primary"></Button>
-    <ui:WebViewExt row="1" loaded="webviewLoaded" debugMode="true"></ui:WebViewExt>
+    <ui:WebViewExt row="1" loaded="webviewLoaded" debugMode="true" viewPortSize="initial-scale=1.2"></ui:WebViewExt>
   </GridLayout>
 </Page>
