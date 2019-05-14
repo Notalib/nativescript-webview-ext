@@ -1,5 +1,6 @@
 {
     "compilerOptions": {
+        "inlineSourceMap": true,
         "target": "es5",
         "module": "commonjs",
         "emitDecoratorMetadata": true,

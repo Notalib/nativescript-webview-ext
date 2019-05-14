@@ -75,6 +75,7 @@ The custom `NSURLProtocol` used with UIWebView is shared with all instances of t
 | scalesPageToFit | UIWebView: Should webpage scale to fit the view? Defaults to false |
 | scrollBounce | true / false | iOS: Should the scrollView bounce? Defaults to true. |
 | supportZoom | true / false | Android: should the webview support zoom |
+| viewPortSize | false / view-port string / ViewPortProperties | Set the viewport metadata on load finished. **Note:** WkWebView sets initial-scale=1.0 by default. |
 
 | Function | Description |
 | --- | --- |
@@ -98,7 +99,7 @@ The custom `NSURLProtocol` used with UIWebView is shared with all instances of t
 | Event | Description |
 | --- | --- |
 | loadFinished | Raised when a loadFinished event occurs. args is a `LoadFinishedEventData` |
-| loadProgress | Android only: Raised duing page load to indicate the progress. args is a `LoadProgressEventData` |
+| loadProgress | Android only: Raised during page load to indicate the progress. args is a `LoadProgressEventData` |
 | loadStarted | Raised when a loadStarted event occurs. args is a `LoadStartedEventData` |
 | shouldOverrideUrlLoading | Raised before the webview requests an URL. Can cancelled by setting args.cancel = true in the `ShouldOverrideUrlLoadEventData` |
 | titleChanged | Document title changed |
@@ -116,7 +117,7 @@ Inside the WebView we have the `nsWebViewBridge` for sending events between the 
 | Function | Description |
 | --- | --- |
 | window.nsWebViewBridge.on(eventName: string, cb: (data: any) => void) | Registers handlers for events from the native layer. |
-| window.nsWebViewBridge.off(eventName: string, cb?: (data: any) => void) | Deregister handlers for events from the native layer. |
+| window.nsWebViewBridge.off(eventName: string, cb?: (data: any) => void) | Unregister handlers for events from the native layer. |
 | window.nsWebViewBridge.emit(eventName: string, data: any) | Emits event to NativeScript layer. Will be emitted on the WebViewExt as any other event, data will be a part of the WebViewEventData-object |
 
 ## Possible features to come:
@@ -132,6 +133,27 @@ Inside the WebView we have the `nsWebViewBridge` for sending events between the 
 
 #### iOS
 * Settings?
+
+## Demo and unit tests
+
+### Running the demo
+
+To run the demo-project, the plugin must be build locally and a http-server must be running.
+
+The easiest way to run the demo is to follow these steps:
+- Clone the git repository from https://github.com/Notalib/nativescript-webview-ext.git
+- Go into the `src`-folder
+- Use the npm-scripts:
+  - npm run demo.ios
+  - npm run demo.android
+
+### Running the unit-tests
+
+- Clone the git repository from https://github.com/Notalib/nativescript-webview-ext.git
+- Go into the `src`-folder
+- Use the npm-scripts:
+  - npm run test.ios
+  - npm run test.android
 
 ## License
 

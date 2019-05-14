@@ -60,7 +60,6 @@ describe("Load files", () => {
 
             expect(args.error).toBeUndefined();
             expect(url.parse(args.url)).toEqual(url.parse(targetSrc));
-
             // << webview-existing-url-via-promise
         });
     });
