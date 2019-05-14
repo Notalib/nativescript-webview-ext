@@ -14,23 +14,22 @@
     "repository": "<fill-your-repository-here>",
     "dependencies": {
         "@nota/nativescript-webview-ext": "file:../src",
-        "nativescript-theme-core": "~1.0.4",
+        "nativescript-theme-core": "^1.0.6",
         "nativescript-unit-test-runner": "^0.6.2",
-        "tns-core-modules": "~5.3.1",
+        "tns-core-modules": "^5.3.2",
         "url": "^0.11.0"
     },
     "devDependencies": {
         "@types/jasmine": "^3.3.9",
-        "@types/node": "^10.14.5",
-        "ajv": "^6.9.2",
+        "@types/node": "^10.14.6",
         "karma": "4.0.1",
         "karma-jasmine": "2.0.1",
         "karma-nativescript-launcher": "0.4.0",
         "nativescript-dev-typescript": "~0.9.0",
         "nativescript-dev-webpack": "~0.21.2",
-        "prettier": "^1.17.0",
+        "prettier": "^1.17.1",
         "prettier-check": "^2.0.0",
-        "tns-platform-declarations": "~5.3.1"
+        "tns-platform-declarations": "^5.3.2"
     },
     "scripts": {
         "format:check": "prettier-check --config ../.prettierrc.json angular/index.ts vue/index.ts *.ts",

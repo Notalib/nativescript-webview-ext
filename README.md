@@ -134,6 +134,27 @@ Inside the WebView we have the `nsWebViewBridge` for sending events between the 
 #### iOS
 * Settings?
 
+## Demo and unit tests
+
+### Running the demo
+
+To run the demo-project, the plugin must be build locally and a http-server must be running.
+
+The easiest way to run the demo is to follow these steps:
+- Clone the git repository from https://github.com/Notalib/nativescript-webview-ext.git
+- Go into the `src`-folder
+- Use the npm-scripts:
+  - npm run demo.ios
+  - npm run demo.android
+
+### Running the unit-tests
+
+- Clone the git repository from https://github.com/Notalib/nativescript-webview-ext.git
+- Go into the `src`-folder
+- Use the npm-scripts:
+  - npm run test.ios
+  - npm run test.android
+
 ## License
 
 Apache License Version 2.0, January 2004
