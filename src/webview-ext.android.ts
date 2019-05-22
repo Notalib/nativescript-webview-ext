@@ -190,6 +190,7 @@ function initializeWebViewClient(): void {
 
         public onPageFinished(view: android.webkit.WebView, url: string) {
             super.onPageFinished(view, url);
+
             const owner = this.owner.get();
             if (!owner) {
                 console.warn(`WebViewExtClientImpl.onPageFinished("${view}", ${url}") - no owner`);

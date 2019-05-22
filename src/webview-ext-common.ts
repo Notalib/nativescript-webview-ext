@@ -1,5 +1,6 @@
 import * as fs from "tns-core-modules/file-system";
 import { booleanConverter, ContainerView, CSSType, EventData, Property, traceEnabled, traceMessageType, traceWrite } from "tns-core-modules/ui/core/view";
+import * as URL from "url";
 import { fetchPolyfill, metadataViewPort, promisePolyfill, webViewBridge } from "./nativescript-webview-bridge-loader";
 
 export * from "tns-core-modules/ui/core/view";
@@ -321,6 +322,12 @@ export class UnsupportedSDKError extends Error {
     }
 }
 
+declare module "url" {
+    interface UrlWithStringQuery extends Url {
+        format(): string;
+    }
+}
+
 @CSSType("WebView")
 export class WebViewExtBase extends ContainerView {
     /**
@@ -484,6 +491,8 @@ export class WebViewExtBase extends ContainerView {
      * Callback for the loadFinished-event. Called from the native-webview
      */
     public async _onLoadFinished(url: string, error?: string): Promise<LoadFinishedEventData> {
+        url = this.normalizeURL(url);
+
         if (!error) {
             // When this is called without an error, update with this.src value without loading the url.
             // This is needed to keep src up-to-date when linked are clicked inside the webview.
@@ -769,6 +778,20 @@ export class WebViewExtBase extends ContainerView {
         }
 
         if (lcSrc.startsWith(this.interceptScheme) || lcSrc.startsWith("http://") || lcSrc.startsWith("https://") || lcSrc.startsWith("file:///")) {
+            src = this.normalizeURL(src);
+
+            if (originSrc !== src) {
+                // Make sure the src-property reflects the actual value.
+                try {
+                    this.tempSuspendSrcLoading = true;
+                    this.src = src;
+                } catch {
+                    // ignore
+                } finally {
+                    this.tempSuspendSrcLoading = false;
+                }
+            }
+
             this._loadUrl(src);
 
             this.writeTrace(`WebViewExt.src = "${originSrc}" - LoadUrl("${src}")`);
@@ -1008,6 +1031,18 @@ export class WebViewExtBase extends ContainerView {
 
     public removeAutoExecuteJavaScript(name: string) {
         this.autoInjectJavaScriptBlocks = this.autoInjectJavaScriptBlocks.filter((data) => data.name !== name);
+    }
+
+    public normalizeURL(url: string) {
+        if (!url) {
+            return url;
+        }
+
+        if (url.startsWith(this.interceptScheme)) {
+            return url;
+        }
+
+        return URL.parse(url).format();
     }
 
     /**

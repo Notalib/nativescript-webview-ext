@@ -110,6 +110,8 @@
         "whatwg-fetch": "^3.0.0",
         "zone.js": "^0.8.29"
     },
-    "dependencies": {},
+    "dependencies": {
+        "url": "^0.11.0"
+    },
     "bootstrapper": "nativescript-plugin-seed"
 }
