@@ -254,7 +254,7 @@ export class WKWebViewWrapper implements IOSWebViewWrapper {
     protected wkUIDelegate: WKUIDelegateImpl;
     protected wkCustomUrlSchemeHandler: CustomUrlSchemeHandler;
     protected wkUserContentController: WKUserContentController;
-    protected wkUserScriptInjectWebViewBridge: Promise<WKUserScript> | void;
+    protected wkUserScriptInjectWebViewBridge?: WKUserScript;
     protected wkUserScriptViewPortCode: Promise<WKUserScript>;
     protected wkNamedUserScripts = [] as Array<{
         resourceName: string;
@@ -552,10 +552,10 @@ export class WKWebViewWrapper implements IOSWebViewWrapper {
         }
 
         if (!this.wkUserScriptInjectWebViewBridge) {
-            this.wkUserScriptInjectWebViewBridge = this.makeWKUserScriptPromise(webViewBridge);
+            this.wkUserScriptInjectWebViewBridge = this.createWkUserScript(webViewBridge);
         }
 
-        this.addUserScriptFromPromise(this.wkUserScriptInjectWebViewBridge);
+        this.addUserScript(this.wkUserScriptInjectWebViewBridge);
         for (const { wkUserScript } of this.wkNamedUserScripts) {
             this.addUserScript(wkUserScript);
         }

@@ -4,7 +4,7 @@ import * as frameModule from "tns-core-modules/ui/frame";
 import { Color, Page } from "tns-core-modules/ui/page";
 import {
     cssNotPredefinedFile,
-    cssPreDefinedlinkFile,
+    cssPreDefinedLinkFile,
     eventAsPromise,
     javascriptCallsXLocalFile,
     jsGetElementStyleSheet,
@@ -52,7 +52,7 @@ describe("Inject files", () => {
         const expectedRedColor = new Color("rgb(0, 128, 0)");
 
         webView.registerLocalResource(localStyleSheetCssNAME, localStyleSheetCssFile);
-        const args = await webView.loadUrl(cssPreDefinedlinkFile);
+        const args = await webView.loadUrl(cssPreDefinedLinkFile);
 
         // >> webview-x-local-predefined-link
         // >> (hide)

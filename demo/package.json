@@ -16,7 +16,6 @@
   "devDependencies": {
     "@types/lodash": "^4.14.130",
     "http-server": "^0.11.1",
-    "nativescript-dev-typescript": "~0.9.0",
     "nativescript-dev-webpack": "~0.22.0",
     "prettier": "^1.17.1",
     "tns-platform-declarations": "~5.4.0",

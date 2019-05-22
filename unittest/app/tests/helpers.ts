@@ -1,7 +1,16 @@
+/// <reference path="../../../src/node_modules/tns-platform-declarations/ios.d.ts" />
+/// <reference path="../../../src/platforms/android/webviewinterface.d.ts" />
+
+jasmine.DEFAULT_TIMEOUT_INTERVAL = 10000;
+
 import * as nsApp from "tns-core-modules/application";
 import * as fs from "tns-core-modules/file-system";
 import { EventData, View } from "tns-core-modules/ui/page/page";
 import * as utils from "tns-core-modules/utils/utils";
+import * as trace from "tns-core-modules/trace";
+
+trace.enable();
+trace.setCategories("NOTA");
 
 const currentAppPath = `${fs.knownFolders.currentApp().path}`;
 
@@ -34,7 +43,7 @@ export const emptyHTMLFile = `~/assets/html/empty.html`;
 export const javascriptCallsFile = `~/assets/html/javascript-calls.html`;
 export const javascriptCallsXLocalFile = `~/assets/html/javascript-calls-x-local.html`;
 export const cssNotPredefinedFile = `~/assets/html/css-not-predefined.html`;
-export const cssPreDefinedlinkFile = `~/assets/html/css-predefined-link-tags.html`;
+export const cssPreDefinedLinkFile = `~/assets/html/css-predefined-link-tags.html`;
 
 export const emptyHTMLXLocalSource = "x-local://empty.html";
 

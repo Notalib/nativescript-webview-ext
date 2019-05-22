@@ -779,6 +779,7 @@ export class WebViewExtBase extends ContainerView {
 
         if (lcSrc.startsWith(this.interceptScheme) || lcSrc.startsWith("http://") || lcSrc.startsWith("https://") || lcSrc.startsWith("file:///")) {
             src = this.normalizeURL(src);
+            console.log(src, originSrc);
 
             if (originSrc !== src) {
                 // Make sure the src-property reflects the actual value.
@@ -1033,7 +1034,7 @@ export class WebViewExtBase extends ContainerView {
         this.autoInjectJavaScriptBlocks = this.autoInjectJavaScriptBlocks.filter((data) => data.name !== name);
     }
 
-    public normalizeURL(url: string) {
+    public normalizeURL(url: string): string {
         if (!url) {
             return url;
         }
@@ -1069,9 +1070,7 @@ export class WebViewExtBase extends ContainerView {
     }
 
     protected async loadFetchPolyfill() {
-        const scriptCode = await fetchPolyfill;
-
-        await this.executeJavaScript<void>(scriptCode, false);
+        await this.executeJavaScript<void>(fetchPolyfill, false);
     }
 
     /**
@@ -1099,8 +1098,7 @@ export class WebViewExtBase extends ContainerView {
     }
 
     protected async loadPromisePolyfill() {
-        const scriptCode = await promisePolyfill;
-        await this.executeJavaScript<void>(scriptCode, false);
+        await this.executeJavaScript<void>(promisePolyfill, false);
     }
 
     protected async ensurePolyfills() {
@@ -1241,8 +1239,7 @@ export class WebViewExtBase extends ContainerView {
      * Inject WebView JavaScript Bridge.
      */
     protected async injectWebViewBridge(): Promise<void> {
-        const scriptCode = await webViewBridge;
-        await this.executeJavaScript(scriptCode, false);
+        await this.executeJavaScript(webViewBridge, false);
         await this.ensurePolyfills();
         await this.injectViewPortMeta();
     }
@@ -1261,7 +1258,7 @@ export class WebViewExtBase extends ContainerView {
             return null;
         }
 
-        const scriptCodeTmpl = await metadataViewPort;
+        const scriptCodeTmpl = metadataViewPort;
 
         const viewPortCode = JSON.stringify(this.viewPortSize || {});
 

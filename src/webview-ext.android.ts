@@ -494,6 +494,7 @@ export class WebViewExt extends WebViewExtBase {
 
         this.writeTrace(`WebViewExt<android>._loadUrl("${src}")`);
         nativeView.loadUrl(src);
+        this.writeTrace(`WebViewExt<android>._loadUrl("${src}") - end`);
     }
 
     public _loadData(src: string) {
