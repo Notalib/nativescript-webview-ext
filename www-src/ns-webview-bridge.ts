@@ -318,4 +318,12 @@ class NSWebViewBridge {
     }
 }
 
-(window as any)["nsWebViewBridge"] = new NSWebViewBridge();
+interface WindowWithNSWebViewBridge {
+    nsWebViewBridge: NSWebViewBridge;
+}
+
+const w = window as Window & WindowWithNSWebViewBridge;
+if (!w.nsWebViewBridge) {
+    // Only create the NSWebViewBridge, if is doesn't already exist.
+    w.nsWebViewBridge = new NSWebViewBridge();
+}

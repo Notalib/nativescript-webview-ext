@@ -2,10 +2,10 @@
     "nativescript": {
         "id": "dk.nota.webviewexttest",
         "tns-android": {
-            "version": "5.3.1"
+            "version": "5.4.0"
         },
         "tns-ios": {
-            "version": "5.3.1"
+            "version": "5.4.0"
         }
     },
     "main": "app.js",
@@ -15,23 +15,26 @@
     "dependencies": {
         "@nota/nativescript-webview-ext": "file:../src",
         "nativescript-theme-core": "^1.0.6",
-        "nativescript-unit-test-runner": "^0.6.2",
-        "tns-core-modules": "^5.3.2",
+        "nativescript-unit-test-runner": "^0.6.3",
+        "tns-core-modules": "^5.4.0",
         "url": "^0.11.0"
     },
     "devDependencies": {
-        "@types/jasmine": "^3.3.9",
-        "@types/node": "^10.14.6",
-        "karma": "4.0.1",
+        "@types/jasmine": "^3.3.12",
+        "@types/node": "^12.0.2",
+        "karma": "4.1.0",
         "karma-jasmine": "2.0.1",
         "karma-nativescript-launcher": "0.4.0",
-        "nativescript-dev-typescript": "~0.9.0",
-        "nativescript-dev-webpack": "~0.21.2",
+        "karma-webpack": "3.0.5",
+        "nativescript-dev-webpack": "~0.22.0",
         "prettier": "^1.17.1",
         "prettier-check": "^2.0.0",
-        "tns-platform-declarations": "^5.3.2"
+        "tns-platform-declarations": "^5.4.0",
+        "typescript": "^3.4.5"
     },
     "scripts": {
+        "ci.test.android": "npm i && tns test android --justlaunch --syncAllFiles",
+        "ci.test.ios": "npm i && ts-node ./tools/test-runner.ts",
         "format:check": "prettier-check --config ../.prettierrc.json angular/index.ts vue/index.ts *.ts",
         "format": "prettier --write --config ../.prettierrc.json 'app/**/*.ts' 'app/**/*.css' 'app/**/*.html'"
     },

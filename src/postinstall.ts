@@ -3,7 +3,7 @@ import "tslib";
 import * as fs from "fs";
 import { promisify } from "util";
 
-const fsWrite = promisify(fs.writeFile);
+const fsWriteFile = promisify(fs.writeFile);
 const podFilePath = `${__dirname}/platforms/ios/Podfile`;
 const podSpecFilePath = `${__dirname}/platforms/ios/NotaWebViewExt/NotaWebViewExt.podspec`;
 
@@ -13,7 +13,7 @@ async function writePodFile() {
 pod "NotaWebViewExt", :path => "${__dirname}/platforms/ios/NotaWebViewExt/"
 `;
 
-    await fsWrite(podFilePath, content);
+    await fsWriteFile(podFilePath, content);
 }
 
 async function writePodSpec() {
@@ -33,7 +33,7 @@ async function writePodSpec() {
 end
 `;
 
-    await fsWrite(podSpecFilePath, content);
+    await fsWriteFile(podSpecFilePath, content);
 }
 
 async function worker() {
