@@ -1,6 +1,6 @@
 {
     "name": "@nota/nativescript-webview-ext",
-    "version": "5.4.0",
+    "version": "5.4.1",
     "description": "Extended WebView for NativeScript which adds 'x-local' scheme for local-files. events between WebView and native-layer, javascript execution, injecting CSS and JS-files.",
     "main": "webview-ext",
     "typings": "webview-ext.d.ts",
@@ -11,13 +11,10 @@
         }
     },
     "scripts": {
-        "build:polyfill:fetch": "uglifyjs ./node_modules/whatwg-fetch/dist/fetch.umd.js --mangle --output ./polyfills/fetch-polyfill.js",
-        "build:polyfill:promise": "uglifyjs ./node_modules/promise-polyfill/dist/polyfill.js --mangle --output ./polyfills/promise-polyfill.js",
-        "build:polyfill": "npm-run-all build:polyfill:promise build:polyfill:fetch",
         "build:typings": "npm run build && (cd ../demo && TNS_TYPESCRIPT_DECLARATIONS_PATH=\"$PWD/../typings\" tns build ios) && cp ../typings/i386/*NotaWebViewExt.d.ts platforms/ios/NotaWebViewExt.d.ts",
         "build:webview-bridge:watch": "npm run build:webview-bridge -- -w",
         "build:webview-bridge": "export WWW_OUTDIR=$PWD/www; cd $(git rev-parse --show-toplevel)/www-src && npm i && npm run build -- --outDir ${WWW_OUTDIR}",
-        "build": "npm ci && rimraf www && npm-run-all build:webview-bridge build:polyfill make-bridge-loader ngc tsc",
+        "build": "npm ci && rimraf www && npm-run-all build:webview-bridge make-bridge-loader ngc tsc",
         "ci.run.test.android": "cd ../unittest && npm run ci.test.android",
         "ci.run.test.ios": "cd ../unittest && npm run ci.test.ios",
         "ci.test.android": "npm run build && npm-run-all test.install ci.run.test.android",
@@ -103,12 +100,12 @@
         "prompt": "^1.0.0",
         "rimraf": "^2.6.3",
         "rxjs": "^6.5.2",
+        "terser": "^4.0.0",
         "tns-core-modules": "^5.4.0",
         "tns-platform-declarations": "^5.4.0",
         "ts-node": "^8.1.0",
         "tslint": "^5.16.0",
         "typescript": "~3.1.6",
-        "uglify-js": "^3.5.15",
         "whatwg-fetch": "^3.0.0",
         "zone.js": "^0.8.29"
     },
