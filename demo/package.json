@@ -10,17 +10,17 @@
     "@nota/nativescript-webview-ext": "file://../src",
     "lodash": "^4.17.11",
     "nativescript-theme-core": "^1.0.6",
-    "tns-core-modules": "~5.4.0",
+    "tns-core-modules": "~5.4.2",
     "url": "^0.11.0"
   },
   "devDependencies": {
-    "@types/lodash": "^4.14.130",
+    "@types/lodash": "^4.14.134",
     "http-server": "^0.11.1",
-    "nativescript-dev-webpack": "~0.22.0",
+    "nativescript-dev-webpack": "~0.24.0",
     "prettier": "^1.17.1",
-    "tns-platform-declarations": "~5.4.0",
-    "tslint": "^5.16.0",
-    "typescript": "~3.4.5"
+    "tns-platform-declarations": "~5.4.2",
+    "tslint": "^5.17.0",
+    "typescript": "~3.5.1"
   },
   "scripts": {
     "format": "prettier --write --config ../.prettierrc.json 'app/**/*.ts' 'app/**/*.css' 'app/**/*.html'",

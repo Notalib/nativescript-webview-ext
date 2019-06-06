@@ -16,20 +16,20 @@
         "@nota/nativescript-webview-ext": "file:../src",
         "nativescript-theme-core": "^1.0.6",
         "nativescript-unit-test-runner": "^0.6.3",
-        "tns-core-modules": "^5.4.0",
+        "tns-core-modules": "^5.4.2",
         "url": "^0.11.0"
     },
     "devDependencies": {
-        "@types/jasmine": "^3.3.12",
-        "@types/node": "^12.0.2",
+        "@types/jasmine": "^3.3.13",
+        "@types/node": "^10.14.8",
         "karma": "4.1.0",
         "karma-jasmine": "2.0.1",
         "karma-nativescript-launcher": "0.4.0",
         "karma-webpack": "3.0.5",
-        "nativescript-dev-webpack": "~0.22.0",
+        "nativescript-dev-webpack": "~0.24.0",
         "prettier": "^1.17.1",
         "prettier-check": "^2.0.0",
-        "tns-platform-declarations": "^5.4.0",
+        "tns-platform-declarations": "^5.4.2",
         "typescript": "^3.4.5"
     },
     "scripts": {
