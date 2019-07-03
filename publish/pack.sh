@@ -26,7 +26,7 @@ pack() {
 
     # copy src
     echo 'Copying src...'
-    rsync -avP \
+    rsync -aP \
         --delete \
         --delete-excluded \
         --exclude hooks \
@@ -47,16 +47,19 @@ pack() {
          "${ROOT_DIR}/README.md" \
          "${TO_SOURCE_DIR}/"
   
-    rsync -avP \
+    rsync -aP \
          "${SOURCE_DIR}/webview-ext.d.ts" \
          "${TO_SOURCE_DIR}"
 
-    rsync -avP \
+    rsync -aP \
         --delete \
-        --delete-excluded \
-        --exclude platforms \
          "${SOURCE_DIR}/platforms/" \
          "${TO_SOURCE_DIR}/platforms/"
+
+    rsync -aP \
+        --delete \
+         "${SOURCE_DIR}/types/" \
+         "${TO_SOURCE_DIR}/types/"
 
     # compile package and copy files required by npm
     echo 'Building /src...'
