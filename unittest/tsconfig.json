@@ -1,7 +1,6 @@
 {
     "compilerOptions": {
         "downlevelIteration": true,
-        "inlineSourceMap": true,
         "target": "es5",
         "module": "commonjs",
         "emitDecoratorMetadata": true,

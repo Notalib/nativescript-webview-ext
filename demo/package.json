@@ -3,22 +3,25 @@
     "name": "hugo",
     "id": "dk.nota.webviewdemo",
     "tns-android": {
-      "version": "5.4.0"
+      "version": "6.0.0-rc-2019-06-27-172817-03"
+    },
+    "tns-ios": {
+      "version": "6.0.0-rc-2019-06-28-105002-01"
     }
   },
   "dependencies": {
     "@nota/nativescript-webview-ext": "file://../src",
     "lodash": "^4.17.11",
     "nativescript-theme-core": "^1.0.6",
-    "tns-core-modules": "~5.4.2",
+    "tns-core-modules": "^6.0.0-rc-2019-07-03-093231-01",
     "url": "^0.11.0"
   },
   "devDependencies": {
     "@types/lodash": "^4.14.134",
     "http-server": "^0.11.1",
-    "nativescript-dev-webpack": "~0.24.0",
+    "nativescript-dev-webpack": "1.0.0-rc-2019-07-02-161545-02",
     "prettier": "^1.17.1",
-    "tns-platform-declarations": "~5.4.2",
+    "tns-platform-declarations": "6.0.0-rc-2019-06-28-175837-02",
     "tslint": "^5.17.0",
     "typescript": "~3.5.1"
   },

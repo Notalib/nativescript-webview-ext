@@ -1,5 +1,5 @@
 /// <reference path="./node_modules/tns-platform-declarations/ios.d.ts" />
-/// <reference path="./platforms/ios/NotaWebViewExt.d.ts" />
+/// <reference path="./types/ios/NotaWebViewExt.d.ts" />
 
 import * as fs from "tns-core-modules/file-system";
 import { webViewBridge } from "./nativescript-webview-bridge-loader";
@@ -64,9 +64,7 @@ export class WKNavigationDelegateImpl extends NSObject implements WKNavigationDe
         const shouldOverrideUrlLoading = owner._onShouldOverrideUrlLoading(url, httpMethod, navType);
         if (shouldOverrideUrlLoading === true) {
             owner.writeTrace(
-                `WKNavigationDelegateClass.webViewDecidePolicyForNavigationActionDecisionHandler("${url}", "${
-                    navigationAction.navigationType
-                }") -> method:${httpMethod} "${navType}" -> cancel`,
+                `WKNavigationDelegateClass.webViewDecidePolicyForNavigationActionDecisionHandler("${url}", "${navigationAction.navigationType}") -> method:${httpMethod} "${navType}" -> cancel`,
             );
             decisionHandler(WKNavigationActionPolicy.Cancel);
             return;
@@ -74,9 +72,7 @@ export class WKNavigationDelegateImpl extends NSObject implements WKNavigationDe
         decisionHandler(WKNavigationActionPolicy.Allow);
 
         owner.writeTrace(
-            `WKNavigationDelegateClass.webViewDecidePolicyForNavigationActionDecisionHandler("${url}", "${
-                navigationAction.navigationType
-            }") -> method:${httpMethod} "${navType}"`,
+            `WKNavigationDelegateClass.webViewDecidePolicyForNavigationActionDecisionHandler("${url}", "${navigationAction.navigationType}") -> method:${httpMethod} "${navType}"`,
         );
         owner._onLoadStarted(url, navType);
     }

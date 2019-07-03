@@ -1,13 +1,13 @@
 /// <reference path="../../../src/node_modules/tns-platform-declarations/ios.d.ts" />
-/// <reference path="../../../src/platforms/android/webviewinterface.d.ts" />
+/// <reference path="../../../src/types/android/webviewinterface.d.ts" />
 
 jasmine.DEFAULT_TIMEOUT_INTERVAL = 10000;
 
 import * as nsApp from "tns-core-modules/application";
 import * as fs from "tns-core-modules/file-system";
+import * as trace from "tns-core-modules/trace";
 import { EventData, View } from "tns-core-modules/ui/page/page";
 import * as utils from "tns-core-modules/utils/utils";
-import * as trace from "tns-core-modules/trace";
 
 trace.enable();
 trace.setCategories("NOTA");
@@ -153,7 +153,7 @@ export function waitUntilReady(isReady: () => boolean, timeoutSec: number = 3, s
         let totalWaitTime = 0;
         while (true) {
             const begin = time();
-            const currentRunLoop = utils.ios.getter(NSRunLoop, NSRunLoop.currentRunLoop);
+            const currentRunLoop = NSRunLoop.currentRunLoop;
             currentRunLoop.limitDateForMode(currentRunLoop.currentMode);
             if (isReady()) {
                 break;
