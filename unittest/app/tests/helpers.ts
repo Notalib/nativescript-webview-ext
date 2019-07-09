@@ -1,5 +1,5 @@
 /// <reference path="../../../src/node_modules/tns-platform-declarations/ios.d.ts" />
-/// <reference path="../../../src/platforms/android/webviewinterface.d.ts" />
+/// <reference path="../../../src/types/android/webviewinterface.d.ts" />
 
 jasmine.DEFAULT_TIMEOUT_INTERVAL = 10000;
 

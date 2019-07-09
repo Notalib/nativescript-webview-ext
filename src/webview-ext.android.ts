@@ -1,4 +1,4 @@
-/// <reference path="./platforms/android/webviewinterface.d.ts" />
+/// <reference path="./types/android/webviewinterface.d.ts" />
 
 import * as fs from "tns-core-modules/file-system";
 import {
@@ -201,12 +201,12 @@ function initializeWebViewClient(): void {
             owner._onLoadFinished(url).catch(() => void 0);
         }
 
-        public onReceivedError() {
-            if (arguments.length === 4) {
-                const [view, errorCode, description, failingUrl] = [...arguments] as [android.webkit.WebView, number, string, string];
+        public onReceivedError(...args: any[]) {
+            if (args.length === 4) {
+                const [view, errorCode, description, failingUrl] = args as [android.webkit.WebView, number, string, string];
                 this.onReceivedErrorBeforeAPI23(view, errorCode, description, failingUrl);
             } else {
-                const [view, request, error] = [...arguments] as [android.webkit.WebView, any, any];
+                const [view, request, error] = args as [android.webkit.WebView, any, any];
                 this.onReceivedErrorAPI23(view, request, error);
             }
         }

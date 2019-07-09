@@ -1,4 +1,5 @@
 /// <reference path="./node_modules/tns-platform-declarations/ios.d.ts" />
+/// <reference path="./types/ios/NotaWebViewExt.d.ts" />
 
 import * as fs from "tns-core-modules/file-system";
 import { IOSWebViewWrapper, NavigationType, WebViewExtBase } from "./webview-ext-common";
