@@ -14,6 +14,23 @@ export const useWKWebView = typeof CustomUrlSchemeHandler !== "undefined";
 export class WebViewExt extends WebViewExtBase {
     protected nativeWrapper: IOSWebViewWrapper;
 
+
+
+    constructor() {
+        super();
+    }
+
+    public loadView() {
+        console.log("WebViewExt loadView()");
+        if (this.viewController && this.nativeWrapper) {
+            this.viewController.view = (<any>this.nativeWrapper).ios;
+        }
+    }
+
+    public getNativeWrapper() {
+        return this.nativeWrapper;
+    }
+
     public get isUIWebView() {
         return !useWKWebView;
     }
@@ -24,23 +41,24 @@ export class WebViewExt extends WebViewExtBase {
 
     public viewPortSize = useWKWebView ? { initialScale: 1.0 } : false;
 
-    public createNativeView() {
+    public createNativeView(existingIOSConfiguration?: WKWebViewConfiguration) {
         if (useWKWebView) {
-            this.nativeWrapper = new WKWebViewWrapper(this);
+            this.nativeWrapper = new WKWebViewWrapper(this, existingIOSConfiguration);
         } else {
             this.nativeWrapper = new UIWebViewWrapper(this);
         }
-
         return this.nativeWrapper.createNativeView();
     }
 
     public initNativeView() {
         super.initNativeView();
-
         this.nativeWrapper.initNativeView();
     }
 
     public disposeNativeView() {
+        if (this.ios && this.ios.navigationDelegate) this.ios.navigationDelegate = null;
+        if (this.ios && this.ios.scrollView.delegate) this.ios.scrollView.delegate = null;
+        if (this.ios && this.ios.UIDelegate) this.ios.UIDelegate = null
         this.nativeWrapper.disposeNativeView();
 
         super.disposeNativeView();
@@ -106,13 +124,11 @@ export class WebViewExt extends WebViewExtBase {
     @profile
     public onLoaded() {
         super.onLoaded();
-
         this.nativeWrapper.onLoaded();
     }
 
     public onUnloaded() {
         this.nativeWrapper.onUnloaded();
-
         super.onUnloaded();
     }
 

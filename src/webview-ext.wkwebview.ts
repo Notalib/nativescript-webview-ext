@@ -3,8 +3,8 @@
 
 import * as fs from "tns-core-modules/file-system";
 import { webViewBridge } from "./nativescript-webview-bridge-loader";
-import { WebViewExt } from "./webview-ext";
 import { IOSWebViewWrapper, NavigationType, traceMessageType, WebViewExtBase } from "./webview-ext-common";
+import { WebViewExt } from "./webview-ext.ios";
 
 export class WKNavigationDelegateImpl extends NSObject implements WKNavigationDelegate {
     public static ObjCProtocols = [WKNavigationDelegate];
@@ -65,7 +65,7 @@ export class WKNavigationDelegateImpl extends NSObject implements WKNavigationDe
         if (shouldOverrideUrlLoading === true) {
             owner.writeTrace(
                 `WKNavigationDelegateClass.webViewDecidePolicyForNavigationActionDecisionHandler("${url}", "${
-                    navigationAction.navigationType
+                navigationAction.navigationType
                 }") -> method:${httpMethod} "${navType}" -> cancel`,
             );
             decisionHandler(WKNavigationActionPolicy.Cancel);
@@ -75,7 +75,7 @@ export class WKNavigationDelegateImpl extends NSObject implements WKNavigationDe
 
         owner.writeTrace(
             `WKNavigationDelegateClass.webViewDecidePolicyForNavigationActionDecisionHandler("${url}", "${
-                navigationAction.navigationType
+            navigationAction.navigationType
             }") -> method:${httpMethod} "${navType}"`,
         );
         owner._onLoadStarted(url, navType);
@@ -150,7 +150,6 @@ export class WKScriptMessageHandlerImpl extends NSObject implements WKScriptMess
         if (!owner) {
             return;
         }
-
         try {
             const message = JSON.parse(webViewMessage.body as string);
             owner.onWebViewEvent(message.eventName, message.data);
@@ -172,6 +171,39 @@ export class WKUIDelegateImpl extends NSObject implements WKUIDelegate {
         delegate.owner = owner;
         console.log(delegate);
         return delegate;
+    }
+
+    public dealloc() {
+        this.owner = null;
+    }
+
+    public deinit() {
+        this.owner = null;
+    }
+
+    /**
+   * Handle window.open requests
+   */
+    public webViewCreateWebViewWithConfigurationForNavigationActionWindowFeatures(
+        webView: WKWebView,
+        configuration: WKWebViewConfiguration,
+        forNavigationAction: WKNavigationAction,
+        windowFeatures: WKWindowFeatures
+    ): WKWebView {
+        const owner = this.owner.get();
+        if (!owner) {
+            return null;
+        }
+        let newNSWebViewExt = new WebViewExt();
+        let newWKWebView: WKWebView = newNSWebViewExt.createNativeView(configuration);
+        newNSWebViewExt.setNativeView(newWKWebView);
+
+        newWKWebView.navigationDelegate = webView.navigationDelegate
+        newWKWebView.UIDelegate = webView.UIDelegate;
+
+        owner.notify({ eventName: "createWebViewWithConfiguration", object: owner, data: newNSWebViewExt });
+
+        return newWKWebView;
     }
 
     /**
@@ -261,6 +293,8 @@ export class WKWebViewWrapper implements IOSWebViewWrapper {
         wkUserScript: WKUserScript;
     }>;
 
+    private existingIOSConfiguration: WKWebViewConfiguration;
+
     public owner: WeakRef<WebViewExt>;
     public get ios(): WKWebView | void {
         const owner = this.owner.get();
@@ -274,7 +308,8 @@ export class WKWebViewWrapper implements IOSWebViewWrapper {
         return owner && owner.autoInjectJSBridge;
     }
 
-    constructor(owner: WebViewExt) {
+    constructor(owner: WebViewExt, existingIOSConfiguration?: WKWebViewConfiguration) {
+        this.existingIOSConfiguration = existingIOSConfiguration;
         this.owner = new WeakRef(owner);
     }
 
@@ -284,20 +319,26 @@ export class WKWebViewWrapper implements IOSWebViewWrapper {
             throw new Error("No owner, this should not happen");
         }
 
-        const configuration = WKWebViewConfiguration.new();
-        configuration.dataDetectorTypes = WKDataDetectorTypes.All;
-        this.wkWebViewConfiguration = configuration;
+        let configuration = null;
+        if (!!this.existingIOSConfiguration) {
+            configuration = this.existingIOSConfiguration;
+            this.wkUserContentController = configuration.userContentController;
+        } else {
+            configuration = WKWebViewConfiguration.new();
+            configuration.dataDetectorTypes = WKDataDetectorTypes.All;
+            this.wkWebViewConfiguration = this.existingIOSConfiguration || configuration;
 
-        const messageHandler = WKScriptMessageHandlerImpl.initWithOwner(this.owner);
-        const wkUController = (this.wkUserContentController = WKUserContentController.new());
-        wkUController.addScriptMessageHandlerName(messageHandler, "nsBridge");
-        configuration.userContentController = wkUController;
-        configuration.preferences.setValueForKey(true, "allowFileAccessFromFileURLs");
-        configuration.setValueForKey(true, "allowUniversalAccessFromFileURLs");
+            const messageHandler = WKScriptMessageHandlerImpl.initWithOwner(this.owner);
+            const wkUController = (this.wkUserContentController = WKUserContentController.new());
+            wkUController.addScriptMessageHandlerName(messageHandler, "nsBridge");
+            configuration.userContentController = wkUController;
+            configuration.preferences.setValueForKey(true, "allowFileAccessFromFileURLs");
+            configuration.setValueForKey(true, "allowUniversalAccessFromFileURLs");
 
-        this.wkCustomUrlSchemeHandler = new CustomUrlSchemeHandler();
+            this.wkCustomUrlSchemeHandler = new CustomUrlSchemeHandler();
 
-        configuration.setURLSchemeHandlerForURLScheme(this.wkCustomUrlSchemeHandler, owner.interceptScheme);
+            configuration.setURLSchemeHandlerForURLScheme(this.wkCustomUrlSchemeHandler, owner.interceptScheme);
+        }
 
         const webview = new WKWebView({
             frame: CGRectZero,
@@ -308,15 +349,22 @@ export class WKWebViewWrapper implements IOSWebViewWrapper {
     }
 
     public initNativeView() {
-        this.wkNavigationDelegate = WKNavigationDelegateImpl.initWithOwner(this.owner);
-        this.wkUIDelegate = WKUIDelegateImpl.initWithOwner(this.owner);
+        if (!this.existingIOSConfiguration) {
+            this.wkNavigationDelegate = this.wkNavigationDelegate || WKNavigationDelegateImpl.initWithOwner(this.owner);
+            this.wkUIDelegate = this.wkUIDelegate || WKUIDelegateImpl.initWithOwner(this.owner);
 
-        this.loadWKUserScripts();
+            this.loadWKUserScripts();
+        }
     }
 
     public disposeNativeView() {
+        this.wkUserContentController && this.wkUserContentController.removeAllUserScripts();
+        this.wkUserContentController = null;
+        this.wkWebViewConfiguration = null;
+        this.existingIOSConfiguration = null;
         this.wkNavigationDelegate = null;
         this.wkCustomUrlSchemeHandler = null;
+        this.wkUIDelegate && this.wkUIDelegate.deinit();
         this.wkUIDelegate = null;
     }
 
@@ -333,6 +381,7 @@ export class WKWebViewWrapper implements IOSWebViewWrapper {
         if (ios) {
             ios.navigationDelegate = null;
             ios.UIDelegate = null;
+            ios.scrollView.delegate = null;
         }
     }
 
@@ -412,14 +461,12 @@ export class WKWebViewWrapper implements IOSWebViewWrapper {
         if (!ios) {
             return Promise.reject(new Error("WebView is missing"));
         }
-
         return new Promise<any>((resolve, reject) => {
             ios.evaluateJavaScriptCompletionHandler(scriptCode, (result, error) => {
                 if (error) {
                     reject(error);
                     return;
                 }
-
                 resolve(result);
             });
         });
