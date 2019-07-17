@@ -65,7 +65,7 @@ export class WKNavigationDelegateImpl extends NSObject implements WKNavigationDe
         if (shouldOverrideUrlLoading === true) {
             owner.writeTrace(
                 `WKNavigationDelegateClass.webViewDecidePolicyForNavigationActionDecisionHandler("${url}", "${
-                navigationAction.navigationType
+                    navigationAction.navigationType
                 }") -> method:${httpMethod} "${navType}" -> cancel`,
             );
             decisionHandler(WKNavigationActionPolicy.Cancel);
@@ -75,7 +75,7 @@ export class WKNavigationDelegateImpl extends NSObject implements WKNavigationDe
 
         owner.writeTrace(
             `WKNavigationDelegateClass.webViewDecidePolicyForNavigationActionDecisionHandler("${url}", "${
-            navigationAction.navigationType
+                navigationAction.navigationType
             }") -> method:${httpMethod} "${navType}"`,
         );
         owner._onLoadStarted(url, navType);
@@ -173,22 +173,18 @@ export class WKUIDelegateImpl extends NSObject implements WKUIDelegate {
         return delegate;
     }
 
-    public dealloc() {
-        this.owner = null;
-    }
-
     public deinit() {
         this.owner = null;
     }
 
     /**
-   * Handle window.open requests
-   */
+     * Handle window.open requests
+     */
     public webViewCreateWebViewWithConfigurationForNavigationActionWindowFeatures(
         webView: WKWebView,
         configuration: WKWebViewConfiguration,
         forNavigationAction: WKNavigationAction,
-        windowFeatures: WKWindowFeatures
+        windowFeatures: WKWindowFeatures,
     ): WKWebView {
         const owner = this.owner.get();
         if (!owner) {
@@ -198,7 +194,7 @@ export class WKUIDelegateImpl extends NSObject implements WKUIDelegate {
         let newWKWebView: WKWebView = newNSWebViewExt.createNativeView(configuration);
         newNSWebViewExt.setNativeView(newWKWebView);
 
-        newWKWebView.navigationDelegate = webView.navigationDelegate
+        newWKWebView.navigationDelegate = webView.navigationDelegate;
         newWKWebView.UIDelegate = webView.UIDelegate;
 
         owner.notify({ eventName: "createWebViewWithConfiguration", object: owner, data: newNSWebViewExt });
@@ -366,6 +362,9 @@ export class WKWebViewWrapper implements IOSWebViewWrapper {
         this.wkCustomUrlSchemeHandler = null;
         this.wkUIDelegate && this.wkUIDelegate.deinit();
         this.wkUIDelegate = null;
+        if (this.ios && this.ios.navigationDelegate) this.ios.navigationDelegate = null;
+        if (this.ios && this.ios.scrollView && this.ios.scrollView.delegate) this.ios.scrollView.delegate = null;
+        if (this.ios && this.ios.UIDelegate) this.ios.UIDelegate = null;
     }
 
     public onLoaded() {

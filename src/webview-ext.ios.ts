@@ -14,23 +14,6 @@ export const useWKWebView = typeof CustomUrlSchemeHandler !== "undefined";
 export class WebViewExt extends WebViewExtBase {
     protected nativeWrapper: IOSWebViewWrapper;
 
-
-
-    constructor() {
-        super();
-    }
-
-    public loadView() {
-        console.log("WebViewExt loadView()");
-        if (this.viewController && this.nativeWrapper) {
-            this.viewController.view = (<any>this.nativeWrapper).ios;
-        }
-    }
-
-    public getNativeWrapper() {
-        return this.nativeWrapper;
-    }
-
     public get isUIWebView() {
         return !useWKWebView;
     }
@@ -56,9 +39,6 @@ export class WebViewExt extends WebViewExtBase {
     }
 
     public disposeNativeView() {
-        if (this.ios && this.ios.navigationDelegate) this.ios.navigationDelegate = null;
-        if (this.ios && this.ios.scrollView.delegate) this.ios.scrollView.delegate = null;
-        if (this.ios && this.ios.UIDelegate) this.ios.UIDelegate = null
         this.nativeWrapper.disposeNativeView();
 
         super.disposeNativeView();
