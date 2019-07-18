@@ -12,7 +12,7 @@
   },
   "scripts": {
     "build": "npm ci && rimraf www && npm-run-all build:webview-bridge make-bridge-loader ngc tsc",
-    "build:typings": "npm run build && (cd ../demo && TNS_TYPESCRIPT_DECLARATIONS_PATH=\"$PWD/../typings\" tns build ios) && cp ../typings/i386/*NotaWebViewExt.d.ts platforms/ios/NotaWebViewExt.d.ts",
+    "build:typings": "npm run build && (cd ../demo && TNS_TYPESCRIPT_DECLARATIONS_PATH=\"$PWD/../typings\" tns build ios) && cp ../typings/i386/*NotaWebViewExt.d.ts types/ios/NotaWebViewExt.d.ts",
     "build:webview-bridge": "export WWW_OUTDIR=$PWD/www; cd $(git rev-parse --show-toplevel)/www-src && npm i && npm run build -- --outDir ${WWW_OUTDIR}",
     "build:webview-bridge:watch": "npm run build:webview-bridge -- -w",
     "ci.run.test.android": "cd ../unittest && npm run ci.test.android",
