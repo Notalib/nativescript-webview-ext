@@ -5,17 +5,17 @@
   "description": "",
   "main": "ns-webview-bridge.js",
   "scripts": {
-    "format:check": "prettier-check --config ../.prettierrc.json angular/index.ts vue/index.ts *.ts",
-    "format": "prettier --write --config ../.prettierrc.json angular/index.ts vue/index.ts *.ts",
+    "format:check": "prettier-check --config ../.prettierrc.json '*.ts'",
+    "format": "prettier --write --config ../.prettierrc.json '*.ts'",
     "build": "tsc -p tsconfig.json"
   },
   "license": "MIT",
   "devDependencies": {
     "npm-run-all": "^4.1.5",
-    "prettier": "^1.17.1",
+    "prettier": "^1.18.2",
     "prettier-check": "^2.0.0",
-    "ts-node": "^8.1.0",
-    "tslint": "^5.16.0",
-    "typescript": "^3.4.5"
+    "ts-node": "^8.3.0",
+    "tslint": "^5.18.0",
+    "typescript": "^3.5.3"
   }
 }

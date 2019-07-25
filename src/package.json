@@ -92,7 +92,7 @@
     "@angular/router": "~8.0.0",
     "@types/node": "^10.14.13",
     "nativescript-angular": "~8.0.2",
-    "nativescript-vue": "^2.3.0",
+    "nativescript-vue": "^2.4.0",
     "npm-run-all": "^4.1.5",
     "prettier": "^1.18.2",
     "prettier-check": "^2.0.0",
