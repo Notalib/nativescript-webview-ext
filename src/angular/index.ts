@@ -7,5 +7,5 @@ if (!isKnownView(webviewElementName)) {
     registerElement(webviewElementName, () => require("../webview-ext").WebViewExt);
 }
 
-@NgModule({})
+@NgModule()
 export class WebViewExtModule {}
