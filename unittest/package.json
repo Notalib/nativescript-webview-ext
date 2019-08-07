@@ -33,7 +33,7 @@
         "typescript": "^3.5.3"
     },
     "scripts": {
-        "ci.test.android": "npm i && tns test android --justlaunch --syncAllFiles",
+        "ci.test.android": "npm i && tns test android --justlaunch",
         "ci.test.ios": "npm i && ts-node ./tools/test-runner.ts",
         "format:check": "prettier-check --config ../.prettierrc.json angular/index.ts vue/index.ts *.ts",
         "format": "prettier --write --config ../.prettierrc.json 'app/**/*.ts' 'app/**/*.css' 'app/**/*.html'"
