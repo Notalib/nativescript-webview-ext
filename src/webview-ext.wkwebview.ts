@@ -1,15 +1,15 @@
 /// <reference path="./node_modules/tns-platform-declarations/ios.d.ts" />
-/// <reference path="./platforms/ios/NotaWebViewExt.d.ts" />
+/// <reference path="./types/ios/NotaWebViewExt.d.ts" />
 
 import * as fs from "tns-core-modules/file-system";
 import { webViewBridge } from "./nativescript-webview-bridge-loader";
 import { WebViewExt } from "./webview-ext";
 import { IOSWebViewWrapper, NavigationType, traceMessageType, WebViewExtBase } from "./webview-ext-common";
 
-export class WKNavigationDelegateImpl extends NSObject implements WKNavigationDelegate {
+export class WKNavigationDelegateNotaImpl extends NSObject implements WKNavigationDelegate {
     public static ObjCProtocols = [WKNavigationDelegate];
-    public static initWithOwner(owner: WeakRef<WebViewExt>): WKNavigationDelegateImpl {
-        const handler = <WKNavigationDelegateImpl>WKNavigationDelegateImpl.new();
+    public static initWithOwner(owner: WeakRef<WebViewExt>): WKNavigationDelegateNotaImpl {
+        const handler = <WKNavigationDelegateNotaImpl>WKNavigationDelegateNotaImpl.new();
         handler.owner = owner;
         return handler;
     }
@@ -64,9 +64,7 @@ export class WKNavigationDelegateImpl extends NSObject implements WKNavigationDe
         const shouldOverrideUrlLoading = owner._onShouldOverrideUrlLoading(url, httpMethod, navType);
         if (shouldOverrideUrlLoading === true) {
             owner.writeTrace(
-                `WKNavigationDelegateClass.webViewDecidePolicyForNavigationActionDecisionHandler("${url}", "${
-                    navigationAction.navigationType
-                }") -> method:${httpMethod} "${navType}" -> cancel`,
+                `WKNavigationDelegateClass.webViewDecidePolicyForNavigationActionDecisionHandler("${url}", "${navigationAction.navigationType}") -> method:${httpMethod} "${navType}" -> cancel`,
             );
             decisionHandler(WKNavigationActionPolicy.Cancel);
             return;
@@ -74,9 +72,7 @@ export class WKNavigationDelegateImpl extends NSObject implements WKNavigationDe
         decisionHandler(WKNavigationActionPolicy.Allow);
 
         owner.writeTrace(
-            `WKNavigationDelegateClass.webViewDecidePolicyForNavigationActionDecisionHandler("${url}", "${
-                navigationAction.navigationType
-            }") -> method:${httpMethod} "${navType}"`,
+            `WKNavigationDelegateClass.webViewDecidePolicyForNavigationActionDecisionHandler("${url}", "${navigationAction.navigationType}") -> method:${httpMethod} "${navType}"`,
         );
         owner._onLoadStarted(url, navType);
     }
@@ -134,13 +130,13 @@ export class WKNavigationDelegateImpl extends NSObject implements WKNavigationDe
     }
 }
 
-export class WKScriptMessageHandlerImpl extends NSObject implements WKScriptMessageHandler {
+export class WKScriptMessageHandlerNotaImpl extends NSObject implements WKScriptMessageHandler {
     public static ObjCProtocols = [WKScriptMessageHandler];
 
     private owner: WeakRef<WebViewExtBase>;
 
-    public static initWithOwner(owner: WeakRef<WebViewExtBase>): WKScriptMessageHandlerImpl {
-        const delegate = <WKScriptMessageHandlerImpl>WKScriptMessageHandlerImpl.new();
+    public static initWithOwner(owner: WeakRef<WebViewExtBase>): WKScriptMessageHandlerNotaImpl {
+        const delegate = <WKScriptMessageHandlerNotaImpl>WKScriptMessageHandlerNotaImpl.new();
         delegate.owner = owner;
         return delegate;
     }
@@ -163,12 +159,12 @@ export class WKScriptMessageHandlerImpl extends NSObject implements WKScriptMess
     }
 }
 
-export class WKUIDelegateImpl extends NSObject implements WKUIDelegate {
+export class WKUIDelegateNotaImpl extends NSObject implements WKUIDelegate {
     public static ObjCProtocols = [WKUIDelegate];
     public owner: WeakRef<WebViewExt>;
 
-    public static initWithOwner(owner: WeakRef<WebViewExt>): WKUIDelegateImpl {
-        const delegate = <WKUIDelegateImpl>WKUIDelegateImpl.new();
+    public static initWithOwner(owner: WeakRef<WebViewExt>): WKUIDelegateNotaImpl {
+        const delegate = <WKUIDelegateNotaImpl>WKUIDelegateNotaImpl.new();
         delegate.owner = owner;
         console.log(delegate);
         return delegate;
@@ -250,11 +246,11 @@ export class WKUIDelegateImpl extends NSObject implements WKUIDelegate {
 
 export class WKWebViewWrapper implements IOSWebViewWrapper {
     protected wkWebViewConfiguration: WKWebViewConfiguration;
-    protected wkNavigationDelegate: WKNavigationDelegateImpl;
-    protected wkUIDelegate: WKUIDelegateImpl;
+    protected wkNavigationDelegate: WKNavigationDelegateNotaImpl;
+    protected wkUIDelegate: WKUIDelegateNotaImpl;
     protected wkCustomUrlSchemeHandler: CustomUrlSchemeHandler;
     protected wkUserContentController: WKUserContentController;
-    protected wkUserScriptInjectWebViewBridge: Promise<WKUserScript> | void;
+    protected wkUserScriptInjectWebViewBridge?: WKUserScript;
     protected wkUserScriptViewPortCode: Promise<WKUserScript>;
     protected wkNamedUserScripts = [] as Array<{
         resourceName: string;
@@ -288,7 +284,7 @@ export class WKWebViewWrapper implements IOSWebViewWrapper {
         configuration.dataDetectorTypes = WKDataDetectorTypes.All;
         this.wkWebViewConfiguration = configuration;
 
-        const messageHandler = WKScriptMessageHandlerImpl.initWithOwner(this.owner);
+        const messageHandler = WKScriptMessageHandlerNotaImpl.initWithOwner(this.owner);
         const wkUController = (this.wkUserContentController = WKUserContentController.new());
         wkUController.addScriptMessageHandlerName(messageHandler, "nsBridge");
         configuration.userContentController = wkUController;
@@ -308,8 +304,8 @@ export class WKWebViewWrapper implements IOSWebViewWrapper {
     }
 
     public initNativeView() {
-        this.wkNavigationDelegate = WKNavigationDelegateImpl.initWithOwner(this.owner);
-        this.wkUIDelegate = WKUIDelegateImpl.initWithOwner(this.owner);
+        this.wkNavigationDelegate = WKNavigationDelegateNotaImpl.initWithOwner(this.owner);
+        this.wkUIDelegate = WKUIDelegateNotaImpl.initWithOwner(this.owner);
 
         this.loadWKUserScripts();
     }
@@ -552,10 +548,10 @@ export class WKWebViewWrapper implements IOSWebViewWrapper {
         }
 
         if (!this.wkUserScriptInjectWebViewBridge) {
-            this.wkUserScriptInjectWebViewBridge = this.makeWKUserScriptPromise(webViewBridge);
+            this.wkUserScriptInjectWebViewBridge = this.createWkUserScript(webViewBridge);
         }
 
-        this.addUserScriptFromPromise(this.wkUserScriptInjectWebViewBridge);
+        this.addUserScript(this.wkUserScriptInjectWebViewBridge);
         for (const { wkUserScript } of this.wkNamedUserScripts) {
             this.addUserScript(wkUserScript);
         }

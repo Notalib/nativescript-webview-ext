@@ -9,7 +9,7 @@ letter.
 ### Which platform(s) does your issue occur on?
 - iOS/Android/Both
 - iOS/Android versions
-- emulator or device. What type of device?
+- emulator or device. What type of device? Which modal of device?
 
 ### Please, provide the following version numbers that your issue occurs with:
 

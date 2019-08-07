@@ -1,4 +1,4 @@
-/// <reference path="./platforms/android/webviewinterface.d.ts" />
+/// <reference path="./types/android/webviewinterface.d.ts" />
 
 import * as fs from "tns-core-modules/file-system";
 import {
@@ -190,6 +190,7 @@ function initializeWebViewClient(): void {
 
         public onPageFinished(view: android.webkit.WebView, url: string) {
             super.onPageFinished(view, url);
+
             const owner = this.owner.get();
             if (!owner) {
                 console.warn(`WebViewExtClientImpl.onPageFinished("${view}", ${url}") - no owner`);
@@ -200,12 +201,12 @@ function initializeWebViewClient(): void {
             owner._onLoadFinished(url).catch(() => void 0);
         }
 
-        public onReceivedError() {
-            if (arguments.length === 4) {
-                const [view, errorCode, description, failingUrl] = [...arguments] as [android.webkit.WebView, number, string, string];
+        public onReceivedError(...args: any[]) {
+            if (args.length === 4) {
+                const [view, errorCode, description, failingUrl] = args as [android.webkit.WebView, number, string, string];
                 this.onReceivedErrorBeforeAPI23(view, errorCode, description, failingUrl);
             } else {
-                const [view, request, error] = [...arguments] as [android.webkit.WebView, any, any];
+                const [view, request, error] = args as [android.webkit.WebView, any, any];
                 this.onReceivedErrorAPI23(view, request, error);
             }
         }
@@ -533,6 +534,7 @@ export class WebViewExt extends WebViewExtBase {
 
         this.writeTrace(`WebViewExt<android>._loadUrl("${src}")`);
         nativeView.loadUrl(src);
+        this.writeTrace(`WebViewExt<android>._loadUrl("${src}") - end`);
     }
 
     public _loadData(src: string) {

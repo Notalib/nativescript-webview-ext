@@ -218,26 +218,30 @@ class NSWebViewBridge {
         }
 
         return new Promise<void>((resolve, reject) => {
-            const script = document.createElement("script");
-            script.async = true;
-            script.setAttribute("id", elId);
-            script.addEventListener("error", function(error) {
+            const scriptElement = document.createElement("script");
+            scriptElement.async = true;
+            scriptElement.setAttribute("id", elId);
+            scriptElement.addEventListener("error", function(error) {
                 console.error(`Failed to load ${href} - error: ${error}`);
                 reject(error);
+
+                if (scriptElement.parentElement) {
+                    scriptElement.parentElement.removeChild(scriptElement);
+                }
             });
-            script.addEventListener("load", function() {
+            scriptElement.addEventListener("load", function() {
                 console.info(`Loaded ${href}`);
                 window.requestAnimationFrame(() => {
                     resolve();
                 });
 
-                if (script.parentElement) {
-                    script.parentElement.removeChild(script);
+                if (scriptElement.parentElement) {
+                    scriptElement.parentElement.removeChild(scriptElement);
                 }
             });
-            script.src = href;
+            scriptElement.src = href;
 
-            document.body.appendChild(script);
+            document.body.appendChild(scriptElement);
         });
     }
 
@@ -258,6 +262,10 @@ class NSWebViewBridge {
             linkElement.addEventListener("error", (error) => {
                 console.error(`Failed to load ${href} - error: ${error}`);
                 reject(error);
+
+                if (linkElement.parentElement) {
+                    linkElement.parentElement.removeChild(linkElement);
+                }
             });
             linkElement.addEventListener("load", () => {
                 console.info(`Loaded ${href}`);
@@ -318,4 +326,12 @@ class NSWebViewBridge {
     }
 }
 
-(window as any)["nsWebViewBridge"] = new NSWebViewBridge();
+interface WindowWithNSWebViewBridge {
+    nsWebViewBridge: NSWebViewBridge;
+}
+
+const w = window as Window & WindowWithNSWebViewBridge;
+if (!w.nsWebViewBridge) {
+    // Only create the NSWebViewBridge, if is doesn't already exist.
+    w.nsWebViewBridge = new NSWebViewBridge();
+}

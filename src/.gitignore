@@ -2,3 +2,5 @@
 platforms/ios/Podfile
 platforms/ios/NotaWebViewExt/NotaWebViewExt.xcodeproj/xcuserdata
 platforms/ios/NotaWebViewExt/NotaWebViewExt.podspec
+nativescript-webview-bridge-loader.ts
+polyfills

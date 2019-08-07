@@ -1,5 +1,8 @@
+/// <reference path="./types/url.d.ts" />
+
 import * as fs from "tns-core-modules/file-system";
 import { booleanConverter, ContainerView, CSSType, EventData, Property, traceEnabled, traceMessageType, traceWrite } from "tns-core-modules/ui/core/view";
+import * as URL from "url";
 import { fetchPolyfill, metadataViewPort, promisePolyfill, webViewBridge } from "./nativescript-webview-bridge-loader";
 
 export * from "tns-core-modules/ui/core/view";
@@ -497,6 +500,8 @@ export class WebViewExtBase extends ContainerView {
      * Callback for the loadFinished-event. Called from the native-webview
      */
     public async _onLoadFinished(url: string, error?: string): Promise<LoadFinishedEventData> {
+        url = this.normalizeURL(url);
+
         if (!error) {
             // When this is called without an error, update with this.src value without loading the url.
             // This is needed to keep src up-to-date when linked are clicked inside the webview.
@@ -577,7 +582,6 @@ export class WebViewExtBase extends ContainerView {
             object: this,
             url,
         } as ShouldOverrideUrlLoadEventData;
-
         this.notify(args);
 
         const eventNameWithSpellingError = "shouldOverideUrlLoading";
@@ -809,6 +813,21 @@ export class WebViewExtBase extends ContainerView {
         }
 
         if (lcSrc.startsWith(this.interceptScheme) || lcSrc.startsWith("http://") || lcSrc.startsWith("https://") || lcSrc.startsWith("file:///")) {
+            src = this.normalizeURL(src);
+            console.log(src, originSrc);
+
+            if (originSrc !== src) {
+                // Make sure the src-property reflects the actual value.
+                try {
+                    this.tempSuspendSrcLoading = true;
+                    this.src = src;
+                } catch {
+                    // ignore
+                } finally {
+                    this.tempSuspendSrcLoading = false;
+                }
+            }
+
             this._loadUrl(src);
 
             this.writeTrace(`WebViewExt.src = "${originSrc}" - LoadUrl("${src}")`);
@@ -1050,6 +1069,18 @@ export class WebViewExtBase extends ContainerView {
         this.autoInjectJavaScriptBlocks = this.autoInjectJavaScriptBlocks.filter((data) => data.name !== name);
     }
 
+    public normalizeURL(url: string): string {
+        if (!url) {
+            return url;
+        }
+
+        if (url.startsWith(this.interceptScheme)) {
+            return url;
+        }
+
+        return URL.parse(url).format();
+    }
+
     /**
      * Ensure fetch-api is available.
      */
@@ -1074,9 +1105,7 @@ export class WebViewExtBase extends ContainerView {
     }
 
     protected async loadFetchPolyfill() {
-        const scriptCode = await fetchPolyfill;
-
-        await this.executeJavaScript<void>(scriptCode, false);
+        await this.executeJavaScript<void>(fetchPolyfill, false);
     }
 
     /**
@@ -1104,8 +1133,7 @@ export class WebViewExtBase extends ContainerView {
     }
 
     protected async loadPromisePolyfill() {
-        const scriptCode = await promisePolyfill;
-        await this.executeJavaScript<void>(scriptCode, false);
+        await this.executeJavaScript<void>(promisePolyfill, false);
     }
 
     protected async ensurePolyfills() {
@@ -1246,8 +1274,7 @@ export class WebViewExtBase extends ContainerView {
      * Inject WebView JavaScript Bridge.
      */
     protected async injectWebViewBridge(): Promise<void> {
-        const scriptCode = await webViewBridge;
-        await this.executeJavaScript(scriptCode, false);
+        await this.executeJavaScript(webViewBridge, false);
         await this.ensurePolyfills();
         await this.injectViewPortMeta();
     }
@@ -1266,7 +1293,7 @@ export class WebViewExtBase extends ContainerView {
             return null;
         }
 
-        const scriptCodeTmpl = await metadataViewPort;
+        const scriptCodeTmpl = metadataViewPort;
 
         const viewPortCode = JSON.stringify(this.viewPortSize || {});
 

@@ -1,7 +1,18 @@
+/// <reference path="../../../src/node_modules/tns-platform-declarations/ios.d.ts" />
+/// <reference path="../../../src/types/android/webviewinterface.d.ts" />
+
+jasmine.DEFAULT_TIMEOUT_INTERVAL = 10000;
+
 import * as nsApp from "tns-core-modules/application";
 import * as fs from "tns-core-modules/file-system";
-import { EventData, View } from "tns-core-modules/ui/page/page";
+import * as trace from "tns-core-modules/trace";
+import { EventData, View, Page } from "tns-core-modules/ui/page/page";
 import * as utils from "tns-core-modules/utils/utils";
+import { Frame } from "tns-core-modules/ui/frame/frame";
+import { ActionBar } from "tns-core-modules/ui/action-bar/action-bar";
+
+trace.enable();
+trace.setCategories("NOTA");
 
 const currentAppPath = `${fs.knownFolders.currentApp().path}`;
 
@@ -27,6 +38,47 @@ export function timeoutPromise(delay = 100) {
     return new Promise((resolve) => setTimeout(resolve, delay));
 }
 
+export function getRootFrame() {
+    let frame = nsApp.getRootView();
+    while (frame) {
+        if (frame instanceof Frame) {
+            return frame;
+        }
+
+        frame = frame.parent as any;
+    }
+
+    return null;
+}
+
+export async function preparePageForTest() {
+    const frame = getRootFrame();
+
+    const newPage = new Page();
+    newPage.actionBar = new ActionBar();
+    newPage.actionBar.title = "WebView Test";
+
+    frame.navigate({
+        create() {
+            return newPage;
+        },
+        animated: false,
+    });
+
+    await eventAsPromise(newPage, Page.navigatedToEvent);
+
+    return newPage;
+}
+
+export function destroyPageAfterTest(page: Page) {
+    if (page) {
+        page.content = null;
+    }
+
+    const frame = getRootFrame();
+    frame.goBack(frame.backStack[0]);
+}
+
 // HTML test files
 export const testFile = `~/assets/html/test.html`;
 export const testWithSpacesFile = `~/assets/html/test with spaces.html`;
@@ -34,7 +86,7 @@ export const emptyHTMLFile = `~/assets/html/empty.html`;
 export const javascriptCallsFile = `~/assets/html/javascript-calls.html`;
 export const javascriptCallsXLocalFile = `~/assets/html/javascript-calls-x-local.html`;
 export const cssNotPredefinedFile = `~/assets/html/css-not-predefined.html`;
-export const cssPreDefinedlinkFile = `~/assets/html/css-predefined-link-tags.html`;
+export const cssPreDefinedLinkFile = `~/assets/html/css-predefined-link-tags.html`;
 
 export const emptyHTMLXLocalSource = "x-local://empty.html";
 
@@ -144,7 +196,7 @@ export function waitUntilReady(isReady: () => boolean, timeoutSec: number = 3, s
         let totalWaitTime = 0;
         while (true) {
             const begin = time();
-            const currentRunLoop = utils.ios.getter(NSRunLoop, NSRunLoop.currentRunLoop);
+            const currentRunLoop = NSRunLoop.currentRunLoop;
             currentRunLoop.limitDateForMode(currentRunLoop.currentMode);
             if (isReady()) {
                 break;
