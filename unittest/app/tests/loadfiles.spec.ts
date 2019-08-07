@@ -3,26 +3,24 @@ import { ActionBar } from "tns-core-modules/ui/action-bar/action-bar";
 import * as frameModule from "tns-core-modules/ui/frame";
 import { Page } from "tns-core-modules/ui/page";
 import * as url from "url";
-import { emptyHTMLFile, emptyHTMLXLocalSource, eventAsPromise, loadFile, resolveFilePath, testFile, testWithSpacesFile } from "./helpers";
+import {
+    emptyHTMLFile,
+    emptyHTMLXLocalSource,
+    eventAsPromise,
+    loadFile,
+    resolveFilePath,
+    testFile,
+    testWithSpacesFile,
+    preparePageForTest,
+    destroyPageAfterTest,
+} from "./helpers";
 
 describe("Load files", () => {
     let currentPage: Page;
     let webView: WebViewExt;
-    const topmost = frameModule.topmost();
 
     beforeAll(async () => {
-        currentPage = new Page();
-        currentPage.actionBar = new ActionBar();
-        currentPage.actionBar.title = "WebView Test";
-
-        topmost.navigate({
-            create() {
-                return currentPage;
-            },
-            animated: false,
-        });
-
-        await eventAsPromise(currentPage, Page.navigatedToEvent);
+        currentPage = await preparePageForTest();
     });
 
     beforeEach(() => {
@@ -31,11 +29,10 @@ describe("Load files", () => {
     });
 
     afterAll(() => {
-        currentPage.content = null;
+        destroyPageAfterTest(currentPage);
+
         currentPage = null;
         webView = null;
-
-        topmost.goBack(topmost.backStack[0]);
     });
 
     describe("Load external URL", () => {
@@ -64,20 +61,24 @@ describe("Load files", () => {
         });
     });
 
-    it("Load UpperCase Src", async () => {
+    it("UpperCase", async () => {
         // >> webview-UPPER_CASE
-        const event = eventAsPromise<LoadFinishedEventData>(webView, WebViewExt.loadFinishedEvent);
+        try {
+            const event = eventAsPromise<LoadFinishedEventData>(webView, WebViewExt.loadFinishedEvent);
 
-        const targetSrc = "HTTPS://github.com/";
-        webView.src = targetSrc;
+            const targetSrc = "HTTPS://github.com/";
+            webView.src = targetSrc;
 
-        const args = await event;
-        expect(args.error).toBeUndefined();
-        expect(url.parse(args.url)).toEqual(url.parse(targetSrc));
+            const args = await event;
+            expect(args.error).toBeUndefined();
+            expect(url.parse(args.url)).toEqual(url.parse(targetSrc));
+        } catch (err) {
+            console.log(err);
+        }
         // << webview-UPPER_CASE
     });
 
-    describe("Load local files", () => {
+    describe("Local files", () => {
         it("test.html", async () => {
             const targetSrc = testFile;
             const expectedSrc = `file://${resolveFilePath(testFile)}`;
@@ -115,7 +116,7 @@ describe("Load files", () => {
         });
     });
 
-    describe("Load HTML string", () => {
+    describe("HTML string", () => {
         const expectedTitle = "MyTitle";
 
         it("src-attribute", async () => {
@@ -147,7 +148,7 @@ describe("Load files", () => {
         });
     });
 
-    describe("Load x-local files", () => {
+    describe("via x-local", () => {
         const targetSrc = emptyHTMLXLocalSource;
         const expectedTitle = "Blank";
 

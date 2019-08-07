@@ -1,38 +1,26 @@
 import { WebViewExt } from "@nota/nativescript-webview-ext";
-import { ActionBar } from "tns-core-modules/ui/action-bar/action-bar";
-import * as frameModule from "tns-core-modules/ui/frame";
 import { Color, Page } from "tns-core-modules/ui/page";
 import {
     cssNotPredefinedFile,
     cssPreDefinedLinkFile,
-    eventAsPromise,
+    getRootFrame,
     javascriptCallsXLocalFile,
     jsGetElementStyleSheet,
     localJavaScriptFile,
     localJavaScriptName,
     localStyleSheetCssFile,
     localStyleSheetCssNAME,
+    preparePageForTest,
     timeoutPromise,
+    destroyPageAfterTest,
 } from "./helpers";
 
 describe("Inject files", () => {
     let currentPage: Page;
     let webView: WebViewExt;
-    const topmost = frameModule.topmost();
 
     beforeAll(async () => {
-        currentPage = new Page();
-        currentPage.actionBar = new ActionBar();
-        currentPage.actionBar.title = "WebView Test";
-
-        topmost.navigate({
-            create() {
-                return currentPage;
-            },
-            animated: false,
-        });
-
-        await eventAsPromise(currentPage, Page.navigatedToEvent);
+        currentPage = await preparePageForTest();
     });
 
     beforeEach(() => {
@@ -41,14 +29,13 @@ describe("Inject files", () => {
     });
 
     afterAll(() => {
-        currentPage.content = null;
+        destroyPageAfterTest(currentPage);
+
         currentPage = null;
         webView = null;
-
-        topmost.goBack(topmost.backStack[0]);
     });
 
-    it("Inject files predefined StyleSheet Link", async () => {
+    it("Predefined StyleSheet Link", async () => {
         const expectedRedColor = new Color("rgb(0, 128, 0)");
 
         webView.registerLocalResource(localStyleSheetCssNAME, localStyleSheetCssFile);
@@ -67,7 +54,7 @@ describe("Inject files", () => {
         // << webview-x-local-predefined-link
     });
 
-    it("Inject files StyleSheet Link", async () => {
+    it("StyleSheet Link", async () => {
         const expectedRedColor = new Color("rgb(0, 128, 0)");
 
         webView.registerLocalResource(localStyleSheetCssNAME, localStyleSheetCssFile);
@@ -87,7 +74,8 @@ describe("Inject files", () => {
         expect(styles).toBeDefined();
         expect(new Color(styles.color).hex).toBe(expectedRedColor.hex);
     });
-    it("Inject JavaScript Once", async () => {
+
+    it("JavaScript on-demand", async () => {
         webView.registerLocalResource(localJavaScriptName, localJavaScriptFile);
         const args = await webView.loadUrl(javascriptCallsXLocalFile);
 

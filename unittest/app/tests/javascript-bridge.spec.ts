@@ -1,27 +1,14 @@
 import { WebViewExt } from "@nota/nativescript-webview-ext";
-import { ActionBar } from "tns-core-modules/ui/action-bar/action-bar";
 import * as frameModule from "tns-core-modules/ui/frame";
 import { Page } from "tns-core-modules/ui/page";
-import { eventAsPromise, javascriptCallsFile, timeoutPromise } from "./helpers";
+import { eventAsPromise, javascriptCallsFile, preparePageForTest, timeoutPromise, destroyPageAfterTest } from "./helpers";
 
 describe("JavaScript Bridge", () => {
     let currentPage: Page;
     let webView: WebViewExt;
-    const topmost = frameModule.topmost();
 
     beforeAll(async () => {
-        currentPage = new Page();
-        currentPage.actionBar = new ActionBar();
-        currentPage.actionBar.title = "WebView Test";
-
-        topmost.navigate({
-            create() {
-                return currentPage;
-            },
-            animated: false,
-        });
-
-        await eventAsPromise(currentPage, Page.navigatedToEvent);
+        currentPage = await preparePageForTest();
     });
 
     beforeEach(() => {
@@ -30,11 +17,10 @@ describe("JavaScript Bridge", () => {
     });
 
     afterAll(() => {
-        currentPage.content = null;
+        destroyPageAfterTest(currentPage);
+
         currentPage = null;
         webView = null;
-
-        topmost.goBack(topmost.backStack[0]);
     });
 
     /**
