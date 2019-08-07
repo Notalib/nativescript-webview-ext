@@ -30,6 +30,7 @@
         "prettier": "^1.18.2",
         "prettier-check": "^2.0.0",
         "tns-platform-declarations": "^6.0.5",
+        "tslint": "^5.18.0",
         "typescript": "^3.5.3"
     },
     "scripts": {
