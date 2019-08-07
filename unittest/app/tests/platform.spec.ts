@@ -1,30 +1,16 @@
 import { WebViewExt } from "@nota/nativescript-webview-ext";
 import * as platform from "tns-core-modules/platform";
-import { ActionBar } from "tns-core-modules/ui/action-bar/action-bar";
-import * as frameModule from "tns-core-modules/ui/frame";
 import { isAndroid, isIOS, Page, View } from "tns-core-modules/ui/page";
 import { TabView, TabViewItem } from "tns-core-modules/ui/tab-view";
 import * as utils from "tns-core-modules/utils/utils";
-import { DefaultPageOptions, emptyHTMLFile, eventAsPromise, layout, PageOptions, waitForLoadedView, waitUntilReady } from "./helpers";
+import { DefaultPageOptions, emptyHTMLFile, layout, PageOptions, preparePageForTest, waitForLoadedView, waitUntilReady, destroyPageAfterTest } from "./helpers";
 
 describe("Platform", () => {
     let currentPage: Page;
     let webView: WebViewExt;
-    const topmost = frameModule.topmost();
 
     beforeAll(async () => {
-        currentPage = new Page();
-        currentPage.actionBar = new ActionBar();
-        currentPage.actionBar.title = "WebView Test";
-
-        topmost.navigate({
-            create() {
-                return currentPage;
-            },
-            animated: false,
-        });
-
-        await eventAsPromise(currentPage, Page.navigatedToEvent);
+        currentPage = await preparePageForTest();
     });
 
     beforeEach(async () => {
@@ -48,11 +34,10 @@ describe("Platform", () => {
     });
 
     afterAll(() => {
-        currentPage.content = null;
+        destroyPageAfterTest(currentPage);
+
         currentPage = null;
         webView = null;
-
-        topmost.goBack(topmost.backStack[0]);
     });
 });
 
@@ -62,95 +47,97 @@ function android_Tests(getWebView: () => WebViewExt, getPage: () => Page) {
     }
     let currentPage: Page;
 
-    beforeEach(() => {
-        currentPage = getPage();
-        currentPage.content = getWebView();
+    describe("Android", () => {
+        beforeEach(() => {
+            currentPage = getPage();
+            currentPage.content = getWebView();
+        });
+
+        it("builtInZoomControls", async () => {
+            const webView = getWebView();
+            waitForLoadedView(webView);
+
+            // >> webview-built-in-zoom-controls
+            const androidWebView = webView.android as android.webkit.WebView;
+            const args = await webView.loadUrl(emptyHTMLFile);
+
+            const expectedTitle = "Blank";
+            expect(args.error).toBeUndefined();
+
+            const actualTitle = await webView.getTitle();
+            expect(actualTitle).toBe(expectedTitle);
+
+            let expected = true;
+            expect(webView.builtInZoomControls).toBe(expected);
+            expect(androidWebView.getSettings().getBuiltInZoomControls()).toBe(expected);
+
+            let currentValue: any = false;
+            expected = false;
+            webView.builtInZoomControls = currentValue;
+
+            expect(webView.builtInZoomControls).toBe(expected);
+            expect(androidWebView.getSettings().getBuiltInZoomControls()).toBe(expected);
+
+            currentValue = "true";
+            expected = true;
+            webView.builtInZoomControls = currentValue;
+
+            expect(webView.builtInZoomControls).toBe(expected);
+            expect(androidWebView.getSettings().getBuiltInZoomControls()).toBe(expected);
+
+            currentValue = "false";
+            expected = false;
+            webView.builtInZoomControls = currentValue;
+
+            expect(webView.builtInZoomControls).toBe(expected);
+            expect(androidWebView.getSettings().getBuiltInZoomControls()).toBe(expected);
+            // << webview-built-in-zoom-controls
+        });
+
+        it("displayZoomControls", async () => {
+            const webView = getWebView();
+            waitForLoadedView(webView);
+
+            // >> webview-built-in-zoom-controls
+            const androidWebView = webView.android as android.webkit.WebView;
+            const args = await webView.loadUrl(emptyHTMLFile);
+
+            const expectedTitle = "Blank";
+            expect(args.error).toBeUndefined();
+
+            const actualTitle = await webView.getTitle();
+            expect(actualTitle).toBe(expectedTitle);
+
+            let expected = true;
+            expect(webView.displayZoomControls).toBe(expected);
+            expect(androidWebView.getSettings().getDisplayZoomControls()).toBe(expected);
+
+            let currentValue: any = false;
+            expected = false;
+            webView.displayZoomControls = currentValue;
+
+            expected = false;
+            expect(webView.displayZoomControls).toBe(expected);
+            expect(androidWebView.getSettings().getDisplayZoomControls()).toBe(expected);
+
+            currentValue = "true";
+            expected = true;
+            webView.displayZoomControls = currentValue;
+
+            expect(webView.displayZoomControls).toBe(expected);
+            expect(androidWebView.getSettings().getDisplayZoomControls()).toBe(expected);
+
+            currentValue = "false";
+            expected = false;
+            webView.displayZoomControls = currentValue;
+
+            expect(webView.displayZoomControls).toBe(expected);
+            expect(androidWebView.getSettings().getDisplayZoomControls()).toBe(expected);
+            // << webview-built-in-zoom-controls
+        });
+
+        afterEach(() => (currentPage = null));
     });
-
-    it("builtInZoomControls", async () => {
-        const webView = getWebView();
-        waitForLoadedView(webView);
-
-        // >> webview-built-in-zoom-controls
-        const androidWebView = webView.android as android.webkit.WebView;
-        const args = await webView.loadUrl(emptyHTMLFile);
-
-        const expectedTitle = "Blank";
-        expect(args.error).toBeUndefined();
-
-        const actualTitle = await webView.getTitle();
-        expect(actualTitle).toBe(expectedTitle);
-
-        let expected = true;
-        expect(webView.builtInZoomControls).toBe(expected);
-        expect(androidWebView.getSettings().getBuiltInZoomControls()).toBe(expected);
-
-        let currentValue: any = false;
-        expected = false;
-        webView.builtInZoomControls = currentValue;
-
-        expect(webView.builtInZoomControls).toBe(expected);
-        expect(androidWebView.getSettings().getBuiltInZoomControls()).toBe(expected);
-
-        currentValue = "true";
-        expected = true;
-        webView.builtInZoomControls = currentValue;
-
-        expect(webView.builtInZoomControls).toBe(expected);
-        expect(androidWebView.getSettings().getBuiltInZoomControls()).toBe(expected);
-
-        currentValue = "false";
-        expected = false;
-        webView.builtInZoomControls = currentValue;
-
-        expect(webView.builtInZoomControls).toBe(expected);
-        expect(androidWebView.getSettings().getBuiltInZoomControls()).toBe(expected);
-        // << webview-built-in-zoom-controls
-    });
-
-    it("displayZoomControls", async () => {
-        const webView = getWebView();
-        waitForLoadedView(webView);
-
-        // >> webview-built-in-zoom-controls
-        const androidWebView = webView.android as android.webkit.WebView;
-        const args = await webView.loadUrl(emptyHTMLFile);
-
-        const expectedTitle = "Blank";
-        expect(args.error).toBeUndefined();
-
-        const actualTitle = await webView.getTitle();
-        expect(actualTitle).toBe(expectedTitle);
-
-        let expected = true;
-        expect(webView.displayZoomControls).toBe(expected);
-        expect(androidWebView.getSettings().getDisplayZoomControls()).toBe(expected);
-
-        let currentValue: any = false;
-        expected = false;
-        webView.displayZoomControls = currentValue;
-
-        expected = false;
-        expect(webView.displayZoomControls).toBe(expected);
-        expect(androidWebView.getSettings().getDisplayZoomControls()).toBe(expected);
-
-        currentValue = "true";
-        expected = true;
-        webView.displayZoomControls = currentValue;
-
-        expect(webView.displayZoomControls).toBe(expected);
-        expect(androidWebView.getSettings().getDisplayZoomControls()).toBe(expected);
-
-        currentValue = "false";
-        expected = false;
-        webView.displayZoomControls = currentValue;
-
-        expect(webView.displayZoomControls).toBe(expected);
-        expect(androidWebView.getSettings().getDisplayZoomControls()).toBe(expected);
-        // << webview-built-in-zoom-controls
-    });
-
-    afterEach(() => (currentPage = null));
 }
 
 function iOS_Tests(getWebView: () => WebViewExt, getPage: () => Page) {

@@ -6,8 +6,10 @@ jasmine.DEFAULT_TIMEOUT_INTERVAL = 10000;
 import * as nsApp from "tns-core-modules/application";
 import * as fs from "tns-core-modules/file-system";
 import * as trace from "tns-core-modules/trace";
-import { EventData, View } from "tns-core-modules/ui/page/page";
+import { EventData, View, Page } from "tns-core-modules/ui/page/page";
 import * as utils from "tns-core-modules/utils/utils";
+import { Frame } from "tns-core-modules/ui/frame/frame";
+import { ActionBar } from "tns-core-modules/ui/action-bar/action-bar";
 
 trace.enable();
 trace.setCategories("NOTA");
@@ -34,6 +36,47 @@ export async function loadFile(path: string) {
 
 export function timeoutPromise(delay = 100) {
     return new Promise((resolve) => setTimeout(resolve, delay));
+}
+
+export function getRootFrame() {
+    let frame = nsApp.getRootView();
+    while (frame) {
+        if (frame instanceof Frame) {
+            return frame;
+        }
+
+        frame = frame.parent as any;
+    }
+
+    return null;
+}
+
+export async function preparePageForTest() {
+    const frame = getRootFrame();
+
+    const newPage = new Page();
+    newPage.actionBar = new ActionBar();
+    newPage.actionBar.title = "WebView Test";
+
+    frame.navigate({
+        create() {
+            return newPage;
+        },
+        animated: false,
+    });
+
+    await eventAsPromise(newPage, Page.navigatedToEvent);
+
+    return newPage;
+}
+
+export function destroyPageAfterTest(page: Page) {
+    if (page) {
+        page.content = null;
+    }
+
+    const frame = getRootFrame();
+    frame.goBack(frame.backStack[0]);
 }
 
 // HTML test files
