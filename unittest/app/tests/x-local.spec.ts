@@ -23,7 +23,6 @@ describe("x-local schema", () => {
     });
 
     it("XHR", async () => {
-        // >> webview-x-localfile-xhr
         webView.registerLocalResource(localStyleSheetCssNAME, localStyleSheetCssFile);
 
         const expectedData = await loadFile(localStyleSheetCssFile);
@@ -65,19 +64,15 @@ describe("x-local schema", () => {
         const actualData = (await webView.executePromise<string>(`makeRequestPromise({url: 'x-local://${localStyleSheetCssNAME}'})`)) || "";
 
         expect(actualData.trim()).toBe(expectedData.trim());
-
-        // << webview-x-localfile-xhr
     });
 
     it("Fetch-API", async () => {
-        // >> webview-x-localfile-fetch
         webView.registerLocalResource(localStyleSheetCssNAME, localStyleSheetCssFile);
 
         const expectedData = await loadFile(localStyleSheetCssFile);
 
         const args = await webView.loadUrl(emptyHTMLFile);
 
-        // >> (hide)
         const expectedTitle = "Blank";
         const actualTitle = await webView.getTitle();
         expect(args.error).toBeUndefined();
@@ -99,6 +94,5 @@ describe("x-local schema", () => {
         );
 
         expect(actualData.trim()).toBe(expectedData.trim());
-        // << webview-x-localfile-fetch
     });
 });

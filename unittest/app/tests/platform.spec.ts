@@ -57,7 +57,6 @@ function android_Tests(getWebView: () => WebViewExt, getPage: () => Page) {
             const webView = getWebView();
             waitForLoadedView(webView);
 
-            // >> webview-built-in-zoom-controls
             const androidWebView = webView.android as android.webkit.WebView;
             const args = await webView.loadUrl(emptyHTMLFile);
 
@@ -91,14 +90,12 @@ function android_Tests(getWebView: () => WebViewExt, getPage: () => Page) {
 
             expect(webView.builtInZoomControls).toBe(expected);
             expect(androidWebView.getSettings().getBuiltInZoomControls()).toBe(expected);
-            // << webview-built-in-zoom-controls
         });
 
         it("displayZoomControls", async () => {
             const webView = getWebView();
             waitForLoadedView(webView);
 
-            // >> webview-built-in-zoom-controls
             const androidWebView = webView.android as android.webkit.WebView;
             const args = await webView.loadUrl(emptyHTMLFile);
 
@@ -133,7 +130,6 @@ function android_Tests(getWebView: () => WebViewExt, getPage: () => Page) {
 
             expect(webView.displayZoomControls).toBe(expected);
             expect(androidWebView.getSettings().getDisplayZoomControls()).toBe(expected);
-            // << webview-built-in-zoom-controls
         });
 
         afterEach(() => (currentPage = null));

@@ -38,7 +38,6 @@ describe("Auto load", () => {
         const messageEvent2 = eventAsPromise<any>(webView, "tns-message-2");
         const messageEvent3 = eventAsPromise<any>(webView, "tns-message-3");
 
-        // >> webview-auto-exec-javascript
         const autoLoadScript1 = `
           new Promise(function(resolve) {
             window.nsWebViewBridge.emit("tns-message-1", ${JSON.stringify(expectedMessage)});
@@ -86,14 +85,11 @@ describe("Auto load", () => {
         for (const { data } of messageArgs) {
             expect(data).toBe(expectedMessage);
         }
-
-        // << webview-auto-exec-javascript
     });
 
     it("autoLoadJavaScriptFile", async () => {
         const expectedTitle = "Blank";
 
-        // >> webview-autoload-javascript
         webView.autoLoadJavaScriptFile(localJavaScriptName, localJavaScriptFile);
 
         const args1 = await webView.loadUrl(javascriptCallsXLocalFile);
@@ -109,6 +105,5 @@ describe("Auto load", () => {
         const actualTitle2 = await webView.getTitle();
         expect(actualTitle2).toBe(expectedTitle);
         expect(await webView.executeJavaScript(`getNumber()`)).toBe(42);
-        // << webview-autoload-javascript
     });
 });

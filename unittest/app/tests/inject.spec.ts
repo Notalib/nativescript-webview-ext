@@ -41,8 +41,6 @@ describe("Inject files", () => {
         webView.registerLocalResource(localStyleSheetCssNAME, localStyleSheetCssFile);
         const args = await webView.loadUrl(cssPreDefinedLinkFile);
 
-        // >> webview-x-local-predefined-link
-        // >> (hide)
         const expectedTitle = "Load predefined x-local stylesheet";
         expect(args.error).toBeUndefined();
         const actualTitle = await webView.getTitle();
@@ -51,7 +49,6 @@ describe("Inject files", () => {
         const styles = await webView.executeJavaScript<any>(jsGetElementStyleSheet);
         expect(styles).toBeDefined();
         expect(new Color(styles.color).hex).toBe(expectedRedColor.hex);
-        // << webview-x-local-predefined-link
     });
 
     it("StyleSheet Link", async () => {
@@ -60,8 +57,6 @@ describe("Inject files", () => {
         webView.registerLocalResource(localStyleSheetCssNAME, localStyleSheetCssFile);
         const args = await webView.loadUrl(cssNotPredefinedFile);
 
-        // >> webview-x-local-inject-css-link
-        // >> (hide)
         const expectedTitle = "Inject stylesheet via x-local";
 
         expect(args.error).toBeUndefined();
@@ -79,7 +74,6 @@ describe("Inject files", () => {
         webView.registerLocalResource(localJavaScriptName, localJavaScriptFile);
         const args = await webView.loadUrl(javascriptCallsXLocalFile);
 
-        // >> webview-x-local-inject-once
         const expectedTitle = "Blank";
 
         const actualTitle = await webView.getTitle();
@@ -90,6 +84,5 @@ describe("Inject files", () => {
         await timeoutPromise();
 
         expect(await webView.executeJavaScript(`getNumber()`)).toBe(42);
-        // << webview-x-local-inject-once
     });
 });

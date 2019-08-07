@@ -27,7 +27,6 @@ describe("JavaScript Bridge", () => {
      * Tests event callback by triggering an event in the webview that emits an event to the nativescript layer.
      */
     it("Bridge events", async () => {
-        // >> webview-bridge-events
         const expected = {
             huba: "hop",
         };
@@ -44,8 +43,6 @@ describe("JavaScript Bridge", () => {
         const { data: result } = await webEventData;
 
         expect(result).toEqual(expected);
-
-        // << webview-bridge-events
     });
 
     async function runWebViewJavaScriptInterfaceTest<T>(scriptCode: string, expected: T) {
@@ -109,12 +106,10 @@ describe("JavaScript Bridge", () => {
      * Test calls in the WebView that resolves or rejects a promise.
      */
     it("executeJavaScript promises", async () => {
-        // >> webview-promise
         const args = await webView.loadUrl(javascriptCallsFile);
 
         expect(args.error).toBeUndefined();
         expectAsync(webView.executePromise(`testPromiseResolve()`)).toBeResolvedTo(42);
         expectAsync(webView.executePromise(`testPromiseReject()`)).toBeRejectedWith("The Cake is a Lie");
-        // << webview-promise
     });
 });
