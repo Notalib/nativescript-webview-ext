@@ -61,12 +61,8 @@ async function runTestOniOSDevice(emulatorInfo: IOSEmulatorInfo) {
     const start = Date.now();
     console.log(`Running Unit tests on:\n${cls}`);
 
-    const { stdout, stderr } = await execPromise(`tns test ios --device ${deviceId} --justlaunch --syncAllFiles`);
-    if (stderr) {
-        console.log(stdout);
-
-        throw new Error(stderr);
-    }
+    const { stdout } = await execPromise(`tns test ios --device ${deviceId} --justlaunch`);
+    console.log(stdout);
 
     const runTime = Date.now() - start;
     console.log(`Ended after ${runTime / 1000}s`);
