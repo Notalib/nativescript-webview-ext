@@ -1,6 +1,7 @@
 /// <reference path="./types/url.d.ts" />
 
 import * as fs from "tns-core-modules/file-system";
+import { isAndroid } from "tns-core-modules/platform";
 import { booleanConverter, ContainerView, CSSType, EventData, Property, traceEnabled, traceMessageType, traceWrite } from "tns-core-modules/ui/core/view";
 import * as URL from "url";
 import { fetchPolyfill, metadataViewPort, promisePolyfill, webViewBridge } from "./nativescript-webview-bridge-loader";
@@ -345,9 +346,8 @@ export class WebViewExtBase extends ContainerView {
 
     /**
      * Gets the native [WKWebView](https://developer.apple.com/documentation/webkit/wkwebview/) that represents the user interface for this component. Valid only when running on iOS 11+.
-     * Gets the native [UIWebView]https://developer.apple.com/documentation/uikit/uiwebview that represents the user interface for this component. Valid only when running on iOS <11
      */
-    public ios: any /* WKWebView | UIWebView */;
+    public ios: any /* WKWebView */;
 
     public get interceptScheme() {
         return "x-local";
@@ -392,15 +392,7 @@ export class WebViewExtBase extends ContainerView {
         return EventNames.WebConsole;
     }
 
-    /**
-     * iOS <11 uses an UIWebview
-     */
-    public readonly isUIWebView: boolean;
-
-    /**
-     * iOS 11+ uses a WKWebView
-     */
-    public readonly isWKWebView: boolean;
+    public readonly supportXLocalSchema: boolean;
 
     /**
      * Gets or sets the url, local file path or HTML string.
@@ -447,11 +439,6 @@ export class WebViewExtBase extends ContainerView {
      * iOS: Should the scrollView bounce? Defaults to true.
      */
     public scrollBounce: boolean;
-
-    /**
-     * iOS(UIWebView): If true, the webpage is scaled to fit and the user can zoom in and zoom out. If false, user zooming is disabled. The default value is false.
-     */
-    public scalesPageToFit: boolean;
 
     /**
      * Set viewport metadata for the webview.
@@ -897,14 +884,9 @@ export class WebViewExtBase extends ContainerView {
         const promiseScriptCodes = [];
 
         for (const { resourceName, filepath } of files) {
-            const fixedResourceName = this.fixLocalResourceName(resourceName);
-            if (filepath) {
-                this.registerLocalResource(fixedResourceName, filepath);
-            }
-            const href = `${this.interceptScheme}://${fixedResourceName}`;
-            const scriptCode = this.generateLoadJavaScriptFileScriptCode(href);
+            const scriptCode = this.generateLoadJavaScriptFileScriptCode(resourceName, filepath);
             promiseScriptCodes.push(scriptCode);
-            this.writeTrace(`WebViewExt.loadJavaScriptFiles() - > Loading javascript file: "${href}"`);
+            this.writeTrace(`WebViewExt.loadJavaScriptFiles() - > Loading javascript file: "${filepath}"`);
         }
 
         if (promiseScriptCodes.length !== files.length) {
@@ -950,16 +932,11 @@ export class WebViewExtBase extends ContainerView {
         const promiseScriptCodes = [] as string[];
 
         for (const { resourceName, filepath, insertBefore } of files) {
-            const fixedResourceName = this.fixLocalResourceName(resourceName);
-            if (filepath) {
-                this.registerLocalResource(fixedResourceName, filepath);
+            const scriptCode = await this.generateLoadCSSFileScriptCode(resourceName, filepath, insertBefore);
+
+            if (scriptCode) {
+                promiseScriptCodes.push(scriptCode);
             }
-            const href = `${this.interceptScheme}://${fixedResourceName}`;
-            const scriptCode = this.generateLoadCSSFileScriptCode(href, insertBefore);
-
-            promiseScriptCodes.push(scriptCode);
-
-            this.writeTrace(`WebViewExt.loadStyleSheetFiles() - > Loading stylesheet file: ${href}`);
         }
 
         if (promiseScriptCodes.length !== files.length) {
@@ -1105,7 +1082,6 @@ export class WebViewExtBase extends ContainerView {
      * Execute JavaScript inside the webview.
      * The code should be wrapped inside an anonymous-function.
      * Larger scripts should be injected with loadJavaScriptFile.
-     * NOTE: It's not possible to capture syntax errors on UIWebView.
      * NOTE: stringifyResult only applies on iOS.
      */
     public executeJavaScript<T>(scriptCode: string, stringifyResult?: boolean): Promise<T> {
@@ -1219,15 +1195,40 @@ export class WebViewExtBase extends ContainerView {
     /**
      * Generate script code for loading javascript-file.
      */
-    public generateLoadJavaScriptFileScriptCode(scriptHref: string) {
-        return `window.nsWebViewBridge.injectJavaScriptFile(${JSON.stringify(scriptHref)});`;
+    public async generateLoadJavaScriptFileScriptCode(resourceName: string, filepath: string) {
+        if (supportXLocalSchema) {
+            const fixedResourceName = this.fixLocalResourceName(resourceName);
+            if (filepath) {
+                this.registerLocalResource(fixedResourceName, filepath);
+            }
+            const scriptHref = `${this.interceptScheme}://${fixedResourceName}`;
+            return `window.nsWebViewBridge.injectJavaScriptFile(${JSON.stringify(scriptHref)});`;
+        } else {
+            const elId = resourceName.replace(/^[:]*:\/\//, "").replace(/[^a-z0-9]/g, "");
+            const scriptCode = await fs.File.fromPath(filepath).readText();
+
+            return `window.nsWebViewBridge.injectJavaScriptFile(${JSON.stringify(elId)}, ${scriptCode});`;
+        }
     }
 
     /**
      * Generate script code for loading CSS-file.generateLoadCSSFileScriptCode
      */
-    public generateLoadCSSFileScriptCode(stylesheetHref: string, insertBefore = false) {
-        return `window.nsWebViewBridge.injectStyleSheetFile(${JSON.stringify(stylesheetHref)}, ${!!insertBefore});`;
+    public async generateLoadCSSFileScriptCode(resourceName: string, filepath: string, insertBefore = false) {
+        if (supportXLocalSchema) {
+            resourceName = this.fixLocalResourceName(resourceName);
+            if (filepath) {
+                this.registerLocalResource(resourceName, filepath);
+            }
+
+            const stylesheetHref = `${this.interceptScheme}://${resourceName}`;
+            return `window.nsWebViewBridge.injectStyleSheetFile(${JSON.stringify(stylesheetHref)}, ${!!insertBefore});`;
+        } else {
+            const elId = resourceName.replace(/^[:]*:\/\//, "").replace(/[^a-z0-9]/g, "");
+            const stylesheetCode = await fs.File.fromPath(filepath).readText();
+
+            return `window.nsWebViewBridge.injectStyleSheet(${JSON.stringify(elId)}, ${JSON.stringify(stylesheetCode)}, ${!!insertBefore})`;
+        }
     }
 
     /**
@@ -1316,13 +1317,6 @@ export class WebViewExtBase extends ContainerView {
         throw new Error("Method not implemented.");
     }
 
-    /**
-     * Handles UIWebView events. Called from the delegate
-     */
-    public onUIWebViewEvent(url: string) {
-        throw new Error("WebViewExt.onUIWebViewEvent() only available on iOS");
-    }
-
     public zoomIn(): boolean {
         throw new Error("Method not implemented.");
     }
@@ -1391,7 +1385,6 @@ export interface WebViewExtBase {
     /**
      * Override web alerts to replace them.
      * Call args.cancel() on close.
-     * NOTE: Not supported on UIWebView
      */
     on(event: EventNames.WebAlert, callback: (args: WebAlertEventData) => void, thisArg?: any);
     once(event: EventNames.WebAlert, callback: (args: WebAlertEventData) => void, thisArg?: any);
@@ -1399,7 +1392,6 @@ export interface WebViewExtBase {
     /**
      * Override web confirm dialogs to replace them.
      * Call args.cancel(res) on close.
-     * NOTE: Not supported on UIWebView
      */
     on(event: EventNames.WebConfirm, callback: (args: WebConfirmEventData) => void, thisArg?: any);
     once(event: EventNames.WebConfirm, callback: (args: WebConfirmEventData) => void, thisArg?: any);
@@ -1407,7 +1399,6 @@ export interface WebViewExtBase {
     /**
      * Override web confirm prompts to replace them.
      * Call args.cancel(res) on close.
-     * NOTE: Not supported on UIWebView
      */
     on(event: EventNames.WebPrompt, callback: (args: WebPromptEventData) => void, thisArg?: any);
     once(event: EventNames.WebPrompt, callback: (args: WebPromptEventData) => void, thisArg?: any);
@@ -1433,7 +1424,7 @@ scalesPageToFitProperty.register(WebViewExtBase);
 viewPortProperty.register(WebViewExtBase);
 
 /**
- * IOS uses a bridge class to map calls to UIWebView or WKWebView
+ * IOS uses a bridge class to map calls to WKWebView
  */
 export interface IOSWebViewWrapper {
     owner: WeakRef<WebViewExtBase>;
@@ -1499,3 +1490,5 @@ export interface IOSWebViewWrapper {
     scrollBounce: boolean;
     scalesPageToFit: boolean;
 }
+
+export const supportXLocalSchema = isAndroid || typeof CustomUrlSchemeHandler !== "undefined";

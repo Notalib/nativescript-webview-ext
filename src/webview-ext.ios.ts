@@ -3,33 +3,29 @@
 import { profile } from "tns-core-modules/profiling";
 import { traceMessageType } from "tns-core-modules/ui/core/view";
 import { alert, confirm, prompt } from "tns-core-modules/ui/dialogs";
-import { autoInjectJSBridgeProperty, IOSWebViewWrapper, scalesPageToFitProperty, scrollBounceProperty, WebViewExtBase } from "./webview-ext-common";
-import { UIWebViewWrapper } from "./webview-ext.uiwebview";
+import {
+    autoInjectJSBridgeProperty,
+    IOSWebViewWrapper,
+    scalesPageToFitProperty,
+    scrollBounceProperty,
+    supportXLocalSchema,
+    WebViewExtBase,
+} from "./webview-ext-common";
 import { WKWebViewWrapper } from "./webview-ext.wkwebview";
 
 export * from "./webview-ext-common";
 
-export const useWKWebView = typeof CustomUrlSchemeHandler !== "undefined";
-
 export class WebViewExt extends WebViewExtBase {
     protected nativeWrapper: IOSWebViewWrapper;
 
-    public get isUIWebView() {
-        return !useWKWebView;
+    public get supportXLocalSchema() {
+        return supportXLocalSchema;
     }
 
-    public get isWKWebView() {
-        return useWKWebView;
-    }
-
-    public viewPortSize = useWKWebView ? { initialScale: 1.0 } : false;
+    public viewPortSize = { initialScale: 1.0 };
 
     public createNativeView() {
-        if (useWKWebView) {
-            this.nativeWrapper = new WKWebViewWrapper(this);
-        } else {
-            this.nativeWrapper = new UIWebViewWrapper(this);
-        }
+        this.nativeWrapper = new WKWebViewWrapper(this);
 
         return this.nativeWrapper.createNativeView();
     }
@@ -57,7 +53,7 @@ export class WebViewExt extends WebViewExtBase {
 
     protected async injectViewPortMeta() {
         this.nativeWrapper.resetViewPortCode();
-        if (useWKWebView) {
+        if (supportXLocalSchema) {
             return null;
         }
 
@@ -185,6 +181,12 @@ export class WebViewExt extends WebViewExtBase {
 
     public registerLocalResource(resourceName: string, path: string) {
         const cls = `WebViewExt<${this}.ios>.registerLocalResource("${resourceName}", "${path}")`;
+
+        if (!supportXLocalSchema) {
+            this.writeTrace(`${cls} -> custom schema isn't support on iOS <11`, traceMessageType.error);
+            return;
+        }
+
         resourceName = this.fixLocalResourceName(resourceName);
 
         const filepath = this.resolveLocalResourceFilePath(path);
@@ -200,6 +202,11 @@ export class WebViewExt extends WebViewExtBase {
 
     public unregisterLocalResource(resourceName: string) {
         const cls = `WebViewExt<${this}.ios>.unregisterLocalResource("${resourceName}")`;
+        if (!supportXLocalSchema) {
+            this.writeTrace(`${cls} -> custom schema isn't support on iOS <11`, traceMessageType.error);
+            return;
+        }
+
         this.writeTrace(cls);
 
         resourceName = this.fixLocalResourceName(resourceName);
@@ -210,6 +217,10 @@ export class WebViewExt extends WebViewExtBase {
     public getRegisteredLocalResource(resourceName: string) {
         resourceName = this.fixLocalResourceName(resourceName);
         const cls = `WebViewExt<${this}.ios>.getRegisteredLocalResource("${resourceName}")`;
+        if (!supportXLocalSchema) {
+            this.writeTrace(`${cls} -> custom schema isn't support on iOS <11`, traceMessageType.error);
+            return null;
+        }
 
         let result = this.nativeWrapper.getRegisteredLocalResourceFromNative(resourceName);
 
@@ -217,63 +228,24 @@ export class WebViewExt extends WebViewExtBase {
         return result;
     }
 
-    public async onUIWebViewEvent(url: string) {
-        const cls = `WebViewExt<${this}.ios>.onUIWebViewEvent("${url}")`;
-        if (!this.isUIWebView) {
-            this.writeTrace(`${cls} - only works for UIWebView`, traceMessageType.error);
-            return;
-        }
-
-        if (!url.startsWith("js2ios")) {
-            this.writeTrace(`${cls} - only supports js2ios-scheme`, traceMessageType.error);
-            return;
-        }
-
-        try {
-            const message = decodeURIComponent(url.replace(/^js2ios:/, ""));
-            const { eventName, resId } = JSON.parse(message);
-            const data = await this.executeJavaScript<any>(`window.nsWebViewBridge.getUIWebViewResponse(${JSON.stringify(resId)})`);
-
-            this.onWebViewEvent(eventName, data);
-        } catch (err) {
-            this.writeTrace(`${cls} - "${err}"`, traceMessageType.error);
-        }
-    }
-
     public getTitle() {
         return this.executeJavaScript<string>("document.title");
     }
 
     public autoLoadStyleSheetFile(resourceName: string, filepath: string, insertBefore?: boolean) {
-        if (this.isWKWebView) {
-            return this.nativeWrapper.autoLoadStyleSheetFile(resourceName, filepath, insertBefore);
-        } else {
-            return super.autoLoadStyleSheetFile(resourceName, filepath, insertBefore);
-        }
+        return this.nativeWrapper.autoLoadStyleSheetFile(resourceName, filepath, insertBefore);
     }
 
     public removeAutoLoadStyleSheetFile(resourceName: string) {
-        if (this.isWKWebView) {
-            this.nativeWrapper.removeAutoLoadStyleSheetFile(resourceName);
-        } else {
-            super.removeAutoLoadStyleSheetFile(resourceName);
-        }
+        this.nativeWrapper.removeAutoLoadStyleSheetFile(resourceName);
     }
 
     public autoLoadJavaScriptFile(resourceName: string, filepath: string) {
-        if (this.isWKWebView) {
-            this.nativeWrapper.autoLoadJavaScriptFile(resourceName, filepath);
-        } else {
-            super.autoLoadJavaScriptFile(resourceName, filepath);
-        }
+        this.nativeWrapper.autoLoadJavaScriptFile(resourceName, filepath);
     }
 
     public removeAutoLoadJavaScriptFile(resourceName: string) {
-        if (this.isWKWebView) {
-            this.nativeWrapper.removeAutoLoadJavaScriptFile(resourceName);
-        } else {
-            super.removeAutoLoadJavaScriptFile(resourceName);
-        }
+        this.nativeWrapper.removeAutoLoadJavaScriptFile(resourceName);
     }
 
     [autoInjectJSBridgeProperty.setNative](enabled: boolean) {

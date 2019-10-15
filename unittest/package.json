@@ -2,10 +2,10 @@
     "nativescript": {
         "id": "dk.nota.webviewexttest",
         "tns-ios": {
-            "version": "6.0.1"
+            "version": "6.1.1"
         },
         "tns-android": {
-            "version": "6.0.1"
+            "version": "6.1.2"
         }
     },
     "main": "app.js",
@@ -16,7 +16,7 @@
         "@nota/nativescript-webview-ext": "file:../src",
         "nativescript-theme-core": "^1.0.6",
         "nativescript-unit-test-runner": "0.7.0",
-        "tns-core-modules": "^6.0.5",
+        "tns-core-modules": "^6.1.1",
         "url": "^0.11.0"
     },
     "devDependencies": {
@@ -26,11 +26,11 @@
         "karma-jasmine": "2.0.1",
         "karma-nativescript-launcher": "0.4.0",
         "karma-webpack": "3.0.5",
-        "nativescript-dev-webpack": "1.0.3",
+        "nativescript-dev-webpack": "1.2.1",
         "prettier": "^1.18.2",
         "prettier-check": "^2.0.0",
-        "tns-platform-declarations": "^6.0.5",
-        "tslint": "^5.18.0",
+        "tns-platform-declarations": "^6.1.1",
+        "tslint": "^5.20.0",
         "typescript": "^3.5.3"
     },
     "scripts": {

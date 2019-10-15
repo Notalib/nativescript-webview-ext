@@ -4,7 +4,7 @@
 import * as fs from "tns-core-modules/file-system";
 import { webViewBridge } from "./nativescript-webview-bridge-loader";
 import { WebViewExt } from "./webview-ext";
-import { IOSWebViewWrapper, NavigationType, traceMessageType, WebViewExtBase } from "./webview-ext-common";
+import { IOSWebViewWrapper, NavigationType, supportXLocalSchema, traceMessageType, WebViewExtBase } from "./webview-ext-common";
 
 export class WKNavigationDelegateNotaImpl extends NSObject implements WKNavigationDelegate {
     public static ObjCProtocols = [WKNavigationDelegate];
@@ -248,7 +248,7 @@ export class WKWebViewWrapper implements IOSWebViewWrapper {
     protected wkWebViewConfiguration: WKWebViewConfiguration;
     protected wkNavigationDelegate: WKNavigationDelegateNotaImpl;
     protected wkUIDelegate: WKUIDelegateNotaImpl;
-    protected wkCustomUrlSchemeHandler: CustomUrlSchemeHandler;
+    protected wkCustomUrlSchemeHandler: CustomUrlSchemeHandler | void;
     protected wkUserContentController: WKUserContentController;
     protected wkUserScriptInjectWebViewBridge?: WKUserScript;
     protected wkUserScriptViewPortCode: Promise<WKUserScript>;
@@ -291,9 +291,10 @@ export class WKWebViewWrapper implements IOSWebViewWrapper {
         configuration.preferences.setValueForKey(true, "allowFileAccessFromFileURLs");
         configuration.setValueForKey(true, "allowUniversalAccessFromFileURLs");
 
-        this.wkCustomUrlSchemeHandler = new CustomUrlSchemeHandler();
-
-        configuration.setURLSchemeHandlerForURLScheme(this.wkCustomUrlSchemeHandler, owner.interceptScheme);
+        if (supportXLocalSchema) {
+            this.wkCustomUrlSchemeHandler = new CustomUrlSchemeHandler();
+            configuration.setURLSchemeHandlerForURLScheme(this.wkCustomUrlSchemeHandler, owner.interceptScheme);
+        }
 
         const webview = new WKWebView({
             frame: CGRectZero,
@@ -440,32 +441,47 @@ export class WKWebViewWrapper implements IOSWebViewWrapper {
     }
 
     public registerLocalResourceForNative(resourceName: string, filepath: string) {
+        if (!this.wkCustomUrlSchemeHandler) {
+            return;
+        }
+
         this.wkCustomUrlSchemeHandler.registerLocalResourceForKeyFilepath(resourceName, filepath);
     }
 
     public unregisterLocalResourceForNative(resourceName: string) {
+        if (!this.wkCustomUrlSchemeHandler) {
+            return;
+        }
+
         this.wkCustomUrlSchemeHandler.unregisterLocalResourceForKey(resourceName);
     }
 
     public getRegisteredLocalResourceFromNative(resourceName: string) {
+        if (!this.wkCustomUrlSchemeHandler) {
+            return null;
+        }
+
         return this.wkCustomUrlSchemeHandler.getRegisteredLocalResourceForKey(resourceName);
     }
 
-    public autoLoadStyleSheetFile(resourceName: string, filepath: string, insertBefore?: boolean) {
+    public async autoLoadStyleSheetFile(resourceName: string, path: string, insertBefore?: boolean) {
         const owner = this.owner.get();
         if (!owner) {
             return;
         }
 
-        resourceName = this.fixLocalResourceName(resourceName);
-        if (filepath) {
-            owner.registerLocalResource(resourceName, filepath);
+        const filepath = owner.resolveLocalResourceFilePath(path);
+        if (!filepath) {
+            owner.writeTrace(`WKWebViewWrapper.autoLoadStyleSheetFile("${resourceName}", "${path}") - couldn't resolve filepath`);
+            return;
         }
 
-        const href = `${owner.interceptScheme}://${resourceName}`;
-        const scriptCode = owner.generateLoadCSSFileScriptCode(href, insertBefore);
+        resourceName = this.fixLocalResourceName(resourceName);
+        const scriptCode = await owner.generateLoadCSSFileScriptCode(resourceName, filepath, insertBefore);
 
-        this.addNamedWKUserScript(`auto-load-css-${resourceName}`, scriptCode);
+        if (scriptCode) {
+            this.addNamedWKUserScript(`auto-load-css-${resourceName}`, scriptCode);
+        }
     }
 
     public removeAutoLoadStyleSheetFile(resourceName: string) {
@@ -479,14 +495,11 @@ export class WKWebViewWrapper implements IOSWebViewWrapper {
             return;
         }
 
-        resourceName = this.fixLocalResourceName(resourceName);
-
         const filepath = owner.resolveLocalResourceFilePath(path);
         if (!filepath) {
             owner.writeTrace(`WKWebViewWrapper.autoLoadJavaScriptFile("${resourceName}", "${path}") - couldn't resolve filepath`);
             return;
         }
-        owner.registerLocalResource(resourceName, path);
 
         const scriptCode = await fs.File.fromPath(filepath).readText();
 
