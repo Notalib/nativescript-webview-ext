@@ -15,8 +15,6 @@ let gotMessageData: any = null;
 export function webviewLoaded(args: LoadEventData) {
     webview = args.object;
 
-    webview.registerLocalResource("index.html", "~/assets/test-data/html/javascript-calls.html");
-
     if (isAndroid) {
         webview.src = "http://10.0.2.2:8080";
     } else {

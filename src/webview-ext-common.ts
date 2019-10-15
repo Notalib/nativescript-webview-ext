@@ -1,7 +1,6 @@
 /// <reference path="./types/url.d.ts" />
 
 import * as fs from "tns-core-modules/file-system";
-import { isAndroid } from "tns-core-modules/platform";
 import { booleanConverter, ContainerView, CSSType, EventData, Property, traceEnabled, traceMessageType, traceWrite } from "tns-core-modules/ui/core/view";
 import * as URL from "url";
 import { fetchPolyfill, metadataViewPort, promisePolyfill, webViewBridge } from "./nativescript-webview-bridge-loader";
@@ -761,7 +760,6 @@ export class WebViewExtBase extends ContainerView {
 
         if (lcSrc.startsWith(this.interceptScheme) || lcSrc.startsWith("http://") || lcSrc.startsWith("https://") || lcSrc.startsWith("file:///")) {
             src = this.normalizeURL(src);
-            console.log(src, originSrc);
 
             if (originSrc !== src) {
                 // Make sure the src-property reflects the actual value.
@@ -933,7 +931,6 @@ export class WebViewExtBase extends ContainerView {
 
         for (const { resourceName, filepath, insertBefore } of files) {
             const scriptCode = await this.generateLoadCSSFileScriptCode(resourceName, filepath, insertBefore);
-
             if (scriptCode) {
                 promiseScriptCodes.push(scriptCode);
             }
@@ -1195,17 +1192,18 @@ export class WebViewExtBase extends ContainerView {
     /**
      * Generate script code for loading javascript-file.
      */
-    public async generateLoadJavaScriptFileScriptCode(resourceName: string, filepath: string) {
-        if (supportXLocalSchema) {
+    public async generateLoadJavaScriptFileScriptCode(resourceName: string, path: string) {
+        if (this.supportXLocalSchema) {
             const fixedResourceName = this.fixLocalResourceName(resourceName);
-            if (filepath) {
-                this.registerLocalResource(fixedResourceName, filepath);
+            if (path) {
+                this.registerLocalResource(fixedResourceName, path);
             }
+
             const scriptHref = `${this.interceptScheme}://${fixedResourceName}`;
             return `window.nsWebViewBridge.injectJavaScriptFile(${JSON.stringify(scriptHref)});`;
         } else {
             const elId = resourceName.replace(/^[:]*:\/\//, "").replace(/[^a-z0-9]/g, "");
-            const scriptCode = await fs.File.fromPath(filepath).readText();
+            const scriptCode = await fs.File.fromPath(this.resolveLocalResourceFilePath(path) as string).readText();
 
             return `window.nsWebViewBridge.injectJavaScriptFile(${JSON.stringify(elId)}, ${scriptCode});`;
         }
@@ -1214,18 +1212,19 @@ export class WebViewExtBase extends ContainerView {
     /**
      * Generate script code for loading CSS-file.generateLoadCSSFileScriptCode
      */
-    public async generateLoadCSSFileScriptCode(resourceName: string, filepath: string, insertBefore = false) {
-        if (supportXLocalSchema) {
+    public async generateLoadCSSFileScriptCode(resourceName: string, path: string, insertBefore = false) {
+        if (this.supportXLocalSchema) {
             resourceName = this.fixLocalResourceName(resourceName);
-            if (filepath) {
-                this.registerLocalResource(resourceName, filepath);
+            if (path) {
+                this.registerLocalResource(resourceName, path);
             }
 
             const stylesheetHref = `${this.interceptScheme}://${resourceName}`;
             return `window.nsWebViewBridge.injectStyleSheetFile(${JSON.stringify(stylesheetHref)}, ${!!insertBefore});`;
         } else {
             const elId = resourceName.replace(/^[:]*:\/\//, "").replace(/[^a-z0-9]/g, "");
-            const stylesheetCode = await fs.File.fromPath(filepath).readText();
+
+            const stylesheetCode = await fs.File.fromPath(this.resolveLocalResourceFilePath(path) as string).readText();
 
             return `window.nsWebViewBridge.injectStyleSheet(${JSON.stringify(elId)}, ${JSON.stringify(stylesheetCode)}, ${!!insertBefore})`;
         }
@@ -1490,5 +1489,3 @@ export interface IOSWebViewWrapper {
     scrollBounce: boolean;
     scalesPageToFit: boolean;
 }
-
-export const supportXLocalSchema = isAndroid || typeof CustomUrlSchemeHandler !== "undefined";

@@ -4,7 +4,7 @@
 import * as fs from "tns-core-modules/file-system";
 import { webViewBridge } from "./nativescript-webview-bridge-loader";
 import { WebViewExt } from "./webview-ext";
-import { IOSWebViewWrapper, NavigationType, supportXLocalSchema, traceMessageType, WebViewExtBase } from "./webview-ext-common";
+import { IOSWebViewWrapper, NavigationType, traceMessageType, WebViewExtBase } from "./webview-ext-common";
 
 export class WKNavigationDelegateNotaImpl extends NSObject implements WKNavigationDelegate {
     public static ObjCProtocols = [WKNavigationDelegate];
@@ -291,7 +291,7 @@ export class WKWebViewWrapper implements IOSWebViewWrapper {
         configuration.preferences.setValueForKey(true, "allowFileAccessFromFileURLs");
         configuration.setValueForKey(true, "allowUniversalAccessFromFileURLs");
 
-        if (supportXLocalSchema) {
+        if (owner.supportXLocalSchema) {
             this.wkCustomUrlSchemeHandler = new CustomUrlSchemeHandler();
             configuration.setURLSchemeHandlerForURLScheme(this.wkCustomUrlSchemeHandler, owner.interceptScheme);
         }
