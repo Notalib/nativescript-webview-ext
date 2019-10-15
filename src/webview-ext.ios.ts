@@ -4,7 +4,7 @@
 import { profile } from "tns-core-modules/profiling";
 import { traceMessageType } from "tns-core-modules/ui/core/view";
 import { alert, confirm, prompt } from "tns-core-modules/ui/dialogs";
-import { autoInjectJSBridgeProperty, IOSWebViewWrapper, scalesPageToFitProperty, scrollBounceProperty, WebViewExtBase } from "./webview-ext-common";
+import { autoInjectJSBridgeProperty, IOSWebViewWrapper, scrollBounceProperty, WebViewExtBase } from "./webview-ext-common";
 import { WKWebViewWrapper } from "./webview-ext.wkwebview";
 
 export * from "./webview-ext-common";
@@ -252,13 +252,5 @@ export class WebViewExt extends WebViewExtBase {
 
     [scrollBounceProperty.setNative](enabled: boolean) {
         this.nativeWrapper.scrollBounce = !!enabled;
-    }
-
-    [scalesPageToFitProperty.getDefault]() {
-        return !!this.nativeWrapper.scalesPageToFit;
-    }
-
-    [scalesPageToFitProperty.setNative](enabled: boolean) {
-        this.nativeWrapper.scalesPageToFit = !!enabled;
     }
 }

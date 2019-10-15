@@ -73,12 +73,6 @@ export const scrollBounceProperty = new Property<WebViewExtBase, boolean>({
     valueConverter: booleanConverter,
 });
 
-export const scalesPageToFitProperty = new Property<WebViewExtBase, boolean>({
-    name: "scalesPageToFit",
-    defaultValue: false,
-    valueConverter: booleanConverter,
-});
-
 export type ViewPortValue = boolean | ViewPortProperties;
 export const viewPortProperty = new Property<WebViewExtBase, ViewPortValue>({
     name: "viewPortSize",
@@ -1419,7 +1413,6 @@ domStorageProperty.register(WebViewExtBase);
 srcProperty.register(WebViewExtBase);
 supportZoomProperty.register(WebViewExtBase);
 scrollBounceProperty.register(WebViewExtBase);
-scalesPageToFitProperty.register(WebViewExtBase);
 viewPortProperty.register(WebViewExtBase);
 
 /**
@@ -1487,5 +1480,4 @@ export interface IOSWebViewWrapper {
     enableAutoInject(enable: boolean): void;
 
     scrollBounce: boolean;
-    scalesPageToFit: boolean;
 }

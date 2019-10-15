@@ -52,7 +52,6 @@
     "Android",
     "iOS",
     "WebView",
-    "UIWebView",
     "WkWebView"
   ],
   "author": {
