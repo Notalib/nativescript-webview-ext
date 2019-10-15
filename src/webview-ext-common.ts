@@ -1205,7 +1205,7 @@ export class WebViewExtBase extends ContainerView {
             const elId = resourceName.replace(/^[:]*:\/\//, "").replace(/[^a-z0-9]/g, "");
             const scriptCode = await fs.File.fromPath(this.resolveLocalResourceFilePath(path) as string).readText();
 
-            return `window.nsWebViewBridge.injectJavaScriptFile(${JSON.stringify(elId)}, ${scriptCode});`;
+            return `window.nsWebViewBridge.injectJavaScript(${JSON.stringify(elId)}, ${scriptCode});`;
         }
     }
 
