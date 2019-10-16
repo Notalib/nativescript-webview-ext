@@ -73,12 +73,6 @@ export const scrollBounceProperty = new Property<WebViewExtBase, boolean>({
     valueConverter: booleanConverter,
 });
 
-export const scalesPageToFitProperty = new Property<WebViewExtBase, boolean>({
-    name: "scalesPageToFit",
-    defaultValue: false,
-    valueConverter: booleanConverter,
-});
-
 export type ViewPortValue = boolean | ViewPortProperties;
 export const viewPortProperty = new Property<WebViewExtBase, ViewPortValue>({
     name: "viewPortSize",
@@ -1419,73 +1413,4 @@ domStorageProperty.register(WebViewExtBase);
 srcProperty.register(WebViewExtBase);
 supportZoomProperty.register(WebViewExtBase);
 scrollBounceProperty.register(WebViewExtBase);
-scalesPageToFitProperty.register(WebViewExtBase);
 viewPortProperty.register(WebViewExtBase);
-
-/**
- * IOS uses a bridge class to map calls to WKWebView
- */
-export interface IOSWebViewWrapper {
-    owner: WeakRef<WebViewExtBase>;
-
-    /**
-     * Create Native View object
-     */
-    createNativeView(): any;
-
-    /**
-     * Init the native view.
-     */
-    initNativeView(): void;
-
-    /**
-     * Dispose the native view
-     */
-    disposeNativeView(): void;
-
-    /**
-     * Add Delegate on loaded event
-     */
-    onLoaded(): void;
-
-    /**
-     * Null the delegate on unloaded event.
-     */
-    onUnloaded(): void;
-
-    // Resource APIs
-    executeJavaScript(scriptCode: string): Promise<any>;
-    registerLocalResourceForNative(resourceName: string, filepath: string): void;
-    unregisterLocalResourceForNative(resourceName: string): void;
-    getRegisteredLocalResourceFromNative(resourceName: string): string;
-    autoLoadStyleSheetFile(resourceName: string, filepath: string, insertBefore?: boolean): void;
-    removeAutoLoadStyleSheetFile(resourceName: string): void;
-    autoLoadJavaScriptFile(resourceName: string, filepath: string): Promise<void>;
-    removeAutoLoadJavaScriptFile(resourceName: string): void;
-
-    resetViewPortCode(): Promise<void>;
-
-    // WebView calls and properties
-    stopLoading(): void;
-    loadUrl(url: string): void;
-    loadData(content: string): void;
-    readonly canGoBack: boolean;
-    readonly canGoForward: boolean;
-    goBack(): void;
-    goForward(): void;
-    reload(): void;
-
-    /**
-     * Should WebViewBridge be inject on loadFinished?
-     * WKWebView uses WKUserScripts for this.
-     */
-    readonly shouldInjectWebViewBridge: boolean;
-
-    /**
-     * Enable/Disable auto injection of scripts.
-     */
-    enableAutoInject(enable: boolean): void;
-
-    scrollBounce: boolean;
-    scalesPageToFit: boolean;
-}
