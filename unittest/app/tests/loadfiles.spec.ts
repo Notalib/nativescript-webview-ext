@@ -1,5 +1,5 @@
+import { Page } from "@nativescript/core/ui/page";
 import { LoadFinishedEventData, WebViewExt } from "@nota/nativescript-webview-ext";
-import { Page } from "tns-core-modules/ui/page";
 import * as url from "url";
 import {
     destroyPageAfterTest,

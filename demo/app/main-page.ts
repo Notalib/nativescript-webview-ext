@@ -1,7 +1,7 @@
-import { isAndroid, LoadEventData, LoadFinishedEventData, ShouldOverrideUrlLoadEventData, WebAlertEventData, WebViewExt } from "@nota/nativescript-webview-ext";
+import * as observable from "@nativescript/core/data/observable";
+import * as trace from "@nativescript/core/trace";
+import { isAndroid, LoadEventData, LoadFinishedEventData, ShouldOverrideUrlLoadEventData, WebViewExt } from "@nota/nativescript-webview-ext";
 import * as _ from "lodash";
-import * as observable from "tns-core-modules/data/observable";
-import * as trace from "tns-core-modules/trace";
 
 let webview: WebViewExt;
 

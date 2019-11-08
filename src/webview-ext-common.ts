@@ -1,11 +1,11 @@
 /// <reference path="./types/url.d.ts" />
 
-import * as fs from "tns-core-modules/file-system";
-import { booleanConverter, ContainerView, CSSType, EventData, Property, traceEnabled, traceMessageType, traceWrite } from "tns-core-modules/ui/core/view";
+import * as fs from "@nativescript/core/file-system";
+import { booleanConverter, ContainerView, CSSType, EventData, Property, traceEnabled, traceMessageType, traceWrite } from "@nativescript/core/ui/core/view";
 import * as URL from "url";
 import { fetchPolyfill, metadataViewPort, promisePolyfill, webViewBridge } from "./nativescript-webview-bridge-loader";
 
-export * from "tns-core-modules/ui/core/view";
+export * from "@nativescript/core/ui/core/view";
 export interface ViewPortProperties {
     width?: number | "device-width";
     height?: number | "device-height";

@@ -1,10 +1,10 @@
 /// <reference path="./node_modules/tns-platform-declarations/ios.d.ts" />
 /// <reference path="./types/ios/NotaWebViewExt.d.ts" />
 
-import * as fs from "tns-core-modules/file-system";
-import { profile } from "tns-core-modules/profiling";
-import { traceMessageType } from "tns-core-modules/ui/core/view";
-import { alert, confirm, prompt } from "tns-core-modules/ui/dialogs";
+import * as fs from "@nativescript/core/file-system";
+import { profile } from "@nativescript/core/profiling";
+import { traceMessageType } from "@nativescript/core/ui/core/view";
+import { alert, confirm, prompt } from "@nativescript/core/ui/dialogs";
 import { webViewBridge } from "./nativescript-webview-bridge-loader";
 import { autoInjectJSBridgeProperty, NavigationType, scrollBounceProperty, WebViewExtBase } from "./webview-ext-common";
 

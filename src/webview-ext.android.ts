@@ -1,6 +1,6 @@
 /// <reference path="./types/android/webviewinterface.d.ts" />
 
-import * as fs from "tns-core-modules/file-system";
+import * as fs from "@nativescript/core/file-system";
 import {
     builtInZoomControlsProperty,
     CacheMode,

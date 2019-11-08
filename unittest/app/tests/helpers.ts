@@ -3,13 +3,13 @@
 
 jasmine.DEFAULT_TIMEOUT_INTERVAL = 10000;
 
-import * as nsApp from "tns-core-modules/application";
-import * as fs from "tns-core-modules/file-system";
-import * as trace from "tns-core-modules/trace";
-import { ActionBar } from "tns-core-modules/ui/action-bar/action-bar";
-import { Frame } from "tns-core-modules/ui/frame/frame";
-import { EventData, Page, View } from "tns-core-modules/ui/page/page";
-import * as utils from "tns-core-modules/utils/utils";
+import * as nsApp from "@nativescript/core/application";
+import * as fs from "@nativescript/core/file-system";
+import * as trace from "@nativescript/core/trace";
+import { ActionBar } from "@nativescript/core/ui/action-bar/action-bar";
+import { Frame } from "@nativescript/core/ui/frame/frame";
+import { EventData, Page, View } from "@nativescript/core/ui/page/page";
+import * as utils from "@nativescript/core/utils/utils";
 
 trace.enable();
 trace.setCategories("NOTA");
