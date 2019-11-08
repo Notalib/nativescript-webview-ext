@@ -873,7 +873,7 @@ export class WebViewExtBase extends ContainerView {
             return;
         }
 
-        const promiseScriptCodes = [];
+        const promiseScriptCodes = [] as Promise<string>[];
 
         for (const { resourceName, filepath } of files) {
             const scriptCode = this.generateLoadJavaScriptFileScriptCode(resourceName, filepath);
@@ -897,7 +897,7 @@ export class WebViewExtBase extends ContainerView {
             return;
         }
 
-        await this.executePromises(promiseScriptCodes);
+        await this.executePromises(await Promise.all(promiseScriptCodes));
     }
 
     /**
@@ -921,13 +921,11 @@ export class WebViewExtBase extends ContainerView {
             return;
         }
 
-        const promiseScriptCodes = [] as string[];
+        const promiseScriptCodes = [] as Promise<string>[];
 
         for (const { resourceName, filepath, insertBefore } of files) {
-            const scriptCode = await this.generateLoadCSSFileScriptCode(resourceName, filepath, insertBefore);
-            if (scriptCode) {
-                promiseScriptCodes.push(scriptCode);
-            }
+            const scriptCode = this.generateLoadCSSFileScriptCode(resourceName, filepath, insertBefore);
+            promiseScriptCodes.push(scriptCode);
         }
 
         if (promiseScriptCodes.length !== files.length) {
@@ -942,7 +940,7 @@ export class WebViewExtBase extends ContainerView {
             return;
         }
 
-        await this.executePromises(promiseScriptCodes);
+        await this.executePromises(await Promise.all(promiseScriptCodes));
     }
 
     /**
@@ -1104,8 +1102,16 @@ export class WebViewExtBase extends ContainerView {
 
         const scriptBody = [] as string[];
 
-        // Execute the promises in order, one at a time.
         for (const scriptCode of scriptCodes) {
+            if (!scriptCode) {
+                continue;
+            }
+
+            if (typeof scriptCode !== "string") {
+                this.writeTrace(`WebViewExt.executePromises() - scriptCode is not a string`);
+                continue;
+            }
+
             // Wrapped in a Promise.then to delay executing scriptCode till the previous promise have finished
             scriptBody.push(
                 `
