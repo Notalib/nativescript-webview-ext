@@ -1,9 +1,9 @@
+import { Color, Page } from "@nativescript/core/ui/page";
 import { WebViewExt } from "@nota/nativescript-webview-ext";
-import { Color, Page } from "tns-core-modules/ui/page";
 import {
     cssNotPredefinedFile,
     cssPreDefinedLinkFile,
-    getRootFrame,
+    destroyPageAfterTest,
     javascriptCallsXLocalFile,
     jsGetElementStyleSheet,
     localJavaScriptFile,
@@ -12,7 +12,6 @@ import {
     localStyleSheetCssNAME,
     preparePageForTest,
     timeoutPromise,
-    destroyPageAfterTest,
 } from "./helpers";
 
 describe("Inject files", () => {

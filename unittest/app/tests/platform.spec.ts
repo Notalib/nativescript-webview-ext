@@ -1,8 +1,8 @@
+import * as platform from "@nativescript/core/platform";
+import { isAndroid, isIOS, Page, View } from "@nativescript/core/ui/page";
+import { TabView, TabViewItem } from "@nativescript/core/ui/tab-view";
+import * as utils from "@nativescript/core/utils/utils";
 import { WebViewExt } from "@nota/nativescript-webview-ext";
-import * as platform from "tns-core-modules/platform";
-import { isAndroid, isIOS, Page, View } from "tns-core-modules/ui/page";
-import { TabView, TabViewItem } from "tns-core-modules/ui/tab-view";
-import * as utils from "tns-core-modules/utils/utils";
 import { DefaultPageOptions, destroyPageAfterTest, emptyHTMLFile, layout, PageOptions, preparePageForTest, waitForLoadedView, waitUntilReady } from "./helpers";
 
 describe("Platform", () => {

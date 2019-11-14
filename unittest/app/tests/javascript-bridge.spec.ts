@@ -1,7 +1,6 @@
+import { Page } from "@nativescript/core/ui/page";
 import { WebViewExt } from "@nota/nativescript-webview-ext";
-import * as frameModule from "tns-core-modules/ui/frame";
-import { Page } from "tns-core-modules/ui/page";
-import { eventAsPromise, javascriptCallsFile, preparePageForTest, timeoutPromise, destroyPageAfterTest } from "./helpers";
+import { destroyPageAfterTest, eventAsPromise, javascriptCallsFile, preparePageForTest, timeoutPromise } from "./helpers";
 
 describe("JavaScript Bridge", () => {
     let currentPage: Page;
