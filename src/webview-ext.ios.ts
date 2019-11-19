@@ -11,6 +11,10 @@ import { autoInjectJSBridgeProperty, NavigationType, scrollBounceProperty, WebVi
 export * from "./webview-ext-common";
 
 export class WebViewExt extends WebViewExtBase {
+    public static get supportXLocalScheme() {
+        return typeof CustomUrlSchemeHandler !== "undefined";
+    }
+
     protected wkWebViewConfiguration: WKWebViewConfiguration;
     protected wkNavigationDelegate: WKNavigationDelegateNotaImpl;
     protected wkUIDelegate: WKUIDelegateNotaImpl;
@@ -23,7 +27,7 @@ export class WebViewExt extends WebViewExtBase {
         wkUserScript: WKUserScript;
     }>;
 
-    public get supportXLocalSchema() {
+    public get supportXLocalScheme() {
         return typeof CustomUrlSchemeHandler !== "undefined";
     }
 
@@ -41,7 +45,7 @@ export class WebViewExt extends WebViewExtBase {
         configuration.preferences.setValueForKey(true, "allowFileAccessFromFileURLs");
         configuration.setValueForKey(true, "allowUniversalAccessFromFileURLs");
 
-        if (this.supportXLocalSchema) {
+        if (this.supportXLocalScheme) {
             this.wkCustomUrlSchemeHandler = new CustomUrlSchemeHandler();
             configuration.setURLSchemeHandlerForURLScheme(this.wkCustomUrlSchemeHandler, this.interceptScheme);
         }
@@ -77,7 +81,7 @@ export class WebViewExt extends WebViewExtBase {
 
     protected async injectViewPortMeta() {
         this.resetViewPortCode();
-        if (this.supportXLocalSchema) {
+        if (this.supportXLocalScheme) {
             return null;
         }
 
@@ -274,7 +278,7 @@ export class WebViewExt extends WebViewExtBase {
     public registerLocalResource(resourceName: string, path: string) {
         const cls = `WebViewExt<${this}.ios>.registerLocalResource("${resourceName}", "${path}")`;
 
-        if (!this.supportXLocalSchema) {
+        if (!this.supportXLocalScheme) {
             this.writeTrace(`${cls} -> custom schema isn't support on iOS <11`, traceMessageType.error);
             return;
         }
@@ -294,7 +298,7 @@ export class WebViewExt extends WebViewExtBase {
 
     public unregisterLocalResource(resourceName: string) {
         const cls = `WebViewExt<${this}.ios>.unregisterLocalResource("${resourceName}")`;
-        if (!this.supportXLocalSchema) {
+        if (!this.supportXLocalScheme) {
             this.writeTrace(`${cls} -> custom schema isn't support on iOS <11`, traceMessageType.error);
             return;
         }
@@ -309,7 +313,7 @@ export class WebViewExt extends WebViewExtBase {
     public getRegisteredLocalResource(resourceName: string) {
         resourceName = this.fixLocalResourceName(resourceName);
         const cls = `WebViewExt<${this}.ios>.getRegisteredLocalResource("${resourceName}")`;
-        if (!this.supportXLocalSchema) {
+        if (!this.supportXLocalScheme) {
             this.writeTrace(`${cls} -> custom schema isn't support on iOS <11`, traceMessageType.error);
             return null;
         }

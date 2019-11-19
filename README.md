@@ -61,7 +61,7 @@ Prior to iOS 11 there isn't support for intercepting the URL with `WKWebView` an
 
 | Property | Value | Description |
 | --- | --- | --- |
-| readonly supportXLocalSchema | true / false | Is `x-local://` supported? True on `iOS >= 11` or `Android`, False on `iOS < 11`. |
+| readonly supportXLocalScheme | true / false | Is `x-local://` supported? True on `iOS >= 11` or `Android`, False on `iOS < 11`. |
 | src | | Load src |
 | autoInjectJSBridge | true / false | Should the window.nsWebViewBridge be injected on `loadFinishedEvent`? Defaults to true |
 | builtInZoomControls | true / false | Android: Is the built-in zoom mechanisms being used |
@@ -100,10 +100,10 @@ Prior to iOS 11 there isn't support for intercepting the URL with `WKWebView` an
 | loadStarted | Raised when a loadStarted event occurs. args is a `LoadStartedEventData` |
 | shouldOverrideUrlLoading | Raised before the webview requests an URL. Can cancelled by setting args.cancel = true in the `ShouldOverrideUrlLoadEventData` |
 | titleChanged | Document title changed |
-| webAlert | Raised when `window.alert` is triggered inside the webview, needed to use customs dialogs for web alerts. args in a `WebAlertEventData`. `args.callback()` must be called to indicate alert is closed. |
-| webConfirm | Raised when `window.confirm` is triggered inside the webview, needed to use customs dialogs for web confirm boxes. args in a `webConfirmEvent`. `args.callback(boolean)` must be called to indicate confirm box is closed. |
+| webAlert | Raised when `window.alert` is triggered inside the webview, needed to use custom dialogs for web alerts. args in a `WebAlertEventData`. `args.callback()` must be called to indicate alert is closed. |
+| webConfirm | Raised when `window.confirm` is triggered inside the webview, needed to use custom dialogs for web confirm boxes. args in a `webConfirmEvent`. `args.callback(boolean)` must be called to indicate confirm box is closed. |
 | webConsole | Android only: Raised when a line is added to the web console. args is a `WebConsoleEventData`. |
-| webPrompt | Raised when `window.prompt` is triggered inside the webview, needed to use customs dialogs for web prompt boxes. args in a `webConfirmEvent`. `args.callback(string | null)` must be called to indicate prompt box is closed. |
+| webPrompt | Raised when `window.prompt` is triggered inside the webview, needed to use custom dialogs for web prompt boxes. args in a `webConfirmEvent`. `args.callback(string | null)` must be called to indicate prompt box is closed. |
 | Events emitted from the webview | Raised when nsWebViewBridge.emit(...) is called inside the webview. args in an `WebViewEventData` |
 
 ### WebView

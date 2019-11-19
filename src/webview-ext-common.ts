@@ -320,6 +320,8 @@ export class UnsupportedSDKError extends Error {
 
 @CSSType("WebView")
 export class WebViewExtBase extends ContainerView {
+    public static readonly supportXLocalScheme: boolean;
+
     /**
      * Is Fetch API supported?
      *
@@ -385,7 +387,7 @@ export class WebViewExtBase extends ContainerView {
         return EventNames.WebConsole;
     }
 
-    public readonly supportXLocalSchema: boolean;
+    public readonly supportXLocalScheme: boolean;
 
     /**
      * Gets or sets the url, local file path or HTML string.
@@ -1193,7 +1195,7 @@ export class WebViewExtBase extends ContainerView {
      * Generate script code for loading javascript-file.
      */
     public async generateLoadJavaScriptFileScriptCode(resourceName: string, path: string) {
-        if (this.supportXLocalSchema) {
+        if (this.supportXLocalScheme) {
             const fixedResourceName = this.fixLocalResourceName(resourceName);
             if (path) {
                 this.registerLocalResource(fixedResourceName, path);
@@ -1213,7 +1215,7 @@ export class WebViewExtBase extends ContainerView {
      * Generate script code for loading CSS-file.generateLoadCSSFileScriptCode
      */
     public async generateLoadCSSFileScriptCode(resourceName: string, path: string, insertBefore = false) {
-        if (this.supportXLocalSchema) {
+        if (this.supportXLocalScheme) {
             resourceName = this.fixLocalResourceName(resourceName);
             if (path) {
                 this.registerLocalResource(resourceName, path);
