@@ -66,7 +66,7 @@ This registers the element `WebViewExt`. Replace the <WebView> tag with <WebView
 
 The custom-scheme handler for `x-local://` is only supported by `Android` and `iOS 11+`
 
-Support for `iOS <11` was removed because of [ITMS-90809](https://forums.developer.apple.com/thread/122114).
+Custom-scheme support for `iOS <11` was removed because of [ITMS-90809](https://forums.developer.apple.com/thread/122114).
 
 ## API
 
