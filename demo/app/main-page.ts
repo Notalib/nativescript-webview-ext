@@ -9,7 +9,7 @@ import {
     ShouldOverrideUrlLoadEventData,
     WebViewExt,
 } from "@nota/nativescript-webview-ext";
-import * as _ from "lodash";
+import * as fastEqual from "fast-deep-equal";
 
 let webview: WebViewExt;
 
@@ -56,7 +56,7 @@ async function executeJavaScriptTest<T>(js: string, expected?: T): Promise<T> {
         console.log(`executeJavaScript '${js}' => ${JSON.stringify(res)} (${typeof res})`);
         const jsonRes = JSON.stringify(res);
         const expectedJson = JSON.stringify(expected);
-        if (expected !== undefined && !_.isEqual(expected, res)) {
+        if (expected !== undefined && !fastEqual(expected, res)) {
             throw new Error(`Expected: ${expectedJson}. Got: ${jsonRes}`);
         }
 
@@ -75,7 +75,7 @@ export async function runTests() {
     const expected = { huba: "hop" };
     const gotJson = JSON.stringify(gotMessageData);
 
-    if (_.isEqual(expected, gotMessageData)) {
+    if (fastEqual(expected, gotMessageData)) {
         console.log(`executeJavaScript via message 'callFromNativeScript()' => ${gotJson} (${typeof gotMessageData})`);
     } else {
         throw new Error(`Expected: ${JSON.stringify(expected)}. Got: ${gotJson}`);
