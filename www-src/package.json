@@ -16,6 +16,6 @@
     "prettier-check": "^2.0.0",
     "ts-node": "^8.3.0",
     "tslint": "^5.18.0",
-    "typescript": "^3.5.3"
+    "typescript": "^3.7.2"
   }
 }

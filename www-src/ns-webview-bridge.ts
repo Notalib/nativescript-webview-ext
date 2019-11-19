@@ -10,18 +10,6 @@ declare const androidWebViewBridge: {
     emitEvent(eventName: string, data: string): void;
 };
 
-/**
- * Creates temporary iFrame element to load custom url, for sending handshake message
- * to iOS which is necessary to initiate data transfer from webView to iOS
- */
-function createIFrameForUIWebView(src: string): HTMLIFrameElement {
-    const rootElm = document.documentElement || document.body;
-    const newFrameElm = document.createElement("iframe");
-    newFrameElm.setAttribute("src", src);
-    rootElm.appendChild(newFrameElm);
-    return newFrameElm;
-}
-
 interface WKWebViewMessageHandler {
     postMessage(message: string): void;
 }
@@ -75,7 +63,7 @@ class NSWebViewBridge {
      * With WKWebView it's assumed the there is a WKScriptMessage named nsBridge
      *
      * With UIWebView:
-     * No longer supported
+     *   No longer supported
      */
     private emitEventToIOS(eventName: string, data: any) {
         const messageHandler = getWkWebViewMessageHandler();
@@ -86,6 +74,7 @@ class NSWebViewBridge {
                     data,
                 }),
             );
+
             return;
         }
 
