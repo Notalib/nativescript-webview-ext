@@ -50,13 +50,10 @@ This registers the element `WebViewExt`. Replace the <WebView> tag with <WebView
 
 ## Limitations
 
-In order to intercept requests for the custom scheme, we use `UIWebView` for iOS 9 and 10 and `WKWebView` for iOS 11+.
+Custom scheme is only supported on iOS 11+.
 
 iOS 11 added support for setting a `WKURLSchemeHandler` on the `WKWebView`.
-Prior to iOS 11 there isn't support for intercepting the URL with `WKWebView`, so we use a custom `NSURLProtocol` + `UIWebView`.
-
-### Important:
-The custom `NSURLProtocol` used with UIWebView is shared with all instances of the WebViewExt, so mapping `x-local://local-filename.js` => `file://app/full/path/local-filename.js` is shared between them.
+Prior to iOS 11 there isn't support for intercepting the URL with `WKWebView` and `UIWebView` have been deprecated: [ITMS-90809](https://forums.developer.apple.com/thread/122114).
 
 ## API
 
@@ -64,8 +61,7 @@ The custom `NSURLProtocol` used with UIWebView is shared with all instances of t
 
 | Property | Value | Description |
 | --- | --- | --- |
-| readonly isUIWebView | true / false | Is the native webview an UIWebView? True if `iOS <11` |
-| readonly isWkWebView | true / false | Is the native webview an WKWebView? True if `iOS >=11` |
+| readonly supportXLocalScheme | true / false | Is `x-local://` supported? True on `iOS >= 11` or `Android`, False on `iOS < 11`. |
 | src | | Load src |
 | autoInjectJSBridge | true / false | Should the window.nsWebViewBridge be injected on `loadFinishedEvent`? Defaults to true |
 | builtInZoomControls | true / false | Android: Is the built-in zoom mechanisms being used |
@@ -74,7 +70,6 @@ The custom `NSURLProtocol` used with UIWebView is shared with all instances of t
 | debugMode | true / false | Android: Enable chrome debugger for webview on Android. Note: Applies to all webviews in App |
 | displayZoomControls | true / false | Android: displays on-screen zoom controls when using the built-in zoom mechanisms |
 | domStorage | true / false | Android: Enable/Disabled DOM Storage API. E.g localStorage |
-| scalesPageToFit | UIWebView: Should webpage scale to fit the view? Defaults to false |
 | scrollBounce | true / false | iOS: Should the scrollView bounce? Defaults to true. |
 | supportZoom | true / false | Android: should the webview support zoom |
 | viewPortSize | false / view-port string / ViewPortProperties | Set the viewport metadata on load finished. **Note:** WkWebView sets initial-scale=1.0 by default. |
@@ -105,10 +100,10 @@ The custom `NSURLProtocol` used with UIWebView is shared with all instances of t
 | loadStarted | Raised when a loadStarted event occurs. args is a `LoadStartedEventData` |
 | shouldOverrideUrlLoading | Raised before the webview requests an URL. Can cancelled by setting args.cancel = true in the `ShouldOverrideUrlLoadEventData` |
 | titleChanged | Document title changed |
-| webAlert | Raised when `window.alert` is triggered inside the webview, needed to use customs dialogs for web alerts. args in a `WebAlertEventData`. `args.callback()` must be called to indicate alert is closed. **NOTE:** Not supported by UIWebView |
-| webConfirm | Raised when `window.confirm` is triggered inside the webview, needed to use customs dialogs for web confirm boxes. args in a `webConfirmEvent`. `args.callback(boolean)` must be called to indicate confirm box is closed. **NOTE:** Not supported by UIWebView |
+| webAlert | Raised when `window.alert` is triggered inside the webview, needed to use custom dialogs for web alerts. args in a `WebAlertEventData`. `args.callback()` must be called to indicate alert is closed. |
+| webConfirm | Raised when `window.confirm` is triggered inside the webview, needed to use custom dialogs for web confirm boxes. args in a `webConfirmEvent`. `args.callback(boolean)` must be called to indicate confirm box is closed. |
 | webConsole | Android only: Raised when a line is added to the web console. args is a `WebConsoleEventData`. |
-| webPrompt | Raised when `window.prompt` is triggered inside the webview, needed to use customs dialogs for web prompt boxes. args in a `webConfirmEvent`. `args.callback(string | null)` must be called to indicate prompt box is closed. **NOTE:** Not supported by UIWebView |
+| webPrompt | Raised when `window.prompt` is triggered inside the webview, needed to use custom dialogs for web prompt boxes. args in a `webConfirmEvent`. `args.callback(string | null)` must be called to indicate prompt box is closed. |
 | Events emitted from the webview | Raised when nsWebViewBridge.emit(...) is called inside the webview. args in an `WebViewEventData` |
 
 ### WebView
@@ -125,7 +120,6 @@ Inside the WebView we have the `nsWebViewBridge` for sending events between the 
 ## Possible features to come:
 
 * Cookie helpers?
-* Setting view-port metadata?
 * Share cache with native-layer?
 
 ### Android

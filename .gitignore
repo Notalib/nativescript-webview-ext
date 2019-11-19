@@ -30,3 +30,4 @@ src/angular/index.d.ts
 UserInterfaceState.xcuserstate
 Podfile.lock
 .migration_backup/
+.update_backup

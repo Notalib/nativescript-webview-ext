@@ -1,6 +1,6 @@
 /// <reference path="./types/android/webviewinterface.d.ts" />
 
-import * as fs from "tns-core-modules/file-system";
+import * as fs from "@nativescript/core/file-system";
 import {
     builtInZoomControlsProperty,
     CacheMode,
@@ -447,16 +447,16 @@ function initializeWebViewClient(): void {
 
 let instanceNo = 0;
 export class WebViewExt extends WebViewExtBase {
+    public static get supportXLocalScheme() {
+        return true;
+    }
+
     public nativeViewProtected: AndroidWebView | void;
 
     protected readonly localResourceMap = new Map<string, string>();
 
-    public get isUIWebView() {
-        return false;
-    }
-
-    public get isWKWebView() {
-        return false;
+    public get supportXLocalScheme() {
+        return true;
     }
 
     public readonly instance = ++instanceNo;

@@ -1,10 +1,15 @@
-import { EnterFullscreenEventData, LoadEventData, LoadFinishedEventData, ShouldOverrideUrlLoadEventData, WebViewExt } from "@nota/nativescript-webview-ext";
+import * as trace from "@nativescript/core/trace";
+import { Button } from "@nativescript/core/ui/button";
+import { EventData, Page } from "@nativescript/core/ui/page/page";
+import {
+    EnterFullscreenEventData,
+    isAndroid,
+    LoadEventData,
+    LoadFinishedEventData,
+    ShouldOverrideUrlLoadEventData,
+    WebViewExt,
+} from "@nota/nativescript-webview-ext";
 import * as _ from "lodash";
-import { EventData } from "tns-core-modules/data/observable";
-import { isAndroid } from "tns-core-modules/platform";
-import * as trace from "tns-core-modules/trace";
-import { Button } from "tns-core-modules/ui/button";
-import { Page } from "tns-core-modules/ui/page";
 
 let webview: WebViewExt;
 
@@ -20,8 +25,6 @@ export function pageLoaded(args: EventData) {
 let gotMessageData: any = null;
 export function webviewLoaded(args: LoadEventData) {
     webview = args.object;
-
-    webview.registerLocalResource("index.html", "~/assets/test-data/html/javascript-calls.html");
 
     if (isAndroid) {
         webview.src = "http://10.0.2.2:8080";
