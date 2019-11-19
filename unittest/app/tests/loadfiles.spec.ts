@@ -1,18 +1,16 @@
+import { Page } from "@nativescript/core/ui/page";
 import { LoadFinishedEventData, WebViewExt } from "@nota/nativescript-webview-ext";
-import { ActionBar } from "tns-core-modules/ui/action-bar/action-bar";
-import * as frameModule from "tns-core-modules/ui/frame";
-import { Page } from "tns-core-modules/ui/page";
 import * as url from "url";
 import {
+    destroyPageAfterTest,
     emptyHTMLFile,
     emptyHTMLXLocalSource,
     eventAsPromise,
     loadFile,
+    preparePageForTest,
     resolveFilePath,
     testFile,
     testWithSpacesFile,
-    preparePageForTest,
-    destroyPageAfterTest,
 } from "./helpers";
 
 describe("Load files", () => {

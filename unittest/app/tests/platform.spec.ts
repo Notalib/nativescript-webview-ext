@@ -1,9 +1,9 @@
+import * as platform from "@nativescript/core/platform";
+import { isAndroid, isIOS, Page, View } from "@nativescript/core/ui/page";
+import { TabView, TabViewItem } from "@nativescript/core/ui/tab-view";
+import * as utils from "@nativescript/core/utils/utils";
 import { WebViewExt } from "@nota/nativescript-webview-ext";
-import * as platform from "tns-core-modules/platform";
-import { isAndroid, isIOS, Page, View } from "tns-core-modules/ui/page";
-import { TabView, TabViewItem } from "tns-core-modules/ui/tab-view";
-import * as utils from "tns-core-modules/utils/utils";
-import { DefaultPageOptions, emptyHTMLFile, layout, PageOptions, preparePageForTest, waitForLoadedView, waitUntilReady, destroyPageAfterTest } from "./helpers";
+import { DefaultPageOptions, destroyPageAfterTest, emptyHTMLFile, layout, PageOptions, preparePageForTest, waitForLoadedView, waitUntilReady } from "./helpers";
 
 describe("Platform", () => {
     let currentPage: Page;
@@ -142,7 +142,6 @@ function iOS_Tests(getWebView: () => WebViewExt, getPage: () => Page) {
     }
 
     describe("iOS", () => {
-        iOS_UIWebView(getWebView, getPage);
         iOS_SafeArea(getWebView, getPage);
 
         describe("Both", () => {
@@ -160,7 +159,7 @@ function iOS_Tests(getWebView: () => WebViewExt, getPage: () => Page) {
 
                 await webView.loadUrl(emptyHTMLFile);
 
-                const nativeView = webView.ios as UIWebView | WKWebView;
+                const nativeView = webView.ios as WKWebView;
 
                 expect(nativeView.scrollView).toBeDefined();
                 expect(nativeView.scrollView.bounces).toBe(true);
@@ -173,7 +172,7 @@ function iOS_Tests(getWebView: () => WebViewExt, getPage: () => Page) {
                 webView.scrollBounce = false;
                 await webView.loadUrl(emptyHTMLFile);
 
-                const nativeView = webView.ios as UIWebView | WKWebView;
+                const nativeView = webView.ios as WKWebView;
 
                 expect(nativeView.scrollView).toBeDefined();
                 expect(nativeView.scrollView.bounces).toBe(false);
@@ -182,50 +181,6 @@ function iOS_Tests(getWebView: () => WebViewExt, getPage: () => Page) {
             afterEach(() => {
                 currentPage = null;
             });
-        });
-    });
-}
-
-function iOS_UIWebView(getWebView: () => WebViewExt, getPage: () => Page) {
-    if (utils.ios.MajorVersion >= 11) {
-        return;
-    }
-
-    describe("UIWebView", () => {
-        let currentPage: Page;
-        beforeEach(() => {
-            currentPage = getPage();
-            currentPage.content = getWebView();
-        });
-
-        it("scalesPageToFit = true", async () => {
-            const webView = getWebView();
-            waitForLoadedView(webView);
-
-            webView.scalesPageToFit = true;
-
-            await webView.loadUrl(emptyHTMLFile);
-
-            const uiWebView = webView.ios as UIWebView;
-
-            expect(uiWebView.scalesPageToFit).toBe(true);
-        });
-
-        it("scalesPageToFit = false", async () => {
-            const webView = getWebView();
-            waitForLoadedView(webView);
-
-            webView.scalesPageToFit = false;
-
-            await webView.loadUrl(emptyHTMLFile);
-
-            const uiWebView = webView.ios as UIWebView;
-
-            expect(uiWebView.scalesPageToFit).toBe(false);
-        });
-
-        afterEach(() => {
-            currentPage = null;
         });
     });
 }

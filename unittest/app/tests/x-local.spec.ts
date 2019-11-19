@@ -1,5 +1,5 @@
+import { Page } from "@nativescript/core/ui/page";
 import { WebViewExt } from "@nota/nativescript-webview-ext";
-import { Page } from "tns-core-modules/ui/page";
 import { destroyPageAfterTest, emptyHTMLFile, loadFile, localStyleSheetCssFile, localStyleSheetCssNAME, preparePageForTest } from "./helpers";
 
 describe("x-local schema", () => {

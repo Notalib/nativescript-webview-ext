@@ -10,20 +10,16 @@
 		7A45BB5820582773008AB08B /* NotaWebViewExt.h in Headers */ = {isa = PBXBuildFile; fileRef = 7A45BB5620582773008AB08B /* NotaWebViewExt.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		7A45BB5F205827BE008AB08B /* WKWebviewCustomSchemeHandler.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7A45BB5E205827BE008AB08B /* WKWebviewCustomSchemeHandler.swift */; };
 		7A45BB6120582802008AB08B /* Constants.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7A45BB6020582802008AB08B /* Constants.swift */; };
-		7A8DA4D3207EA0D7007775B8 /* UIWebViewCustomURLProtocol.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7A8DA4D2207EA0D7007775B8 /* UIWebViewCustomURLProtocol.swift */; };
-		A27A9F849EFC65AF1897ABEC /* Pods_NotaWebViewExt.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 6D7B200066D72903781F714E /* Pods_NotaWebViewExt.framework */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
 		0C21D2E26A6C7BD325A64C41 /* Pods-NotaWebViewExt.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-NotaWebViewExt.debug.xcconfig"; path = "Pods/Target Support Files/Pods-NotaWebViewExt/Pods-NotaWebViewExt.debug.xcconfig"; sourceTree = "<group>"; };
 		5670EEDE713AD92F7DEE95DC /* Pods-NotaWebViewExt.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-NotaWebViewExt.release.xcconfig"; path = "Pods/Target Support Files/Pods-NotaWebViewExt/Pods-NotaWebViewExt.release.xcconfig"; sourceTree = "<group>"; };
-		6D7B200066D72903781F714E /* Pods_NotaWebViewExt.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = Pods_NotaWebViewExt.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		7A45BB5320582773008AB08B /* NotaWebViewExt.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = NotaWebViewExt.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		7A45BB5620582773008AB08B /* NotaWebViewExt.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = NotaWebViewExt.h; sourceTree = "<group>"; };
 		7A45BB5720582773008AB08B /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		7A45BB5E205827BE008AB08B /* WKWebviewCustomSchemeHandler.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WKWebviewCustomSchemeHandler.swift; sourceTree = "<group>"; };
 		7A45BB6020582802008AB08B /* Constants.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Constants.swift; sourceTree = "<group>"; };
-		7A8DA4D2207EA0D7007775B8 /* UIWebViewCustomURLProtocol.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UIWebViewCustomURLProtocol.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -31,7 +27,6 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				A27A9F849EFC65AF1897ABEC /* Pods_NotaWebViewExt.framework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -63,7 +58,6 @@
 				7A45BB5720582773008AB08B /* Info.plist */,
 				7A45BB5E205827BE008AB08B /* WKWebviewCustomSchemeHandler.swift */,
 				7A45BB6020582802008AB08B /* Constants.swift */,
-				7A8DA4D2207EA0D7007775B8 /* UIWebViewCustomURLProtocol.swift */,
 			);
 			path = NotaWebViewExt;
 			sourceTree = "<group>";
@@ -71,7 +65,6 @@
 		B655517A48F1B4EBA1B2A143 /* Frameworks */ = {
 			isa = PBXGroup;
 			children = (
-				6D7B200066D72903781F714E /* Pods_NotaWebViewExt.framework */,
 			);
 			name = Frameworks;
 			sourceTree = "<group>";
@@ -129,7 +122,7 @@
 				TargetAttributes = {
 					7A45BB5220582773008AB08B = {
 						CreatedOnToolsVersion = 9.2;
-						LastSwiftMigration = 0920;
+						LastSwiftMigration = 1110;
 						ProvisioningStyle = Automatic;
 					};
 				};
@@ -187,7 +180,6 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				7A8DA4D3207EA0D7007775B8 /* UIWebViewCustomURLProtocol.swift in Sources */,
 				7A45BB5F205827BE008AB08B /* WKWebviewCustomSchemeHandler.swift in Sources */,
 				7A45BB6120582802008AB08B /* Constants.swift in Sources */,
 			);
@@ -336,7 +328,7 @@
 				SKIP_INSTALL = YES;
 				SWIFT_OBJC_BRIDGING_HEADER = "";
 				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
-				SWIFT_VERSION = 4.0;
+				SWIFT_VERSION = 5.0;
 				TARGETED_DEVICE_FAMILY = "1,2";
 			};
 			name = Debug;
@@ -365,7 +357,7 @@
 				SKIP_INSTALL = YES;
 				SWIFT_ACTIVE_COMPILATION_CONDITIONS = "";
 				SWIFT_OBJC_BRIDGING_HEADER = "";
-				SWIFT_VERSION = 4.0;
+				SWIFT_VERSION = 5.0;
 				TARGETED_DEVICE_FAMILY = "1,2";
 			};
 			name = Release;

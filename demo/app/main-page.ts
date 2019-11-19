@@ -1,7 +1,7 @@
-import { isAndroid, LoadEventData, LoadFinishedEventData, ShouldOverrideUrlLoadEventData, WebAlertEventData, WebViewExt } from "@nota/nativescript-webview-ext";
+import * as observable from "@nativescript/core/data/observable";
+import * as trace from "@nativescript/core/trace";
+import { isAndroid, LoadEventData, LoadFinishedEventData, ShouldOverrideUrlLoadEventData, WebViewExt } from "@nota/nativescript-webview-ext";
 import * as _ from "lodash";
-import * as observable from "tns-core-modules/data/observable";
-import * as trace from "tns-core-modules/trace";
 
 let webview: WebViewExt;
 
@@ -14,8 +14,6 @@ export function pageLoaded(args: observable.EventData) {}
 let gotMessageData: any = null;
 export function webviewLoaded(args: LoadEventData) {
     webview = args.object;
-
-    webview.registerLocalResource("index.html", "~/assets/test-data/html/javascript-calls.html");
 
     if (isAndroid) {
         webview.src = "http://10.0.2.2:8080";

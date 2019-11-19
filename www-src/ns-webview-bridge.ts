@@ -6,10 +6,6 @@ interface EventListenerMap {
     [eventName: string]: EventListener[];
 }
 
-interface UIWebViewResponseMap {
-    [id: string]: any;
-}
-
 declare const androidWebViewBridge: {
     emitEvent(eventName: string, data: string): void;
 };
@@ -49,16 +45,6 @@ class NSWebViewBridge {
      */
     private eventListenerMap: EventListenerMap = {};
 
-    /**
-     * Mapping of JS Call responseId and result for iOS
-     */
-    private iosUIWebViewResponseMap: UIWebViewResponseMap = {};
-
-    /**
-     * Counter of iOS JS Call responseId
-     */
-    private iosUIWebViewResponseId = 0;
-
     private get androidWebViewBridge() {
         if (typeof androidWebViewBridge !== "undefined") {
             return androidWebViewBridge;
@@ -89,10 +75,7 @@ class NSWebViewBridge {
      * With WKWebView it's assumed the there is a WKScriptMessage named nsBridge
      *
      * With UIWebView:
-     * Sends handshaking signal to iOS using custom url, for sending event payload or JS Call response.
-     * As iOS do not allow to send any data from webView. Here we are sending data in two steps.
-     * 1. Send handshake signal, by loading custom url in iFrame with metadata (eventName, unique responseId)
-     * 2. On intercept of this request, iOS calls getUIWebViewResponse with the responseId to fetch the data.
+     * No longer supported
      */
     private emitEventToIOS(eventName: string, data: any) {
         const messageHandler = getWkWebViewMessageHandler();
@@ -106,19 +89,7 @@ class NSWebViewBridge {
             return;
         }
 
-        // UIWebView fallback
-        this.iosUIWebViewResponseMap[++this.iosUIWebViewResponseId] = data;
-        const metadata = {
-            eventName: eventName,
-            resId: this.iosUIWebViewResponseId,
-        };
-        const url = `js2ios:${JSON.stringify(metadata)}`;
-        const iFrame = createIFrameForUIWebView(url);
-        if (iFrame && iFrame.parentNode) {
-            iFrame.parentNode.removeChild(iFrame);
-        } else {
-            delete this.iosUIWebViewResponseMap[this.iosUIWebViewResponseId];
-        }
+        console.error("NSWebViewBridge cannot emit to UIWebView - no longer supported");
     }
 
     /**
@@ -132,16 +103,6 @@ class NSWebViewBridge {
         }
 
         androidWebViewBridge.emitEvent(eventName, data);
-    }
-
-    /**
-     * Returns data to iOS.
-     * This function is called from iOS when using UIWebView.
-     */
-    public getUIWebViewResponse(resId: string) {
-        const response = this.iosUIWebViewResponseMap[resId];
-        delete this.iosUIWebViewResponseMap[resId];
-        return response;
     }
 
     /**
@@ -246,6 +207,34 @@ class NSWebViewBridge {
     }
 
     /**
+     * Used to inject javascript-files on iOS<11 where we cannot support x-local
+     */
+    public injectJavaScript(elId: string, scriptCode: string): Promise<void> {
+        if (document.getElementById(elId)) {
+            console.log(`${elId} already exists`);
+            return Promise.resolve();
+        }
+
+        return new Promise<void>((resolve, reject) => {
+            const scriptElement = document.createElement("script");
+            scriptElement.setAttribute("id", elId);
+            scriptElement.addEventListener("error", function(error) {
+                console.error(`Failed to inject javascript- error: ${error}`);
+                reject(error);
+
+                if (scriptElement.parentElement) {
+                    scriptElement.parentElement.removeChild(scriptElement);
+                }
+            });
+            scriptElement.text = scriptCode;
+
+            document.body.appendChild(scriptElement);
+
+            resolve();
+        });
+    }
+
+    /**
      * Injects a StyleSheet file.
      * This is usually called from WebViewExt.loadStyleSheetFiles(...)
      */
@@ -284,6 +273,32 @@ class NSWebViewBridge {
                     document.head.appendChild(linkElement);
                 }
             }
+        });
+    }
+
+    /**
+     * Inject stylesheets into the page without using x-local. This is needed for iOS<11
+     */
+    public injectStyleSheet(elId: string, stylesheet: string, insertBefore?: boolean): Promise<void> {
+        if (document.getElementById(elId)) {
+            console.log(`${elId} already exists`);
+            return Promise.resolve();
+        }
+
+        return new Promise<void>((resolve, reject) => {
+            const styleElement = document.createElement("style");
+            styleElement.addEventListener("error", reject);
+            styleElement.textContent = stylesheet;
+            styleElement.setAttribute("id", elId);
+            if (document.head) {
+                if (insertBefore && document.head.childElementCount > 0) {
+                    document.head.insertBefore(styleElement, document.head.firstElementChild);
+                } else {
+                    document.head.appendChild(styleElement);
+                }
+            }
+
+            resolve();
         });
     }
 
@@ -330,7 +345,7 @@ interface WindowWithNSWebViewBridge {
     nsWebViewBridge: NSWebViewBridge;
 }
 
-const w = window as Window & WindowWithNSWebViewBridge;
+const w = window as any;
 if (!w.nsWebViewBridge) {
     // Only create the NSWebViewBridge, if is doesn't already exist.
     w.nsWebViewBridge = new NSWebViewBridge();
