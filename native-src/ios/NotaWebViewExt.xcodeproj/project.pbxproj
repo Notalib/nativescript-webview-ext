@@ -13,8 +13,6 @@
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
-		0C21D2E26A6C7BD325A64C41 /* Pods-NotaWebViewExt.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-NotaWebViewExt.debug.xcconfig"; path = "Pods/Target Support Files/Pods-NotaWebViewExt/Pods-NotaWebViewExt.debug.xcconfig"; sourceTree = "<group>"; };
-		5670EEDE713AD92F7DEE95DC /* Pods-NotaWebViewExt.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-NotaWebViewExt.release.xcconfig"; path = "Pods/Target Support Files/Pods-NotaWebViewExt/Pods-NotaWebViewExt.release.xcconfig"; sourceTree = "<group>"; };
 		7A45BB5320582773008AB08B /* NotaWebViewExt.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = NotaWebViewExt.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		7A45BB5620582773008AB08B /* NotaWebViewExt.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = NotaWebViewExt.h; sourceTree = "<group>"; };
 		7A45BB5720582773008AB08B /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
@@ -38,8 +36,6 @@
 			children = (
 				7A45BB5520582773008AB08B /* NotaWebViewExt */,
 				7A45BB5420582773008AB08B /* Products */,
-				C888EDE8B11FE4D7F75020D1 /* Pods */,
-				B655517A48F1B4EBA1B2A143 /* Frameworks */,
 			);
 			sourceTree = "<group>";
 		};
@@ -62,22 +58,6 @@
 			path = NotaWebViewExt;
 			sourceTree = "<group>";
 		};
-		B655517A48F1B4EBA1B2A143 /* Frameworks */ = {
-			isa = PBXGroup;
-			children = (
-			);
-			name = Frameworks;
-			sourceTree = "<group>";
-		};
-		C888EDE8B11FE4D7F75020D1 /* Pods */ = {
-			isa = PBXGroup;
-			children = (
-				0C21D2E26A6C7BD325A64C41 /* Pods-NotaWebViewExt.debug.xcconfig */,
-				5670EEDE713AD92F7DEE95DC /* Pods-NotaWebViewExt.release.xcconfig */,
-			);
-			name = Pods;
-			sourceTree = "<group>";
-		};
 /* End PBXGroup section */
 
 /* Begin PBXHeadersBuildPhase section */
@@ -96,7 +76,6 @@
 			isa = PBXNativeTarget;
 			buildConfigurationList = 7A45BB5B20582773008AB08B /* Build configuration list for PBXNativeTarget "NotaWebViewExt" */;
 			buildPhases = (
-				BA41FE3DC46B84E35DC6FABC /* [CP] Check Pods Manifest.lock */,
 				7A45BB4E20582773008AB08B /* Sources */,
 				7A45BB4F20582773008AB08B /* Frameworks */,
 				7A45BB5020582773008AB08B /* Headers */,
@@ -133,6 +112,7 @@
 			hasScannedForEncodings = 0;
 			knownRegions = (
 				en,
+				Base,
 			);
 			mainGroup = 7A45BB4920582773008AB08B;
 			productRefGroup = 7A45BB5420582773008AB08B /* Products */;
@@ -154,27 +134,6 @@
 		};
 /* End PBXResourcesBuildPhase section */
 
-/* Begin PBXShellScriptBuildPhase section */
-		BA41FE3DC46B84E35DC6FABC /* [CP] Check Pods Manifest.lock */ = {
-			isa = PBXShellScriptBuildPhase;
-			buildActionMask = 2147483647;
-			files = (
-			);
-			inputPaths = (
-				"${PODS_PODFILE_DIR_PATH}/Podfile.lock",
-				"${PODS_ROOT}/Manifest.lock",
-			);
-			name = "[CP] Check Pods Manifest.lock";
-			outputPaths = (
-				"$(DERIVED_FILE_DIR)/Pods-NotaWebViewExt-checkManifestLockResult.txt",
-			);
-			runOnlyForDeploymentPostprocessing = 0;
-			shellPath = /bin/sh;
-			shellScript = "diff \"${PODS_PODFILE_DIR_PATH}/Podfile.lock\" \"${PODS_ROOT}/Manifest.lock\" > /dev/null\nif [ $? != 0 ] ; then\n    # print error to STDERR\n    echo \"error: The sandbox is not in sync with the Podfile.lock. Run 'pod install' or update your CocoaPods installation.\" >&2\n    exit 1\nfi\n# This output is used by Xcode 'outputs' to avoid re-running this script phase.\necho \"SUCCESS\" > \"${SCRIPT_OUTPUT_FILE_0}\"\n";
-			showEnvVarsInLog = 0;
-		};
-/* End PBXShellScriptBuildPhase section */
-
 /* Begin PBXSourcesBuildPhase section */
 		7A45BB4E20582773008AB08B /* Sources */ = {
 			isa = PBXSourcesBuildPhase;
@@ -192,6 +151,7 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = NO;
+				BUILD_LIBRARY_FOR_DISTRIBUTION = YES;
 				CLANG_ANALYZER_NONNULL = YES;
 				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
 				CLANG_CXX_LANGUAGE_STANDARD = "gnu++14";
@@ -219,7 +179,7 @@
 				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
 				CLANG_WARN_UNREACHABLE_CODE = YES;
 				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
-				CODE_SIGN_IDENTITY = "iPhone Developer";
+				CODE_SIGN_IDENTITY = "iPhone Developer: Morten Sjøgren (PJT26S45H2)";
 				COPY_PHASE_STRIP = NO;
 				CURRENT_PROJECT_VERSION = 1;
 				DEBUG_INFORMATION_FORMAT = dwarf;
@@ -254,6 +214,7 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = NO;
+				BUILD_LIBRARY_FOR_DISTRIBUTION = YES;
 				CLANG_ANALYZER_NONNULL = YES;
 				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
 				CLANG_CXX_LANGUAGE_STANDARD = "gnu++14";
@@ -281,7 +242,7 @@
 				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
 				CLANG_WARN_UNREACHABLE_CODE = YES;
 				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
-				CODE_SIGN_IDENTITY = "iPhone Developer";
+				CODE_SIGN_IDENTITY = "iPhone Developer: Morten Sjøgren (PJT26S45H2)";
 				COPY_PHASE_STRIP = NO;
 				CURRENT_PROJECT_VERSION = 1;
 				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
@@ -307,7 +268,6 @@
 		};
 		7A45BB5C20582773008AB08B /* Debug */ = {
 			isa = XCBuildConfiguration;
-			baseConfigurationReference = 0C21D2E26A6C7BD325A64C41 /* Pods-NotaWebViewExt.debug.xcconfig */;
 			buildSettings = {
 				ALWAYS_EMBED_SWIFT_STANDARD_LIBRARIES = YES;
 				CLANG_ENABLE_MODULES = YES;
@@ -326,6 +286,7 @@
 				PRODUCT_BUNDLE_IDENTIFIER = dk.nota.NotaWebViewExt;
 				PRODUCT_NAME = "$(TARGET_NAME:c99extidentifier)";
 				SKIP_INSTALL = YES;
+				SUPPORTS_MACCATALYST = NO;
 				SWIFT_OBJC_BRIDGING_HEADER = "";
 				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
 				SWIFT_VERSION = 5.0;
@@ -335,7 +296,6 @@
 		};
 		7A45BB5D20582773008AB08B /* Release */ = {
 			isa = XCBuildConfiguration;
-			baseConfigurationReference = 5670EEDE713AD92F7DEE95DC /* Pods-NotaWebViewExt.release.xcconfig */;
 			buildSettings = {
 				ALWAYS_EMBED_SWIFT_STANDARD_LIBRARIES = YES;
 				CLANG_ENABLE_MODULES = YES;
@@ -355,6 +315,7 @@
 				PRODUCT_BUNDLE_IDENTIFIER = dk.nota.NotaWebViewExt;
 				PRODUCT_NAME = "$(TARGET_NAME:c99extidentifier)";
 				SKIP_INSTALL = YES;
+				SUPPORTS_MACCATALYST = NO;
 				SWIFT_ACTIVE_COMPILATION_CONDITIONS = "";
 				SWIFT_OBJC_BRIDGING_HEADER = "";
 				SWIFT_VERSION = 5.0;
