@@ -69,6 +69,7 @@ function initializeWebViewClient(): void {
             super();
 
             this.owner = new WeakRef(owner);
+
             return global.__native(this);
         }
 
@@ -79,6 +80,7 @@ function initializeWebViewClient(): void {
             const owner = this.owner.get();
             if (!owner) {
                 console.warn("WebViewExtClientImpl.shouldOverrideUrlLoading(...) - no owner");
+
                 return true;
             }
 
@@ -104,12 +106,14 @@ function initializeWebViewClient(): void {
 
             if (url.startsWith(owner.interceptScheme)) {
                 owner.writeTrace(`WebViewClientClass.shouldOverrideUrlLoading("${url}") - "${owner.interceptScheme}" - cancel`);
+
                 return true;
             }
 
             const shouldOverrideUrlLoading = owner._onShouldOverrideUrlLoading(url, httpMethod);
             if (shouldOverrideUrlLoading === true) {
                 owner.writeTrace(`WebViewClientClass.shouldOverrideUrlLoading("${url}") - cancel loading url`);
+
                 return true;
             }
 
@@ -120,6 +124,7 @@ function initializeWebViewClient(): void {
             const owner = this.owner.get();
             if (!owner) {
                 console.warn("WebViewExtClientImpl.shouldInterceptRequest(...) - no owner");
+
                 return super.shouldInterceptRequest(view, request as android.webkit.WebResourceRequest);
             }
 
@@ -132,6 +137,7 @@ function initializeWebViewClient(): void {
 
             if (typeof url !== "string") {
                 owner.writeTrace(`WebViewClientClass.shouldInterceptRequest("${url}") - is not a string`);
+
                 return super.shouldInterceptRequest(view, request as android.webkit.WebResourceRequest);
             }
 
@@ -142,11 +148,13 @@ function initializeWebViewClient(): void {
             const filepath = owner.getRegisteredLocalResource(url);
             if (!filepath) {
                 owner.writeTrace(`WebViewClientClass.shouldInterceptRequest("${url}") - no matching file`);
+
                 return super.shouldInterceptRequest(view, request as android.webkit.WebResourceRequest);
             }
 
             if (!fs.File.exists(filepath)) {
                 owner.writeTrace(`WebViewClientClass.shouldInterceptRequest("${url}") - file: "${filepath}" doesn't exists`);
+
                 return super.shouldInterceptRequest(view, request as android.webkit.WebResourceRequest);
             }
 
@@ -181,6 +189,7 @@ function initializeWebViewClient(): void {
             const owner = this.owner.get();
             if (!owner) {
                 console.warn(`WebViewExtClientImpl.onPageStarted("${view}", "${url}", "${favicon}") - no owner`);
+
                 return;
             }
 
@@ -194,6 +203,7 @@ function initializeWebViewClient(): void {
             const owner = this.owner.get();
             if (!owner) {
                 console.warn(`WebViewExtClientImpl.onPageFinished("${view}", ${url}") - no owner`);
+
                 return;
             }
 
@@ -217,6 +227,7 @@ function initializeWebViewClient(): void {
             const owner = this.owner.get();
             if (!owner) {
                 console.warn("WebViewExtClientImpl.onReceivedErrorAPI23(...) - no owner");
+
                 return;
             }
 
@@ -236,6 +247,7 @@ function initializeWebViewClient(): void {
             const owner = this.owner.get();
             if (!owner) {
                 console.warn("WebViewExtClientImpl.onReceivedErrorBeforeAPI23(...) - no owner");
+
                 return;
             }
 
@@ -252,6 +264,7 @@ function initializeWebViewClient(): void {
             super();
 
             this.owner = new WeakRef(owner);
+
             return global.__native(this);
         }
 
@@ -284,6 +297,7 @@ function initializeWebViewClient(): void {
             }
 
             let gotResponse = false;
+
             return owner._webAlert(message, () => {
                 if (!gotResponse) {
                     result.confirm();
@@ -300,6 +314,7 @@ function initializeWebViewClient(): void {
             }
 
             let gotResponse = false;
+
             return owner._webConfirm(message, (confirmed: boolean) => {
                 if (!gotResponse) {
                     if (confirmed) {
@@ -320,6 +335,7 @@ function initializeWebViewClient(): void {
             }
 
             let gotResponse = false;
+
             return owner._webPrompt(message, defaultValue, (message: string) => {
                 if (!gotResponse) {
                     if (message) {
@@ -380,6 +396,7 @@ function initializeWebViewClient(): void {
             super();
 
             this.owner = new WeakRef(owner);
+
             return global.__native(this);
         }
 
@@ -387,11 +404,13 @@ function initializeWebViewClient(): void {
             const owner = this.owner.get();
             if (!owner) {
                 console.warn(`WebViewExtClientImpl.emitEventToNativeScript("${eventName}") - no owner`);
+
                 return;
             }
 
             try {
                 owner.onWebViewEvent(eventName, JSON.parse(data));
+
                 return;
             } catch (err) {
                 owner.writeTrace(`WebViewExtClientImpl.emitEventToNativeScript("${eventName}") - couldn't parse data: ${data} err: ${err}`);
@@ -441,6 +460,7 @@ export class WebViewExt extends WebViewExtBase {
 
         // Needed for XHRRequests with x-local://
         settings.setAllowUniversalAccessFromFileURLs(true);
+
         return nativeView;
     }
 
@@ -513,6 +533,7 @@ export class WebViewExt extends WebViewExtBase {
         if (nativeView) {
             return nativeView.canGoBack();
         }
+
         return false;
     }
 
@@ -528,6 +549,7 @@ export class WebViewExt extends WebViewExtBase {
         if (nativeView) {
             return nativeView.canGoForward();
         }
+
         return false;
     }
 
@@ -558,6 +580,7 @@ export class WebViewExt extends WebViewExtBase {
         const filepath = this.resolveLocalResourceFilePath(path);
         if (!filepath) {
             this.writeTrace(`WebViewExt<android>.registerLocalResource("${resourceName}", "${path}") -> file doesn't exist`, traceMessageType.error);
+
             return;
         }
 
@@ -609,6 +632,7 @@ export class WebViewExt extends WebViewExtBase {
     public async executeJavaScript<T>(scriptCode: string): Promise<T> {
         if (android.os.Build.VERSION.SDK_INT < 19) {
             this.writeTrace(`WebViewExt<android>.executeJavaScript() -> SDK:${android.os.Build.VERSION.SDK_INT} not supported`, traceMessageType.error);
+
             return Promise.reject(new UnsupportedSDKError(19));
         }
 
@@ -616,6 +640,7 @@ export class WebViewExt extends WebViewExtBase {
             if (!this.nativeViewProtected) {
                 this.writeTrace(`WebViewExt<android>.executeJavaScript() -> no nativeView?`, traceMessageType.error);
                 reject(new Error("Native Android not initialized, cannot call executeJavaScript"));
+
                 return;
             }
 
@@ -640,6 +665,7 @@ export class WebViewExt extends WebViewExtBase {
         if (!this.nativeViewProtected) {
             return false;
         }
+
         return this.nativeViewProtected.zoomIn();
     }
 
@@ -647,12 +673,14 @@ export class WebViewExt extends WebViewExtBase {
         if (!this.nativeViewProtected) {
             return false;
         }
+
         return this.nativeViewProtected.zoomOut();
     }
 
     public zoomBy(zoomFactor: number) {
         if (android.os.Build.VERSION.SDK_INT < 21) {
             this.writeTrace(`WebViewExt<android>.zoomBy - not supported on this SDK`);
+
             return;
         }
 
@@ -681,6 +709,7 @@ export class WebViewExt extends WebViewExtBase {
         }
 
         const settings = this.nativeViewProtected.getSettings();
+
         return settings.getBuiltInZoomControls();
     }
 
@@ -697,6 +726,7 @@ export class WebViewExt extends WebViewExtBase {
             return false;
         }
         const settings = this.nativeViewProtected.getSettings();
+
         return settings.getDisplayZoomControls();
     }
 
@@ -733,6 +763,7 @@ export class WebViewExt extends WebViewExtBase {
         for (const [key, nativeValue] of cacheModeMap) {
             if (key === cacheMode) {
                 settings.setCacheMode(nativeValue);
+
                 return;
             }
         }
@@ -744,6 +775,7 @@ export class WebViewExt extends WebViewExtBase {
         }
 
         const settings = this.nativeViewProtected.getSettings();
+
         return settings.getDatabaseEnabled();
     }
 
@@ -762,6 +794,7 @@ export class WebViewExt extends WebViewExtBase {
         }
 
         const settings = this.nativeViewProtected.getSettings();
+
         return settings.getDomStorageEnabled();
     }
 
@@ -780,6 +813,7 @@ export class WebViewExt extends WebViewExtBase {
         }
 
         const settings = this.nativeViewProtected.getSettings();
+
         return settings.supportZoom();
     }
 

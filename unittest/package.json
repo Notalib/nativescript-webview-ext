@@ -2,10 +2,10 @@
     "nativescript": {
         "id": "dk.nota.webviewexttest",
         "tns-ios": {
-            "version": "6.2.0"
+            "version": "6.3.0"
         },
         "tns-android": {
-            "version": "6.2.0"
+            "version": "6.3.1"
         }
     },
     "main": "app.js",
@@ -26,7 +26,7 @@
         "karma-jasmine": "2.0.1",
         "karma-nativescript-launcher": "0.4.0",
         "karma-webpack": "3.0.5",
-        "nativescript-dev-webpack": "~1.3.0",
+        "nativescript-dev-webpack": "~1.4.0",
         "prettier": "^1.18.2",
         "prettier-check": "^2.0.0",
         "tns-platform-declarations": "^6.2.0",

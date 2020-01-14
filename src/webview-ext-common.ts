@@ -165,6 +165,7 @@ export const viewPortProperty = new Property<WebViewExtBase, ViewPortValue>({
         }
 
         const { initialScale = defaultViewPort.initialScale, width, height, userScalable, minimumScale, maximumScale } = viewPortInputValues;
+
         return {
             initialScale,
             width,
@@ -493,6 +494,7 @@ export class WebViewExtBase extends ContainerView {
 
         if (error) {
             this.notify(args);
+
             return Promise.reject(args);
         }
 
@@ -515,6 +517,7 @@ export class WebViewExtBase extends ContainerView {
         this.notify(args);
 
         this.getTitle().then((title) => this._titleChanged(title));
+
         return args;
     }
 
@@ -608,6 +611,7 @@ export class WebViewExtBase extends ContainerView {
         } as WebAlertEventData;
 
         this.notify(args);
+
         return true;
     }
 
@@ -625,6 +629,7 @@ export class WebViewExtBase extends ContainerView {
         } as WebConfirmEventData;
 
         this.notify(args);
+
         return true;
     }
 
@@ -643,6 +648,7 @@ export class WebViewExtBase extends ContainerView {
         } as WebPromptEventData;
 
         this.notify(args);
+
         return true;
     }
 
@@ -663,6 +669,7 @@ export class WebViewExtBase extends ContainerView {
         } as WebConsoleEventData;
 
         this.notify(args);
+
         return true;
     }
 
@@ -787,6 +794,7 @@ export class WebViewExtBase extends ContainerView {
     public resolveLocalResourceFilePath(filepath: string): string | void {
         if (!filepath) {
             this.writeTrace("WebViewExt.resolveLocalResourceFilePath() no filepath", traceMessageType.error);
+
             return;
         }
 
@@ -800,6 +808,7 @@ export class WebViewExtBase extends ContainerView {
 
         if (!fs.File.exists(filepath)) {
             this.writeTrace(`WebViewExt.resolveLocalResourceFilePath("${filepath}") - no such file`, traceMessageType.error);
+
             return;
         }
 
@@ -892,6 +901,7 @@ export class WebViewExtBase extends ContainerView {
 
         if (!promiseScriptCodes.length) {
             this.writeTrace("WebViewExt.loadJavaScriptFiles() - > No files");
+
             return;
         }
 
@@ -939,6 +949,7 @@ export class WebViewExtBase extends ContainerView {
 
         if (!promiseScriptCodes.length) {
             this.writeTrace("WebViewExt.loadStyleSheetFiles() - > No files");
+
             return;
         }
 
@@ -1025,10 +1036,12 @@ export class WebViewExtBase extends ContainerView {
 
         if (WebViewExtBase.isFetchSupported) {
             this.writeTrace("WebViewExtBase.ensureFetchSupport() - fetch is supported - polyfill not needed.");
+
             return;
         }
 
         this.writeTrace("WebViewExtBase.ensureFetchSupport() - fetch is not supported - polyfill needed.");
+
         return await this.loadFetchPolyfill();
     }
 
@@ -1053,6 +1066,7 @@ export class WebViewExtBase extends ContainerView {
 
         if (WebViewExtBase.isPromiseSupported) {
             this.writeTrace("WebViewExtBase.ensurePromiseSupport() - promise is supported - polyfill not needed.");
+
             return;
         }
 
@@ -1158,6 +1172,7 @@ export class WebViewExtBase extends ContainerView {
                 // Was it a success? No 'err' received.
                 if (typeof err === "undefined") {
                     resolve(data);
+
                     return;
                 }
 
@@ -1171,6 +1186,7 @@ export class WebViewExtBase extends ContainerView {
                     }
 
                     reject(error);
+
                     return;
                 }
 
@@ -1202,6 +1218,7 @@ export class WebViewExtBase extends ContainerView {
             }
 
             const scriptHref = `${this.interceptScheme}://${fixedResourceName}`;
+
             return `window.nsWebViewBridge.injectJavaScriptFile(${JSON.stringify(scriptHref)});`;
         } else {
             const elId = resourceName.replace(/^[:]*:\/\//, "").replace(/[^a-z0-9]/g, "");
@@ -1222,6 +1239,7 @@ export class WebViewExtBase extends ContainerView {
             }
 
             const stylesheetHref = `${this.interceptScheme}://${resourceName}`;
+
             return `window.nsWebViewBridge.injectStyleSheetFile(${JSON.stringify(stylesheetHref)}, ${!!insertBefore});`;
         } else {
             const elId = resourceName.replace(/^[:]*:\/\//, "").replace(/[^a-z0-9]/g, "");

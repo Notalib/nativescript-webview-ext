@@ -50,6 +50,7 @@ function executeJavaScriptTest<T>(js: string, expected?: T): Promise<T> {
             if (expected !== undefined && !_.isEqual(expected, res)) {
                 return Promise.reject(new Error(`Expected: ${expectedJson}. Got: ${jsonRes}`));
             }
+
             return Promise.resolve(res);
         })
         .catch((err) => {
@@ -67,6 +68,7 @@ export function runTests() {
             const gotJson = JSON.stringify(gotMessageData);
             if (!_.isEqual(expected, gotMessageData)) {
                 console.log(`executeJavaScript via message 'callFromNativeScript()' => ${gotJson} (${typeof gotMessageData})`);
+
                 return Promise.resolve(gotMessageData);
             }
 

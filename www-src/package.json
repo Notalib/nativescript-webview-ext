@@ -12,10 +12,10 @@
   "license": "MIT",
   "devDependencies": {
     "npm-run-all": "^4.1.5",
-    "prettier": "^1.18.2",
+    "prettier": "^1.19.1",
     "prettier-check": "^2.0.0",
     "ts-node": "^8.3.0",
     "tslint": "^5.18.0",
-    "typescript": "^3.7.2"
+    "typescript": "^3.7.3"
   }
 }
