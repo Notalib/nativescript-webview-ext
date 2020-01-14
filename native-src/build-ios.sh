@@ -2,11 +2,13 @@
 
 set -e
 
-cd ios
-
 # Based on https://appspector.com/blog/xcframeworks
 
-TARGET="../../src/platforms/ios/NotaWebViewExt.xcframework"
+ROOT_DIR="$(git rev-parse --show-toplevel)"
+NOTA_WEBVIEW_DIR="${ROOT_DIR}/native-src/ios/NotaWebViewExt"
+TARGET="${ROOT_DIR}/src/platforms/ios/NotaWebViewExt.xcframework"
+
+cd $NOTA_WEBVIEW_DIR
 
 rm -rf $TARGET
 

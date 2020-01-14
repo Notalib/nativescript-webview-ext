@@ -1,16 +1,16 @@
 //
 //  Constants.swift
-//  webview-ext
+//  NotaWebViewExt
 //
-//  Created by Morten Anton Bach Sjøgren on 13/03/2018.
-//  Copyright © 2018 Nota. All rights reserved.
+//  Created by Morten Anton Bach Sjøgren on 14/01/2020.
+//  Copyright © 2020 Morten Anton Bach Sjøgren. All rights reserved.
 //
 
 import Foundation
 
 struct Constants {
     static let customURLScheme = "x-local"
-    
+
     static let mimeType: [String: String] = [
         "html": "text/html",
         "htm": "text/html",

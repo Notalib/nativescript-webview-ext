@@ -1,8 +1,9 @@
 //
-//  CustomSchemeHandler.swift
+//  WKWebviewCustomSchemeHandler.swift
+//  NotaWebViewExt
 //
-//  Created by Morten Anton Bach Sjøgren on 13/03/2018.
-//  Copyright © 2018 Nota. All rights reserved.
+//  Created by Morten Anton Bach Sjøgren on 14/01/2020.
+//  Copyright © 2020 Morten Anton Bach Sjøgren. All rights reserved.
 //
 
 import Foundation
@@ -70,9 +71,9 @@ public class CustomUrlSchemeHandler: NSObject,WKURLSchemeHandler {
                 urlSchemeTask.didFailWithError(WebErrors.RequestFailedError)
                 return;
             }
-            
+
             let urlResponse = HTTPURLResponse.init(url: url, statusCode: 200, httpVersion: "HTTP/1.1", headerFields: ["Content-Type": mimeType])
-            
+
             urlSchemeTask.didReceive(urlResponse!)
             urlSchemeTask.didReceive(data as Data)
             urlSchemeTask.didFinish()
@@ -98,7 +99,7 @@ public class CustomUrlSchemeHandler: NSObject,WKURLSchemeHandler {
     public func getRegisteredLocalResource(forKey: String) -> String? {
         return self.resourceDict[forKey]
     }
-    
+
     @objc
     public func clearRegisteredLocalResource() {
         self.resourceDict = [:]

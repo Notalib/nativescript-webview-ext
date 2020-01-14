@@ -13,6 +13,7 @@
     "@nota/nativescript-webview-ext": "file://../src",
     "lodash": "^4.17.15",
     "nativescript-theme-core": "^1.0.6",
+    "nativescript-vue": "^2.4.0",
     "tns-core-modules": "^6.3.2",
     "url": "^0.11.0"
   },
