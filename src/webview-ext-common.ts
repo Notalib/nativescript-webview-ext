@@ -509,7 +509,10 @@ export class WebViewExtBase extends ContainerView {
 
             await this.loadJavaScriptFiles(this.autoInjectScriptFiles);
             await this.loadStyleSheetFiles(this.autoInjectStyleSheetFiles);
-            await this.executePromises(this.autoInjectJavaScriptBlocks.map((data) => data.scriptCode), -1);
+            await this.executePromises(
+                this.autoInjectJavaScriptBlocks.map((data) => data.scriptCode),
+                -1,
+            );
         } catch (error) {
             args.error = error;
         }
