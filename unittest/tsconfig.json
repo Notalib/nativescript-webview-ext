@@ -1,5 +1,6 @@
 {
     "compilerOptions": {
+	"skipLibCheck": true,
         "downlevelIteration": true,
         "target": "es5",
         "module": "commonjs",
@@ -11,7 +12,6 @@
         "baseUrl": ".",
         "paths": {
             "@nota/nativescript-webview-ext/*": ["../src/*"],
-            "tns-core-modules/*": ["./node_modules/tns-core-modules/*"],
             "~/*": ["app/*"]
         }
     },

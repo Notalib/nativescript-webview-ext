@@ -16,6 +16,7 @@
         "@nota/nativescript-webview-ext": "file:../src",
         "nativescript-theme-core": "^1.0.6",
         "nativescript-unit-test-runner": "0.7.0",
+        "nativescript-vue": "^2.4.0",
         "tns-core-modules": "~6.3.2",
         "url": "^0.11.0"
     },
@@ -28,9 +29,8 @@
         "karma-webpack": "3.0.5",
         "nativescript-dev-webpack": "~1.4.0",
         "prettier": "^1.19.1",
-        "tns-platform-declarations": "~6.3.2",
         "tslint": "^5.20.1",
-        "typescript": "^3.7.3"
+        "typescript": "^3.7.4"
     },
     "scripts": {
         "ci.test.android": "npm i && tns test android --justlaunch",
