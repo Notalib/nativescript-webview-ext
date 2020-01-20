@@ -4,8 +4,8 @@ Extended WebView for NativeScript which adds "x-local"-custom-scheme for loading
 Supports Android 19+ and iOS9+.
 
 ## Features
-* Adds a custom-scheme handler for x-local:// to the webview for loading of resources inside the webview.
-    * Note: For iOS 11+ WKWebView is used, but for iOS <11 UIWebView is used
+* Adds a custom-scheme handler for `x-local://` to the webview for loading of resources inside the webview.
+    * Note: This is **not** supported on iOS <11
 * Adds support for capturing URLs.
     *  This allows the app to open external links in an external browser and handle tel-links
 * Added functions like:
@@ -24,7 +24,8 @@ Supports Android 19+ and iOS9+.
 * Allows `alert`, `confirm` and `prompt` with `WkWebView`.
 * Supports:
     * Android 19+
-    * iOS 9+
+    * iOS 11+: Full support
+    * iOS <11: Partial support
 
 ## Installation
 
@@ -32,6 +33,19 @@ Describe your plugin installation steps. Ideally it would be something like:
 
 ```bash
 tns plugin add @nota/nativescript-webview-ext
+```
+
+### Core support
+Load in template like this:
+
+```xml
+<Page class="page" xmlns="http://schemas.nativescript.org/tns.xsd" ns:nota="@nota/nativescript-webview-ext">
+    <ActionBar class="action-bar">
+        <Label class="action-bar-title" text="Home"></Label>
+    </ActionBar>
+
+    <nota:WebViewExt src="https://nota.dk"></<nota:WebViewExt>
+</Page>
 ```
 
 ### Angular support
@@ -50,10 +64,9 @@ This registers the element `WebViewExt`. Replace the <WebView> tag with <WebView
 
 ## Limitations
 
-Custom scheme is only supported on iOS 11+.
+The custom-scheme handler for `x-local://` is only supported by `Android` and `iOS 11+`
 
-iOS 11 added support for setting a `WKURLSchemeHandler` on the `WKWebView`.
-Prior to iOS 11 there isn't support for intercepting the URL with `WKWebView` and `UIWebView` have been deprecated: [ITMS-90809](https://forums.developer.apple.com/thread/122114).
+Custom-scheme support for `iOS <11` was removed because of [ITMS-90809](https://forums.developer.apple.com/thread/122114).
 
 ## API
 

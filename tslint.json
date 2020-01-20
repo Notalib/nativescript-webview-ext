@@ -6,6 +6,7 @@
         ]
     },
     "rules": {
+        "newline-before-return": true,
         "class-name": true,
         "comment-format": [
             true,

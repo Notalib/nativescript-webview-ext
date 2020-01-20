@@ -10,18 +10,6 @@ declare const androidWebViewBridge: {
     emitEvent(eventName: string, data: string): void;
 };
 
-/**
- * Creates temporary iFrame element to load custom url, for sending handshake message
- * to iOS which is necessary to initiate data transfer from webView to iOS
- */
-function createIFrameForUIWebView(src: string): HTMLIFrameElement {
-    const rootElm = document.documentElement || document.body;
-    const newFrameElm = document.createElement("iframe");
-    newFrameElm.setAttribute("src", src);
-    rootElm.appendChild(newFrameElm);
-    return newFrameElm;
-}
-
 interface WKWebViewMessageHandler {
     postMessage(message: string): void;
 }
@@ -31,7 +19,9 @@ interface WKWebViewMessageHandler {
  */
 function getWkWebViewMessageHandler(): WKWebViewMessageHandler | void {
     const w = window as any;
-    if (!w || !w.webkit || !w.webkit.messageHandlers) {
+    if (!w?.webkit?.messageHandlers?.nsBridge) {
+        console.error(`Cannot get the window.webkit.messageHandlers.nsBridge - we can't communicate with native-layer`);
+
         return;
     }
 
@@ -56,7 +46,7 @@ class NSWebViewBridge {
      */
     public onNativeEvent(eventName: string, data: any) {
         const events = this.eventListenerMap[eventName];
-        if (!events || events.length === 0) {
+        if (!events?.length) {
             return;
         }
 
@@ -75,7 +65,7 @@ class NSWebViewBridge {
      * With WKWebView it's assumed the there is a WKScriptMessage named nsBridge
      *
      * With UIWebView:
-     * No longer supported
+     *   No longer supported
      */
     private emitEventToIOS(eventName: string, data: any) {
         const messageHandler = getWkWebViewMessageHandler();
@@ -86,6 +76,7 @@ class NSWebViewBridge {
                     data,
                 }),
             );
+
             return;
         }
 
@@ -99,6 +90,7 @@ class NSWebViewBridge {
         const androidWebViewBridge = this.androidWebViewBridge;
         if (!androidWebViewBridge) {
             console.error(`Tried to emit to android without the androidWebViewBridge`);
+
             return;
         }
 
@@ -113,9 +105,11 @@ class NSWebViewBridge {
             return;
         }
 
-        let events = this.eventListenerMap[eventName] || [];
+        if (!this.eventListenerMap[eventName]) {
+            this.eventListenerMap[eventName] = [];
+        }
 
-        this.eventListenerMap[eventName] = [...events, callback];
+        this.eventListenerMap[eventName].push(callback);
     }
 
     /**
@@ -132,11 +126,17 @@ class NSWebViewBridge {
     public off(eventName?: string, callback?: EventListener) {
         if (!eventName) {
             this.eventListenerMap = {};
+
+            return;
+        }
+
+        if (!this.eventListenerMap[eventName]) {
             return;
         }
 
         if (!callback) {
             delete this.eventListenerMap[eventName];
+
             return;
         }
 
@@ -175,6 +175,7 @@ class NSWebViewBridge {
 
         if (document.getElementById(elId)) {
             console.log(`${elId} already exists`);
+
             return Promise.resolve();
         }
 
@@ -212,6 +213,7 @@ class NSWebViewBridge {
     public injectJavaScript(elId: string, scriptCode: string): Promise<void> {
         if (document.getElementById(elId)) {
             console.log(`${elId} already exists`);
+
             return Promise.resolve();
         }
 
@@ -243,6 +245,7 @@ class NSWebViewBridge {
 
         if (document.getElementById(elId)) {
             console.log(`${elId} already exists`);
+
             return Promise.resolve();
         }
 
@@ -282,6 +285,7 @@ class NSWebViewBridge {
     public injectStyleSheet(elId: string, stylesheet: string, insertBefore?: boolean): Promise<void> {
         if (document.getElementById(elId)) {
             console.log(`${elId} already exists`);
+
             return Promise.resolve();
         }
 
@@ -322,7 +326,8 @@ class NSWebViewBridge {
      * If err is an Error the message and stack will be extracted and emitted to the native-layer.
      */
     public emitError(err: any, eventName = "web-error") {
-        if (err && typeof err === "object" && err.message) {
+        if (typeof err === "object" && err?.message) {
+            // Error objects cannot be serialized
             this.emit(eventName, {
                 err: {
                     message: err.message,

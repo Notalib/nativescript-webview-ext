@@ -26,7 +26,7 @@ pack() {
 
     # copy src
     echo 'Copying src...'
-    rsync -aP \
+    rsync -a \
         --delete \
         --delete-excluded \
         --exclude hooks \
@@ -46,17 +46,17 @@ pack() {
          "${ROOT_DIR}/LICENSE" \
          "${ROOT_DIR}/README.md" \
          "${TO_SOURCE_DIR}/"
-  
-    rsync -aP \
+
+    rsync -a \
          "${SOURCE_DIR}/webview-ext.d.ts" \
          "${TO_SOURCE_DIR}"
 
-    rsync -aP \
+    rsync -a \
         --delete \
          "${SOURCE_DIR}/platforms/" \
          "${TO_SOURCE_DIR}/platforms/"
 
-    rsync -aP \
+    rsync -a \
         --delete \
          "${SOURCE_DIR}/types/" \
          "${TO_SOURCE_DIR}/types/"

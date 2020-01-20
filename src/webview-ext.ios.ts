@@ -122,6 +122,7 @@ export class WebViewExt extends WebViewExtBase {
             ios.evaluateJavaScriptCompletionHandler(scriptCode.trim(), (result, error) => {
                 if (error) {
                     reject(error);
+
                     return;
                 }
 
@@ -205,11 +206,13 @@ export class WebViewExt extends WebViewExtBase {
 
     public get canGoBack(): boolean {
         const ios = this.ios;
+
         return ios && !!ios.canGoBack;
     }
 
     public get canGoForward(): boolean {
         const ios = this.ios;
+
         return ios && !!ios.canGoForward;
     }
 
@@ -256,6 +259,7 @@ export class WebViewExt extends WebViewExtBase {
                 .then((res) => callback(res))
                 .catch(() => callback(null));
         }
+
         return true;
     }
 
@@ -280,6 +284,7 @@ export class WebViewExt extends WebViewExtBase {
 
         if (!this.supportXLocalScheme) {
             this.writeTrace(`${cls} -> custom schema isn't support on iOS <11`, traceMessageType.error);
+
             return;
         }
 
@@ -288,6 +293,7 @@ export class WebViewExt extends WebViewExtBase {
         const filepath = this.resolveLocalResourceFilePath(path);
         if (!filepath) {
             this.writeTrace(`${cls} -> file doesn't exist`, traceMessageType.error);
+
             return;
         }
 
@@ -300,6 +306,7 @@ export class WebViewExt extends WebViewExtBase {
         const cls = `WebViewExt<${this}.ios>.unregisterLocalResource("${resourceName}")`;
         if (!this.supportXLocalScheme) {
             this.writeTrace(`${cls} -> custom schema isn't support on iOS <11`, traceMessageType.error);
+
             return;
         }
 
@@ -315,12 +322,14 @@ export class WebViewExt extends WebViewExtBase {
         const cls = `WebViewExt<${this}.ios>.getRegisteredLocalResource("${resourceName}")`;
         if (!this.supportXLocalScheme) {
             this.writeTrace(`${cls} -> custom schema isn't support on iOS <11`, traceMessageType.error);
+
             return null;
         }
 
         let result = this.getRegisteredLocalResourceFromNative(resourceName);
 
         this.writeTrace(`${cls} -> "${result}"`);
+
         return result;
     }
 
@@ -332,6 +341,7 @@ export class WebViewExt extends WebViewExtBase {
         const filepath = this.resolveLocalResourceFilePath(path);
         if (!filepath) {
             this.writeTrace(`WKWebViewWrapper.autoLoadStyleSheetFile("${resourceName}", "${path}") - couldn't resolve filepath`);
+
             return;
         }
 
@@ -352,6 +362,7 @@ export class WebViewExt extends WebViewExtBase {
         const filepath = this.resolveLocalResourceFilePath(path);
         if (!filepath) {
             this.writeTrace(`WKWebViewWrapper.autoLoadJavaScriptFile("${resourceName}", "${path}") - couldn't resolve filepath`);
+
             return;
         }
 
@@ -528,6 +539,7 @@ export class WKNavigationDelegateNotaImpl extends NSObject implements WKNavigati
     public static initWithOwner(owner: WeakRef<WebViewExt>): WKNavigationDelegateNotaImpl {
         const handler = <WKNavigationDelegateNotaImpl>WKNavigationDelegateNotaImpl.new();
         handler.owner = owner;
+
         return handler;
     }
 
@@ -537,6 +549,7 @@ export class WKNavigationDelegateNotaImpl extends NSObject implements WKNavigati
         const owner = this.owner.get();
         if (!owner) {
             decisionHandler(WKNavigationActionPolicy.Cancel);
+
             return;
         }
 
@@ -584,6 +597,7 @@ export class WKNavigationDelegateNotaImpl extends NSObject implements WKNavigati
                 `WKNavigationDelegateClass.webViewDecidePolicyForNavigationActionDecisionHandler("${url}", "${navigationAction.navigationType}") -> method:${httpMethod} "${navType}" -> cancel`,
             );
             decisionHandler(WKNavigationActionPolicy.Cancel);
+
             return;
         }
         decisionHandler(WKNavigationActionPolicy.Allow);
@@ -655,6 +669,7 @@ export class WKScriptMessageHandlerNotaImpl extends NSObject implements WKScript
     public static initWithOwner(owner: WeakRef<WebViewExtBase>): WKScriptMessageHandlerNotaImpl {
         const delegate = <WKScriptMessageHandlerNotaImpl>WKScriptMessageHandlerNotaImpl.new();
         delegate.owner = owner;
+
         return delegate;
     }
 
@@ -684,6 +699,7 @@ export class WKUIDelegateNotaImpl extends NSObject implements WKUIDelegate {
         const delegate = <WKUIDelegateNotaImpl>WKUIDelegateNotaImpl.new();
         delegate.owner = owner;
         console.log(delegate);
+
         return delegate;
     }
 
