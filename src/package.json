@@ -27,7 +27,8 @@
     "demo.reset": "git clean -d -x -f ../demo && npm install",
     "format": "prettier --write --config ../.prettierrc.json angular/index.ts vue/index.ts *.ts",
     "format:check": "prettier -c --config ../.prettierrc.json angular/index.ts vue/index.ts *.ts",
-    "lint": "npm-run-all format:check tslint",
+    "lint:www": "cd ../www-src && npm run lint",
+    "lint": "npm-run-all format:check tslint lint:www",
     "make-bridge-loader": "ts-node ./make-bridge-loader.ts",
     "ngc": "ngc --project tsconfig.aot.json",
     "plugin.link": "npm link && cd ../demo && npm link nativescript-webview-ext && cd ../src",
@@ -43,7 +44,7 @@
     "test.ios": "npm run build && npm-run-all test.install --parallel build:webview-bridge:watch plugin.tscwatch run.test.ios",
     "test.reset": "git clean -d -x -f ../unittest && npm install",
     "tsc": "npx tsc -skipLibCheck",
-    "tslint": "cd .. && tslint \"**/*.ts\" --config tslint.json --exclude \"**/node_modules/**\" --exclude \"**/*.d.ts\" --exclude \"**/platforms/**\""
+    "tslint": "tslint '**/*.ts' --config ../tslint.json --exclude \"**/node_modules/**\" --exclude \"**/*.d.ts\" --exclude \"**/platforms/**\""
   },
   "keywords": [
     "NativeScript",

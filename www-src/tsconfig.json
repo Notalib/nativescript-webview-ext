@@ -10,6 +10,7 @@
     ],
     "removeComments": true,
     "downlevelIteration": true,
-    "noUnusedLocals": true
+    "noUnusedLocals": true,
+    "strictNullChecks": true
   }
 }

@@ -13,8 +13,8 @@ interface ViewPortProperties {
     };
 
     const document = window.document;
-    let meta: HTMLMetaElement;
-    if (!document.querySelector('head meta[name="viewport"]')) {
+    let meta: HTMLMetaElement | null = document.querySelector('head meta[name="viewport"]');
+    if (!meta) {
         meta = document.createElement("meta");
         meta.setAttribute("name", "viewport");
 

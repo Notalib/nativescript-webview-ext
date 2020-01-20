@@ -9,6 +9,7 @@ import {
     debugModeProperty,
     displayZoomControlsProperty,
     domStorageProperty,
+    isEnabledProperty,
     supportZoomProperty,
     traceMessageType,
     UnsupportedSDKError,
@@ -128,7 +129,7 @@ function initializeWebViewClient(): void {
                 return super.shouldInterceptRequest(view, request as android.webkit.WebResourceRequest);
             }
 
-            let url: string;
+            let url: string | void;
             if (typeof request === "string") {
                 url = request;
             } else if (typeof request === "object") {
@@ -525,7 +526,7 @@ export class WebViewExt extends WebViewExtBase {
 
         const baseUrl = `file:///${fs.knownFolders.currentApp().path}/`;
         this.writeTrace(`WebViewExt<android>._loadData("${src}") -> baseUrl: "${baseUrl}"`);
-        nativeView.loadDataWithBaseURL(baseUrl, src, "text/html", "utf-8", null);
+        nativeView.loadDataWithBaseURL(baseUrl, src, "text/html", "utf-8", null!);
     }
 
     public get canGoBack(): boolean {
@@ -637,14 +638,15 @@ export class WebViewExt extends WebViewExtBase {
         }
 
         const result = await new Promise<T>((resolve, reject) => {
-            if (!this.nativeViewProtected) {
+            const androidWebView = this.nativeViewProtected;
+            if (!androidWebView) {
                 this.writeTrace(`WebViewExt<android>.executeJavaScript() -> no nativeView?`, traceMessageType.error);
                 reject(new Error("Native Android not initialized, cannot call executeJavaScript"));
 
                 return;
             }
 
-            this.nativeViewProtected.evaluateJavascript(
+            androidWebView.evaluateJavascript(
                 scriptCode,
                 new android.webkit.ValueCallback({
                     onReceiveValue(result: any) {
@@ -662,19 +664,21 @@ export class WebViewExt extends WebViewExtBase {
     }
 
     public zoomIn() {
-        if (!this.nativeViewProtected) {
+        const androidWebView = this.nativeViewProtected;
+        if (!androidWebView) {
             return false;
         }
 
-        return this.nativeViewProtected.zoomIn();
+        return androidWebView.zoomIn();
     }
 
     public zoomOut() {
-        if (!this.nativeViewProtected) {
+        const androidWebView = this.nativeViewProtected;
+        if (!androidWebView) {
             return false;
         }
 
-        return this.nativeViewProtected.zoomOut();
+        return androidWebView.zoomOut();
     }
 
     public zoomBy(zoomFactor: number) {
@@ -704,46 +708,52 @@ export class WebViewExt extends WebViewExtBase {
     }
 
     [builtInZoomControlsProperty.getDefault]() {
-        if (!this.nativeViewProtected) {
+        const androidWebView = this.nativeViewProtected;
+        if (!androidWebView) {
             return false;
         }
 
-        const settings = this.nativeViewProtected.getSettings();
+        const settings = androidWebView.getSettings();
 
         return settings.getBuiltInZoomControls();
     }
 
     [builtInZoomControlsProperty.setNative](enabled: boolean) {
-        if (!this.nativeViewProtected) {
+        const androidWebView = this.nativeViewProtected;
+        if (!androidWebView) {
             return;
         }
-        const settings = this.nativeViewProtected.getSettings();
+        const settings = androidWebView.getSettings();
         settings.setBuiltInZoomControls(!!enabled);
     }
 
     [displayZoomControlsProperty.getDefault]() {
-        if (!this.nativeViewProtected) {
+        const androidWebView = this.nativeViewProtected;
+        if (!androidWebView) {
             return false;
         }
-        const settings = this.nativeViewProtected.getSettings();
+
+        const settings = androidWebView.getSettings();
 
         return settings.getDisplayZoomControls();
     }
 
     [displayZoomControlsProperty.setNative](enabled: boolean) {
-        if (!this.nativeViewProtected) {
+        const androidWebView = this.nativeViewProtected;
+        if (!androidWebView) {
             return;
         }
-        const settings = this.nativeViewProtected.getSettings();
+        const settings = androidWebView.getSettings();
         settings.setDisplayZoomControls(!!enabled);
     }
 
-    [cacheModeProperty.getDefault](): CacheMode {
-        if (!this.nativeViewProtected) {
+    [cacheModeProperty.getDefault](): CacheMode | null {
+        const androidWebView = this.nativeViewProtected;
+        if (!androidWebView) {
             return null;
         }
 
-        const settings = this.nativeViewProtected.getSettings();
+        const settings = androidWebView.getSettings();
         const cacheModeInt = settings.getCacheMode();
         for (const [key, value] of cacheModeMap) {
             if (value === cacheModeInt) {
@@ -755,11 +765,12 @@ export class WebViewExt extends WebViewExtBase {
     }
 
     [cacheModeProperty.setNative](cacheMode: CacheMode) {
-        if (!this.nativeViewProtected) {
+        const androidWebView = this.nativeViewProtected;
+        if (!androidWebView) {
             return;
         }
 
-        const settings = this.nativeViewProtected.getSettings();
+        const settings = androidWebView.getSettings();
         for (const [key, nativeValue] of cacheModeMap) {
             if (key === cacheMode) {
                 settings.setCacheMode(nativeValue);
@@ -770,59 +781,84 @@ export class WebViewExt extends WebViewExtBase {
     }
 
     [databaseStorageProperty.getDefault]() {
-        if (!this.nativeViewProtected) {
+        const androidWebView = this.nativeViewProtected;
+        if (!androidWebView) {
             return false;
         }
 
-        const settings = this.nativeViewProtected.getSettings();
+        const settings = androidWebView.getSettings();
 
         return settings.getDatabaseEnabled();
     }
 
     [databaseStorageProperty.setNative](enabled: boolean) {
-        if (!this.nativeViewProtected) {
+        const androidWebView = this.nativeViewProtected;
+        if (!androidWebView) {
             return;
         }
 
-        const settings = this.nativeViewProtected.getSettings();
+        const settings = androidWebView.getSettings();
         settings.setDatabaseEnabled(!!enabled);
     }
 
     [domStorageProperty.getDefault]() {
-        if (!this.nativeViewProtected) {
+        const androidWebView = this.nativeViewProtected;
+        if (!androidWebView) {
             return false;
         }
 
-        const settings = this.nativeViewProtected.getSettings();
+        const settings = androidWebView.getSettings();
 
         return settings.getDomStorageEnabled();
     }
 
     [domStorageProperty.setNative](enabled: boolean) {
-        if (!this.nativeViewProtected) {
+        const androidWebView = this.nativeViewProtected;
+        if (!androidWebView) {
             return;
         }
 
-        const settings = this.nativeViewProtected.getSettings();
+        const settings = androidWebView.getSettings();
         settings.setDomStorageEnabled(!!enabled);
     }
 
     [supportZoomProperty.getDefault]() {
-        if (!this.nativeViewProtected) {
+        const androidWebView = this.nativeViewProtected;
+        if (!androidWebView) {
             return false;
         }
 
-        const settings = this.nativeViewProtected.getSettings();
+        const settings = androidWebView.getSettings();
 
         return settings.supportZoom();
     }
 
     [supportZoomProperty.setNative](enabled: boolean) {
-        if (!this.nativeViewProtected) {
+        const androidWebView = this.nativeViewProtected;
+        if (!androidWebView) {
             return;
         }
 
-        const settings = this.nativeViewProtected.getSettings();
+        const settings = androidWebView.getSettings();
         settings.setSupportZoom(!!enabled);
+    }
+
+    [isEnabledProperty.setNative](enabled: boolean) {
+        const androidWebView = this.nativeViewProtected;
+        if (!androidWebView) {
+            return;
+        }
+
+        if (enabled) {
+            androidWebView.setOnTouchListener(null!);
+        } else {
+            androidWebView.setOnTouchListener(
+                new android.view.View.OnTouchListener({
+                    onTouch() {
+                        return true;
+                    },
+                }),
+            );
+        }
     }
 }

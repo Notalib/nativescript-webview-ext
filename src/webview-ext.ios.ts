@@ -6,11 +6,13 @@ import { profile } from "@nativescript/core/profiling";
 import { traceMessageType } from "@nativescript/core/ui/core/view";
 import { alert, confirm, prompt } from "@nativescript/core/ui/dialogs";
 import { webViewBridge } from "./nativescript-webview-bridge-loader";
-import { autoInjectJSBridgeProperty, NavigationType, scrollBounceProperty, WebViewExtBase } from "./webview-ext-common";
+import { autoInjectJSBridgeProperty, isEnabledProperty, NavigationType, scrollBounceProperty, WebViewExtBase } from "./webview-ext-common";
 
 export * from "./webview-ext-common";
 
 export class WebViewExt extends WebViewExtBase {
+    public ios: WKWebView;
+
     public static get supportXLocalScheme() {
         return typeof CustomUrlSchemeHandler !== "undefined";
     }
@@ -21,7 +23,7 @@ export class WebViewExt extends WebViewExtBase {
     protected wkCustomUrlSchemeHandler: CustomUrlSchemeHandler | void;
     protected wkUserContentController: WKUserContentController;
     protected wkUserScriptInjectWebViewBridge?: WKUserScript;
-    protected wkUserScriptViewPortCode: Promise<WKUserScript>;
+    protected wkUserScriptViewPortCode: Promise<WKUserScript | null> | null;
     protected wkNamedUserScripts = [] as Array<{
         resourceName: string;
         wkUserScript: WKUserScript;
@@ -68,9 +70,9 @@ export class WebViewExt extends WebViewExtBase {
     }
 
     public disposeNativeView() {
-        this.wkNavigationDelegate = null;
-        this.wkCustomUrlSchemeHandler = null;
-        this.wkUIDelegate = null;
+        this.wkNavigationDelegate = null!;
+        this.wkCustomUrlSchemeHandler = null!;
+        this.wkUIDelegate = null!;
 
         super.disposeNativeView();
     }
@@ -82,7 +84,7 @@ export class WebViewExt extends WebViewExtBase {
     protected async injectViewPortMeta() {
         this.resetViewPortCode();
         if (this.supportXLocalScheme) {
-            return null;
+            return;
         }
 
         return await super.injectViewPortMeta();
@@ -156,8 +158,8 @@ export class WebViewExt extends WebViewExtBase {
     public onUnloaded() {
         const ios = this.ios;
         if (ios) {
-            ios.navigationDelegate = null;
-            ios.UIDelegate = null;
+            ios.navigationDelegate = null!;
+            ios.UIDelegate = null!;
         }
 
         super.onUnloaded();
@@ -253,7 +255,7 @@ export class WebViewExt extends WebViewExtBase {
         return true;
     }
 
-    public _webConfirm(message: string, callback: (response: boolean) => void) {
+    public _webConfirm(message: string, callback: (response: boolean | null) => void) {
         if (!super._webConfirm(message, callback)) {
             confirm(message)
                 .then((res) => callback(res))
@@ -263,7 +265,7 @@ export class WebViewExt extends WebViewExtBase {
         return true;
     }
 
-    public _webPrompt(message: string, defaultText: string, callback: (response: string) => void) {
+    public _webPrompt(message: string, defaultText: string, callback: (response: string | null) => void) {
         if (!super._webPrompt(message, defaultText, callback)) {
             prompt(message, defaultText)
                 .then((res) => {
@@ -323,7 +325,7 @@ export class WebViewExt extends WebViewExtBase {
         if (!this.supportXLocalScheme) {
             this.writeTrace(`${cls} -> custom schema isn't support on iOS <11`, traceMessageType.error);
 
-            return null;
+            return;
         }
 
         let result = this.getRegisteredLocalResourceFromNative(resourceName);
@@ -399,6 +401,16 @@ export class WebViewExt extends WebViewExtBase {
         ios.scrollView.bounces = !!enabled;
     }
 
+    [isEnabledProperty.setNative](enabled: boolean) {
+        const ios = this.ios;
+        if (!ios) {
+            return;
+        }
+
+        ios.userInteractionEnabled = !!enabled;
+        ios.scrollView.userInteractionEnabled = !!enabled;
+    }
+
     /**
      * iOS11+
      *
@@ -413,7 +425,7 @@ export class WebViewExt extends WebViewExtBase {
 
         this.wkUserContentController.removeAllUserScripts();
 
-        this.addUserScriptFromPromise(this.wkUserScriptViewPortCode);
+        this.addUserScriptFromPromise(this.wkUserScriptViewPortCode!);
         if (!autoInjectJSBridge) {
             return;
         }
@@ -472,7 +484,7 @@ export class WebViewExt extends WebViewExtBase {
 
     protected getRegisteredLocalResourceFromNative(resourceName: string) {
         if (!this.wkCustomUrlSchemeHandler) {
-            return null;
+            return;
         }
 
         return this.wkCustomUrlSchemeHandler.getRegisteredLocalResourceForKey(resourceName);

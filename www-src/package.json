@@ -5,8 +5,10 @@
   "description": "",
   "main": "ns-webview-bridge.js",
   "scripts": {
+    "tslint": "tslint '*.ts' --config ../tslint.json --exclude \"**/*.d.ts\"",
     "format:check": "npm run format -- -c",
     "format": "prettier --write --config ../.prettierrc.json '*.ts'",
+    "lint": "npm-run-all format:check tslint",
     "build": "tsc -p tsconfig.json"
   },
   "license": "MIT",
@@ -14,7 +16,7 @@
     "npm-run-all": "^4.1.5",
     "prettier": "^1.19.1",
     "ts-node": "^8.3.0",
-    "tslint": "^5.18.0",
+    "tslint": "^5.20.1",
     "typescript": "^3.7.3"
   }
 }
