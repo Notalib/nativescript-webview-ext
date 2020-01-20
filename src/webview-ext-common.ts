@@ -702,6 +702,7 @@ export class WebViewExtBase extends ContainerView {
         } as EnterFullscreenEventData;
 
         this.notify(args);
+
         return true;
     }
 
@@ -713,6 +714,7 @@ export class WebViewExtBase extends ContainerView {
         } as ExitFullscreenEventData;
 
         this.notify(args);
+
         return true;
     }
 
