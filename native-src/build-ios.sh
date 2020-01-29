@@ -30,17 +30,21 @@ function BUILD_ARCHIVE() {
         -archivePath "${ARCHIVE_PATH}" \
         -derivedDataPath "${DERIVED_DATA_PATH}" \
         -sdk "${SDK}" \
-        SKIP_INSTALL=NO BUILD_LIBRARIES_FOR_DISTRIBUTION=YES
+        SKIP_INSTALL=NO \
+        BUILD_LIBRARIES_FOR_DISTRIBUTION=YES
 }
 
 # Archive for iOS
 BUILD_ARCHIVE "iOS" "${IOS_XCARCHIVE_PATH}" "/tmp/iphoneos" "iphoneos"
 
 # Archive for simulator
-BUILD_ARCHIVE "iOS Simulator" "${IOS_SIMULATOR_XCARCHIVE_PATH}" "/tmp/iphoneos" "iphonesimulator"
+BUILD_ARCHIVE "iOS Simulator" "${IOS_SIMULATOR_XCARCHIVE_PATH}" "/tmp/iphonesimulator" "iphonesimulator"
 
 # Create fat binary
-lipo -create "${IPHONEOS_FRAMEWORK}/${SCHEME_NAME}" "${IPHONESIM_FRAMEWORK}/${SCHEME_NAME}" -output "${TARGET}/${SCHEME_NAME}"
+lipo -create \
+    "${IPHONEOS_FRAMEWORK}/${SCHEME_NAME}" \
+    "${IPHONESIM_FRAMEWORK}/${SCHEME_NAME}" \
+    -output "${TARGET}/${SCHEME_NAME}"
 
 # Copy all headers
 cp -R "${IPHONEOS_FRAMEWORK}/"{Headers,Modules,Info.plist} "${TARGET}/"

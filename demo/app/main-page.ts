@@ -1,15 +1,19 @@
 import * as observable from "@nativescript/core/data/observable";
 import * as trace from "@nativescript/core/trace";
-import { isAndroid, LoadEventData, LoadFinishedEventData, ShouldOverrideUrlLoadEventData, WebViewExt } from "@nota/nativescript-webview-ext";
+import { Page } from "@nativescript/core/ui/page";
+import { isAndroid, LoadEventData, LoadFinishedEventData, ShouldOverrideUrlLoadEventData, WebViewExt, EventData } from "@nota/nativescript-webview-ext";
 import * as _ from "lodash";
 
 let webview: WebViewExt;
+let page: Page;
 
 trace.setCategories("NOTA");
 trace.enable();
 
 // Event handler for Page 'loaded' event attached in main-page.xml
-export function pageLoaded(args: observable.EventData) {}
+export function pageLoaded(args: EventData) {
+    page = args.object as Page;
+}
 
 let gotMessageData: any = null;
 export function webviewLoaded(args: LoadEventData) {
@@ -40,47 +44,43 @@ export function webviewLoaded(args: LoadEventData) {
     });
 }
 
-function executeJavaScriptTest<T>(js: string, expected?: T): Promise<T> {
-    return webview
-        .executeJavaScript<T>(js)
-        .then((res: T) => {
-            console.log(`executeJavaScript '${js}' => ${JSON.stringify(res)} (${typeof res})`);
-            const jsonRes = JSON.stringify(res);
-            const expectedJson = JSON.stringify(expected);
-            if (expected !== undefined && !_.isEqual(expected, res)) {
-                return Promise.reject(new Error(`Expected: ${expectedJson}. Got: ${jsonRes}`));
-            }
+async function executeJavaScriptTest<T>(js: string, expected?: T): Promise<T> {
+    try {
+        const res = await webview.executeJavaScript<T>(js);
+        console.log(`executeJavaScript '${js}' => ${JSON.stringify(res)} (${typeof res})`);
+        const jsonRes = JSON.stringify(res);
+        const expectedJson = JSON.stringify(expected);
+        if (expected !== undefined && !_.isEqual(expected, res)) {
+            throw new Error(`Expected: ${expectedJson}. Got: ${jsonRes}`);
+        }
 
-            return Promise.resolve(res);
-        })
-        .catch((err) => {
-            console.log(`executeJavaScript '${js}' => ERROR: ${err}`);
-            throw err;
-        });
+        return res;
+    } catch (err) {
+        console.log(`executeJavaScript '${js}' => ERROR: ${err}`);
+        throw err;
+    }
 }
 
-export function runTests() {
-    console.time("tests");
-    Promise.all([
-        executeJavaScriptTest("callFromNativeScript()").then(() => {
-            const expected = { huba: "hop" };
-            const expectedJson = JSON.stringify(expected);
-            const gotJson = JSON.stringify(gotMessageData);
-            if (!_.isEqual(expected, gotMessageData)) {
-                console.log(`executeJavaScript via message 'callFromNativeScript()' => ${gotJson} (${typeof gotMessageData})`);
+export async function runTests() {
+    console.time("runTests");
 
-                return Promise.resolve(gotMessageData);
-            }
+    await executeJavaScriptTest("callFromNativeScript()");
 
-            return Promise.reject(new Error(`Expected: ${expectedJson}. Got: ${gotJson}`));
-        }),
-        executeJavaScriptTest("getNumber()", 42),
-        executeJavaScriptTest("getNumberFloat()", 3.14),
-        executeJavaScriptTest("getBoolean()", false),
-        executeJavaScriptTest("getString()", "string result from webview JS function"),
-        executeJavaScriptTest("getArray()", [1.5, true, "hello"]),
-        executeJavaScriptTest("getObject()", { name: "object-test", prop: "test", values: [42, 3.14] }),
-    ]).then(() => {
-        console.timeEnd("tests");
-    });
+    const expected = { huba: "hop" };
+    const gotJson = JSON.stringify(gotMessageData);
+
+    if (_.isEqual(expected, gotMessageData)) {
+        console.log(`executeJavaScript via message 'callFromNativeScript()' => ${gotJson} (${typeof gotMessageData})`);
+    } else {
+        throw new Error(`Expected: ${JSON.stringify(expected)}. Got: ${gotJson}`);
+    }
+
+    await executeJavaScriptTest("getNumber()", 42);
+    await executeJavaScriptTest("getNumberFloat()", 3.14);
+    await executeJavaScriptTest("getBoolean()", false);
+    await executeJavaScriptTest("getString()", "string result from webview JS function");
+    await executeJavaScriptTest("getArray()", [1.5, true, "hello"]);
+    await executeJavaScriptTest("getObject()", { name: "object-test", prop: "test", values: [42, 3.14] });
+
+    console.timeEnd("runTests");
 }
