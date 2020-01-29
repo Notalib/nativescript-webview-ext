@@ -299,11 +299,11 @@ function initializeWebViewClient(): void {
                 this.showCustomViewCallback.onCustomViewHidden();
             }
 
-            this.showCustomViewCallback = null;
+            this.showCustomViewCallback = undefined;
         }
 
         public onHideCustomView() {
-            this.showCustomViewCallback = null;
+            this.showCustomViewCallback = undefined;
 
             const owner = this.owner.get();
             if (!owner) {
