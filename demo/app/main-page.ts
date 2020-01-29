@@ -66,7 +66,9 @@ export async function runTests() {
 
     await executeJavaScriptTest("callFromNativeScript()");
 
-    const expected = { huba: "hop" };
+    const expected = {
+        huba: "hop",
+    };
     const gotJson = JSON.stringify(gotMessageData);
 
     if (_.isEqual(expected, gotMessageData)) {
