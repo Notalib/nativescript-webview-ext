@@ -1,6 +1,6 @@
 {
   "name": "@nota/nativescript-webview-ext",
-  "version": "6.3.0-alpha.0",
+  "version": "6.3.0-alpha.1",
   "description": "Extended WebView for NativeScript which adds 'x-local' scheme for local-files. events between WebView and native-layer, javascript execution, injecting CSS and JS-files.",
   "main": "webview-ext",
   "typings": "webview-ext.d.ts",
@@ -27,7 +27,8 @@
     "demo.reset": "git clean -d -x -f ../demo && npm install",
     "format": "prettier --write --config ../.prettierrc.json angular/index.ts vue/index.ts *.ts",
     "format:check": "prettier -c --config ../.prettierrc.json angular/index.ts vue/index.ts *.ts",
-    "lint": "npm-run-all format:check tslint",
+    "lint:www": "cd ../www-src && npm run lint",
+    "lint": "npm-run-all format:check tslint lint:www",
     "make-bridge-loader": "ts-node ./make-bridge-loader.ts",
     "ngc": "ngc --project tsconfig.aot.json",
     "plugin.link": "npm link && cd ../demo && npm link nativescript-webview-ext && cd ../src",
@@ -43,7 +44,7 @@
     "test.ios": "npm run build && npm-run-all test.install --parallel build:webview-bridge:watch plugin.tscwatch run.test.ios",
     "test.reset": "git clean -d -x -f ../unittest && npm install",
     "tsc": "npx tsc -skipLibCheck",
-    "tslint": "cd .. && tslint \"**/*.ts\" --config tslint.json --exclude \"**/node_modules/**\" --exclude \"**/*.d.ts\" --exclude \"**/platforms/**\""
+    "tslint": "tslint '**/*.ts' --config ../tslint.json --exclude \"**/node_modules/**\" --exclude \"**/*.d.ts\" --exclude \"**/platforms/**\""
   },
   "keywords": [
     "NativeScript",
@@ -94,13 +95,13 @@
     "prettier": "^1.19.1",
     "promise-polyfill": "^8.1.3",
     "prompt": "^1.0.0",
-    "rimraf": "^3.0.0",
+    "rimraf": "^3.0.1",
     "rxjs": "^6.5.4",
     "terser": "^4.6.3",
     "tns-core-modules": "~6.3.2",
     "tns-platform-declarations": "~6.3.2",
     "ts-node": "^8.6.2",
-    "tslint": "^5.20.1",
+    "tslint": "^6.0.0",
     "typescript": "~3.5.3",
     "whatwg-fetch": "^3.0.0",
     "zone.js": "^0.9.1"

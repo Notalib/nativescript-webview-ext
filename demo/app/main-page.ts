@@ -12,10 +12,10 @@ import {
 import * as fastEqual from "fast-deep-equal";
 
 let webview: WebViewExt;
+let page: Page;
 
 trace.setCategories("NOTA");
 trace.enable();
-let page: Page;
 
 // Event handler for Page 'loaded' event attached in main-page.xml
 export function pageLoaded(args: EventData) {

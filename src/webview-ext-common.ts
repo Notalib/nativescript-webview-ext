@@ -2,6 +2,7 @@
 
 import * as fs from "@nativescript/core/file-system";
 import { booleanConverter, ContainerView, CSSType, EventData, Property, traceEnabled, traceMessageType, traceWrite } from "@nativescript/core/ui/core/view";
+import { isEnabledProperty } from "tns-core-modules/ui/core/view/view";
 import * as URL from "url";
 import { fetchPolyfill, metadataViewPort, promisePolyfill, webViewBridge } from "./nativescript-webview-bridge-loader";
 
@@ -532,7 +533,7 @@ export class WebViewExtBase extends ContainerView {
 
         this.notify(args);
 
-        this.getTitle().then((title) => this._titleChanged(title));
+        this.getTitle().then((title) => title && this._titleChanged(title));
 
         return args;
     }
@@ -631,7 +632,7 @@ export class WebViewExtBase extends ContainerView {
         return true;
     }
 
-    public _webConfirm(message: string, callback: (response: boolean) => void) {
+    public _webConfirm(message: string, callback: (response: boolean | null) => void) {
         if (!this.hasListeners(WebViewExtBase.webConfirmEvent)) {
             return false;
         }
@@ -649,7 +650,7 @@ export class WebViewExtBase extends ContainerView {
         return true;
     }
 
-    public _webPrompt(message: string, defaultText: string, callback: (response: string) => void) {
+    public _webPrompt(message: string, defaultText: string, callback: (response: string | null) => void) {
         if (!this.hasListeners(WebViewExtBase.webPromptEvent)) {
             return false;
         }
@@ -878,7 +879,7 @@ export class WebViewExtBase extends ContainerView {
     /**
      * Resolve a "x-local://{name}" to file-path.
      */
-    public getRegisteredLocalResource(name: string): string {
+    public getRegisteredLocalResource(name: string): string | void {
         throw new Error("Method not implemented.");
     }
 
@@ -912,7 +913,7 @@ export class WebViewExtBase extends ContainerView {
     /**
      * Load a JavaScript file on the current page in the webview.
      */
-    public loadJavaScriptFile(scriptName: string, filepath?: string) {
+    public loadJavaScriptFile(scriptName: string, filepath: string) {
         return this.loadJavaScriptFiles([
             {
                 resourceName: scriptName,
@@ -1377,7 +1378,7 @@ export class WebViewExtBase extends ContainerView {
      * Get document.title
      * NOTE: On Android, if empty returns filename
      */
-    public getTitle(): Promise<string> {
+    public getTitle(): Promise<string | void> {
         throw new Error("Method not implemented.");
     }
 
@@ -1402,6 +1403,10 @@ export class WebViewExtBase extends ContainerView {
         }
 
         return resourceName;
+    }
+
+    [isEnabledProperty.getDefault]() {
+        return true;
     }
 }
 
