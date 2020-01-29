@@ -1,6 +1,7 @@
 {
   "compileOnSave": false,
   "compilerOptions": {
+    "strictNullChecks": true,
     "allowUnreachableCode": false,
     "allowUnusedLabels": false,
     "declaration": true,
