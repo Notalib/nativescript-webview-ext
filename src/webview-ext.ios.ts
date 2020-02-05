@@ -11,7 +11,9 @@ import { autoInjectJSBridgeProperty, isEnabledProperty, NavigationType, scrollBo
 export * from "./webview-ext-common";
 
 export class WebViewExt extends WebViewExtBase {
-    public ios: WKWebView;
+    public get ios() {
+        return this.nativeViewProtected as WKWebView;
+    }
 
     public static get supportXLocalScheme() {
         return typeof CustomUrlSchemeHandler !== "undefined";
@@ -115,13 +117,13 @@ export class WebViewExt extends WebViewExtBase {
             `;
         }
 
-        const ios = this.ios;
-        if (!ios) {
+        const nativeView = this.nativeViewProtected;
+        if (!nativeView) {
             return Promise.reject(new Error("WebView is missing"));
         }
 
         const rawResult = await new Promise<any>((resolve, reject) => {
-            ios.evaluateJavaScriptCompletionHandler(scriptCode.trim(), (result, error) => {
+            nativeView.evaluateJavaScriptCompletionHandler(scriptCode.trim(), (result, error) => {
                 if (error) {
                     reject(error);
 
@@ -148,35 +150,35 @@ export class WebViewExt extends WebViewExtBase {
     public onLoaded() {
         super.onLoaded();
 
-        const ios = this.ios;
-        if (ios) {
-            ios.navigationDelegate = this.wkNavigationDelegate;
-            ios.UIDelegate = this.wkUIDelegate;
+        const nativeView = this.nativeViewProtected;
+        if (nativeView) {
+            nativeView.navigationDelegate = this.wkNavigationDelegate;
+            nativeView.UIDelegate = this.wkUIDelegate;
         }
     }
 
     public onUnloaded() {
-        const ios = this.ios;
-        if (ios) {
-            ios.navigationDelegate = null!;
-            ios.UIDelegate = null!;
+        const nativeView = this.nativeViewProtected;
+        if (nativeView) {
+            nativeView.navigationDelegate = null!;
+            nativeView.UIDelegate = null!;
         }
 
         super.onUnloaded();
     }
 
     public stopLoading() {
-        const ios = this.ios;
-        if (!ios) {
+        const nativeView = this.nativeViewProtected;
+        if (!nativeView) {
             return;
         }
 
-        ios.stopLoading();
+        nativeView.stopLoading();
     }
 
     public _loadUrl(src: string) {
-        const ios = this.ios;
-        if (!ios) {
+        const nativeView = this.nativeViewProtected;
+        if (!nativeView) {
             return;
         }
 
@@ -185,17 +187,17 @@ export class WebViewExt extends WebViewExtBase {
             const cachePath = src.substring(0, src.lastIndexOf("/"));
             const nsReadAccessUrl = NSURL.URLWithString(cachePath);
             this.writeTrace(`WKWebViewWrapper.loadUrl("${src}") -> ios.loadFileURLAllowingReadAccessToURL("${nsURL}", "${nsReadAccessUrl}"`);
-            ios.loadFileURLAllowingReadAccessToURL(nsURL, nsReadAccessUrl);
+            nativeView.loadFileURLAllowingReadAccessToURL(nsURL, nsReadAccessUrl);
         } else {
             const nsRequestWithUrl = NSURLRequest.requestWithURL(nsURL);
             this.writeTrace(`WKWebViewWrapper.loadUrl("${src}") -> ios.loadRequest("${nsRequestWithUrl}"`);
-            ios.loadRequest(nsRequestWithUrl);
+            nativeView.loadRequest(nsRequestWithUrl);
         }
     }
 
     public _loadData(content: string) {
-        const ios = this.ios;
-        if (!ios) {
+        const nativeView = this.nativeViewProtected;
+        if (!nativeView) {
             return;
         }
 
@@ -203,46 +205,46 @@ export class WebViewExt extends WebViewExtBase {
         const nsBaseUrl = NSURL.URLWithString(baseUrl);
 
         this.writeTrace(`WKWebViewWrapper.loadUrl(content) -> this.ios.loadHTMLStringBaseURL("${nsBaseUrl}")`);
-        ios.loadHTMLStringBaseURL(content, nsBaseUrl);
+        nativeView.loadHTMLStringBaseURL(content, nsBaseUrl);
     }
 
     public get canGoBack(): boolean {
-        const ios = this.ios;
+        const nativeView = this.nativeViewProtected;
 
-        return ios && !!ios.canGoBack;
+        return nativeView && !!nativeView.canGoBack;
     }
 
     public get canGoForward(): boolean {
-        const ios = this.ios;
+        const nativeView = this.nativeViewProtected;
 
-        return ios && !!ios.canGoForward;
+        return nativeView && !!nativeView.canGoForward;
     }
 
     public goBack() {
-        const ios = this.ios;
-        if (!ios) {
+        const nativeView = this.nativeViewProtected;
+        if (!nativeView) {
             return;
         }
 
-        ios.goBack();
+        nativeView.goBack();
     }
 
     public goForward() {
-        const ios = this.ios;
-        if (!ios) {
+        const nativeView = this.nativeViewProtected;
+        if (!nativeView) {
             return;
         }
 
-        ios.goForward();
+        nativeView.goForward();
     }
 
     public reload() {
-        const ios = this.ios;
-        if (!ios) {
+        const nativeView = this.nativeViewProtected;
+        if (!nativeView) {
             return;
         }
 
-        ios.reload();
+        nativeView.reload();
     }
 
     public _webAlert(message: string, callback: () => void) {
@@ -384,31 +386,31 @@ export class WebViewExt extends WebViewExtBase {
     }
 
     [scrollBounceProperty.getDefault]() {
-        const ios = this.ios;
-        if (!ios) {
+        const nativeView = this.nativeViewProtected;
+        if (!nativeView) {
             return false;
         }
 
-        return ios.scrollView.bounces;
+        return nativeView.scrollView.bounces;
     }
 
     [scrollBounceProperty.setNative](enabled: boolean) {
-        const ios = this.ios;
-        if (!ios) {
+        const nativeView = this.nativeViewProtected;
+        if (!nativeView) {
             return;
         }
 
-        ios.scrollView.bounces = !!enabled;
+        nativeView.scrollView.bounces = !!enabled;
     }
 
     [isEnabledProperty.setNative](enabled: boolean) {
-        const ios = this.ios;
-        if (!ios) {
+        const nativeView = this.nativeViewProtected;
+        if (!nativeView) {
             return;
         }
 
-        ios.userInteractionEnabled = !!enabled;
-        ios.scrollView.userInteractionEnabled = !!enabled;
+        nativeView.userInteractionEnabled = !!enabled;
+        nativeView.scrollView.userInteractionEnabled = !!enabled;
     }
 
     /**
