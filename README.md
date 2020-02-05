@@ -35,6 +35,21 @@ Describe your plugin installation steps. Ideally it would be something like:
 tns plugin add @nota/nativescript-webview-ext
 ```
 
+### Update minSdkVersion to 19 or higher
+
+Android SDK 19 is required, update `App_Resources/Android/app.gradle`:  
+```
+android {
+  defaultConfig {
+    minSdkVersion 19 // change this line
+    generatedDensities = []
+  }
+  aaptOptions {
+    additionalParameters "--no-version-vectors"
+  }
+}
+```
+
 ### Core support
 Load in template like this:
 
@@ -129,6 +144,16 @@ Inside the WebView we have the `nsWebViewBridge` for sending events between the 
 | window.nsWebViewBridge.on(eventName: string, cb: (data: any) => void) | Registers handlers for events from the native layer. |
 | window.nsWebViewBridge.off(eventName: string, cb?: (data: any) => void) | Unregister handlers for events from the native layer. |
 | window.nsWebViewBridge.emit(eventName: string, data: any) | Emits event to NativeScript layer. Will be emitted on the WebViewExt as any other event, data will be a part of the WebViewEventData-object |
+
+#### Waiting for nsWebViewBridge to be available
+
+```javascript
+    window.addEventListener("ns-brige-ready", function(e) {
+        var nsWebViewBridge = e.detail || window.nsWebViewBridge;
+        
+        // do stuff here
+    });
+```
 
 ## Possible features to come:
 
