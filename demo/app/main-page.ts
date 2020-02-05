@@ -1,8 +1,15 @@
-import * as observable from "@nativescript/core/data/observable";
 import * as trace from "@nativescript/core/trace";
-import { Page } from "@nativescript/core/ui/page";
-import { isAndroid, LoadEventData, LoadFinishedEventData, ShouldOverrideUrlLoadEventData, WebViewExt, EventData } from "@nota/nativescript-webview-ext";
-import * as _ from "lodash";
+import { Button } from "@nativescript/core/ui/button";
+import { EventData, Page } from "@nativescript/core/ui/page/page";
+import {
+    EnterFullscreenEventData,
+    isAndroid,
+    LoadEventData,
+    LoadFinishedEventData,
+    ShouldOverrideUrlLoadEventData,
+    WebViewExt,
+} from "@nota/nativescript-webview-ext";
+import * as fastEqual from "fast-deep-equal";
 
 let webview: WebViewExt;
 let page: Page;
@@ -26,9 +33,8 @@ export function webviewLoaded(args: LoadEventData) {
     }
 
     webview.on(WebViewExt.shouldOverrideUrlLoadingEvent, (args: ShouldOverrideUrlLoadEventData) => {
-        console.log(args.url);
-        console.log(args.httpMethod);
-        if (args.url.indexOf("google.com") !== -1) {
+        console.log(`${args.httpMethod} ${args.url}`);
+        if (args.url.includes("google.com")) {
             args.cancel = true;
         }
     });
@@ -50,7 +56,7 @@ async function executeJavaScriptTest<T>(js: string, expected?: T): Promise<T> {
         console.log(`executeJavaScript '${js}' => ${JSON.stringify(res)} (${typeof res})`);
         const jsonRes = JSON.stringify(res);
         const expectedJson = JSON.stringify(expected);
-        if (expected !== undefined && !_.isEqual(expected, res)) {
+        if (expected !== undefined && !fastEqual(expected, res)) {
             throw new Error(`Expected: ${expectedJson}. Got: ${jsonRes}`);
         }
 
@@ -71,7 +77,7 @@ export async function runTests() {
     };
     const gotJson = JSON.stringify(gotMessageData);
 
-    if (_.isEqual(expected, gotMessageData)) {
+    if (fastEqual(expected, gotMessageData)) {
         console.log(`executeJavaScript via message 'callFromNativeScript()' => ${gotJson} (${typeof gotMessageData})`);
     } else {
         throw new Error(`Expected: ${JSON.stringify(expected)}. Got: ${gotJson}`);
@@ -85,4 +91,26 @@ export async function runTests() {
     await executeJavaScriptTest("getObject()", { name: "object-test", prop: "test", values: [42, 3.14] });
 
     console.timeEnd("runTests");
+}
+
+let closeFullscreen: () => void;
+export function enterFullscreen(eventData: EnterFullscreenEventData) {
+    page.actionBarHidden = true;
+
+    closeFullscreen = eventData.exitFullscreen;
+
+    const button = page.getViewById("test_button") as Button;
+    if (button) {
+        button.visibility = "collapse";
+    }
+}
+
+export function exitFullscreen() {
+    page.actionBarHidden = false;
+    const button = page.getViewById("test_button") as Button;
+    if (button) {
+        button.visibility = "visible";
+    }
+
+    closeFullscreen = null;
 }
