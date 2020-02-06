@@ -67,13 +67,13 @@ Load in template like this:
 
 Import `WebViewExtModule` from `@nota/nativescript-webview-ext/angular` and add it to your `NgModule`.
 
-This registers the element `WebViewExt`. Replace the <WebView> tag with <WebViewExt>
+This registers the element `WebViewExt`. Replace the `<WebView>` tag with `<WebViewExt>`
 
 ### Vue support
 
 Import `@nota/nativescript-webview-ext/vue` in your app entry file (likely app.js or main.js).
 
-This registers the element `WebViewExt`. Replace the <WebView> tag with <WebViewExt>
+This registers the element `WebViewExt`. Replace the `<WebView>` tag with `<WebViewExt>`
 
 ## Usage
 
