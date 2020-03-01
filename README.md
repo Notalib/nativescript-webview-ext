@@ -54,7 +54,7 @@ android {
 Load in template like this:
 
 ```xml
-<Page class="page" xmlns="http://schemas.nativescript.org/tns.xsd" ns:nota="@nota/nativescript-webview-ext">
+<Page class="page" xmlns="http://schemas.nativescript.org/tns.xsd" xmlns:nota="@nota/nativescript-webview-ext">
     <ActionBar class="action-bar">
         <Label class="action-bar-title" text="Home"></Label>
     </ActionBar>
@@ -148,7 +148,7 @@ Inside the WebView we have the `nsWebViewBridge` for sending events between the 
 #### Waiting for nsWebViewBridge to be available
 
 ```javascript
-    window.addEventListener("ns-brige-ready", function(e) {
+    window.addEventListener("ns-bridge-ready", function(e) {
         var nsWebViewBridge = e.detail || window.nsWebViewBridge;
         
         // do stuff here

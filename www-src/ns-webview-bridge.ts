@@ -350,20 +350,22 @@ interface WindowWithNSWebViewBridge {
     nsWebViewBridge: NSWebViewBridge;
 }
 
-const nsBridgeReadyEventName = "ns-brige-ready";
+const nsBridgeReadyEventName = "ns-bridge-ready";
 
 const w = window as any;
 if (!w.nsWebViewBridge) {
     // Only create the NSWebViewBridge, if is doesn't already exist.
     w.nsWebViewBridge = new NSWebViewBridge();
 
-    if (typeof CustomEvent !== "undefined") {
-        window.dispatchEvent(
-            new CustomEvent(nsBridgeReadyEventName, {
-                detail: w.nsWebViewBridge,
-            }),
-        );
-    } else {
-        window.dispatchEvent(new Event(nsBridgeReadyEventName));
+    for (const eventName of [nsBridgeReadyEventName, `ns-brige-ready`]) {
+        if (typeof CustomEvent !== "undefined") {
+            window.dispatchEvent(
+                new CustomEvent(eventName, {
+                    detail: w.nsWebViewBridge,
+                }),
+            );
+        } else {
+            window.dispatchEvent(new Event(eventName));
+        }
     }
 }
