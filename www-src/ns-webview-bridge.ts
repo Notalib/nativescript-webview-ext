@@ -183,7 +183,7 @@ class NSWebViewBridge {
             const scriptElement = document.createElement("script");
             scriptElement.async = true;
             scriptElement.setAttribute("id", elId);
-            scriptElement.addEventListener("error", function(error) {
+            scriptElement.addEventListener("error", function (error) {
                 console.error(`Failed to load ${href} - error: ${error}`);
                 reject(error);
 
@@ -191,7 +191,7 @@ class NSWebViewBridge {
                     scriptElement.parentElement.removeChild(scriptElement);
                 }
             });
-            scriptElement.addEventListener("load", function() {
+            scriptElement.addEventListener("load", function () {
                 console.info(`Loaded ${href}`);
                 window.requestAnimationFrame(() => {
                     resolve();
@@ -220,7 +220,7 @@ class NSWebViewBridge {
         return new Promise<void>((resolve, reject) => {
             const scriptElement = document.createElement("script");
             scriptElement.setAttribute("id", elId);
-            scriptElement.addEventListener("error", function(error) {
+            scriptElement.addEventListener("error", function (error) {
                 console.error(`Failed to inject javascript- error: ${error}`);
                 reject(error);
 

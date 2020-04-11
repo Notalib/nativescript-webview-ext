@@ -559,7 +559,11 @@ export class WKNavigationDelegateNotaImpl extends NSObject implements WKNavigati
 
     private owner: WeakRef<WebViewExt>;
 
-    public webViewDecidePolicyForNavigationActionDecisionHandler(webView: WKWebView, navigationAction: WKNavigationAction, decisionHandler: any): void {
+    public webViewDecidePolicyForNavigationActionDecisionHandler(
+        webView: WKWebView,
+        navigationAction: WKNavigationAction,
+        decisionHandler: (policy: WKNavigationActionPolicy) => void,
+    ): void {
         const owner = this.owner.get();
         if (!owner) {
             decisionHandler(WKNavigationActionPolicy.Cancel);

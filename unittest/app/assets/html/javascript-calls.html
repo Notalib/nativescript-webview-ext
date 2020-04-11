@@ -37,22 +37,22 @@
             }
 
             function setupEventListener() {
-                window.nsWebViewBridge.on("tns-message", function(args) {
+                window.nsWebViewBridge.on("tns-message", function (args) {
                     window.nsWebViewBridge.emit("web-message", args);
                 });
             }
 
             function testPromiseResolve() {
-                return new Promise(function(resolve) {
-                    setTimeout(function() {
+                return new Promise(function (resolve) {
+                    setTimeout(function () {
                         resolve(42);
                     }, 100);
                 });
             }
 
             function testPromiseReject() {
-                return new Promise(function(resolve, reject) {
-                    setTimeout(function() {
+                return new Promise(function (resolve, reject) {
+                    setTimeout(function () {
                         reject(new Error("The Cake is a Lie"));
                     }, 100);
                 });

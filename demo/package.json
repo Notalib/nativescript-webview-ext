@@ -11,22 +11,22 @@
   },
   "dependencies": {
     "@nota/nativescript-webview-ext": "file://../src",
-    "fast-deep-equal": "^2.0.1",
+    "fast-deep-equal": "^3.1.1",
     "nativescript-theme-core": "^1.0.6",
-    "nativescript-vue": "^2.4.0",
-    "tns-core-modules": "^6.3.2",
+    "tns-core-modules": "^6.5.1",
     "url": "^0.11.0"
   },
   "devDependencies": {
-    "http-server": "^0.11.1",
-    "nativescript-dev-webpack": "^1.4.0",
-    "prettier": "^1.18.2",
-    "tslint": "^5.20.1",
-    "typescript": "~3.5.3"
+    "http-server": "^0.12.1",
+    "nativescript-dev-webpack": "^1.5.1",
+    "prettier": "^2.0.4",
+    "tslint": "^6.1.1",
+    "typescript": "~3.8.3"
   },
   "scripts": {
     "format": "prettier --write --config ../.prettierrc.json 'app/**/*.ts' 'app/**/*.css' 'app/**/*.html'",
     "build.plugin": "cd ../src && npm run build",
-    "ci.tslint": "npm run build.plugin && npm i && tslint --config '../tslint.json' 'app/**/*.ts' --exclude '**/node_modules/**'"
+    "ci.tslint": "npm run build.plugin && npm i && tslint --config '../tslint.json' 'app/**/*.ts' --exclude '**/node_modules/**'",
+    "postinstall": "rm -f hooks/before-watch/nativescript-vue.js hooks/before-checkForChanges/nativescript-vue.js"
   }
 }

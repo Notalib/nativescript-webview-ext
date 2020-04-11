@@ -7,7 +7,7 @@ interface ViewPortProperties {
     userScalable?: boolean | "yes" | "no";
 }
 
-(function(window) {
+(function (window) {
     const defaultViewPort: ViewPortProperties = {
         initialScale: 1.0,
     };
