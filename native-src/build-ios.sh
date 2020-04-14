@@ -2,49 +2,21 @@
 
 set -e
 
-SCHEME_NAME="NotaWebViewExt"
+# Based on https://appspector.com/blog/xcframeworks
 
-ROOT_DIR=$(git rev-parse --show-toplevel)
-NOTA_WEBVIEW_DIR="${ROOT_DIR}/native-src/ios/${SCHEME_NAME}"
-TARGET="${ROOT_DIR}/src/platforms/ios/${SCHEME_NAME}.framework"
+ROOT_DIR="$(git rev-parse --show-toplevel)"
+NOTA_WEBVIEW_DIR="${ROOT_DIR}/native-src/ios/NotaWebViewExt"
+TARGET="${ROOT_DIR}/src/platforms/ios/NotaWebViewExt.xcframework"
 
-IOS_XCARCHIVE_PATH="/tmp/xcf/ios.xcarchive"
-IOS_SIMULATOR_XCARCHIVE_PATH="/tmp/xcf/iossimulator.xcarchive"
-FRAMEWORK_SUBPATH="Products/Library/Frameworks/${SCHEME_NAME}.framework"
+cd $NOTA_WEBVIEW_DIR
 
-IPHONEOS_FRAMEWORK="${IOS_XCARCHIVE_PATH}/${FRAMEWORK_SUBPATH}"
-IPHONESIM_FRAMEWORK="${IOS_SIMULATOR_XCARCHIVE_PATH}/${FRAMEWORK_SUBPATH}"
-
-rm -rf "${TARGET}" && mkdir "${TARGET}"
-
-function BUILD_ARCHIVE() {
-    DESTINATION="${1}"
-    ARCHIVE_PATH="${2}"
-    DERIVED_DATA_PATH="${3}"
-    SDK="${4}"
-
-    cd $NOTA_WEBVIEW_DIR
-
-    xcodebuild archive -scheme ${SCHEME_NAME} \
-        -destination="${DESTINATION}" \
-        -archivePath "${ARCHIVE_PATH}" \
-        -derivedDataPath "${DERIVED_DATA_PATH}" \
-        -sdk "${SDK}" \
-        SKIP_INSTALL=NO \
-        BUILD_LIBRARIES_FOR_DISTRIBUTION=YES
-}
+rm -rf $TARGET
 
 # Archive for iOS
-BUILD_ARCHIVE "iOS" "${IOS_XCARCHIVE_PATH}" "/tmp/iphoneos" "iphoneos"
+xcodebuild archive -scheme NotaWebViewExt -destination="iOS" -archivePath /tmp/xcf/ios.xcarchive -derivedDataPath /tmp/iphoneos -sdk iphoneos SKIP_INSTALL=NO BUILD_LIBRARIES_FOR_DISTRIBUTION=YES
 
 # Archive for simulator
-BUILD_ARCHIVE "iOS Simulator" "${IOS_SIMULATOR_XCARCHIVE_PATH}" "/tmp/iphonesimulator" "iphonesimulator"
+xcodebuild archive -scheme NotaWebViewExt -destination="iOS Simulator" -archivePath /tmp/xcf/iossimulator.xcarchive -derivedDataPath /tmp/iphoneos -sdk iphonesimulator SKIP_INSTALL=NO BUILD_LIBRARIES_FOR_DISTRIBUTION=YES
 
-# Create fat binary
-lipo -create \
-    "${IPHONEOS_FRAMEWORK}/${SCHEME_NAME}" \
-    "${IPHONESIM_FRAMEWORK}/${SCHEME_NAME}" \
-    -output "${TARGET}/${SCHEME_NAME}"
-
-# Copy all headers
-cp -R "${IPHONEOS_FRAMEWORK}/"{Headers,Modules,Info.plist} "${TARGET}/"
+# Build xcframework with two archives
+xcodebuild -create-xcframework -framework /tmp/xcf/ios.xcarchive/Products/Library/Frameworks/NotaWebViewExt.framework -framework /tmp/xcf/iossimulator.xcarchive/Products/Library/Frameworks/NotaWebViewExt.framework -output $TARGET

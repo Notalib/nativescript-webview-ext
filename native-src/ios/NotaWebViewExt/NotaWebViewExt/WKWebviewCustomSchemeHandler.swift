@@ -13,7 +13,7 @@ enum WebErrors: Error {
     case RequestFailedError
 }
 
-@available(iOS 11.0, *)
+@available(iOS 11, *)
 @objc
 public class CustomUrlSchemeHandler: NSObject,WKURLSchemeHandler {
     var resourceDict: [String: String] = [:];
