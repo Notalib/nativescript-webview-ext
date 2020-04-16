@@ -6,7 +6,8 @@
     "module": "commonjs",
     "lib": [
       "dom",
-      "es2015"
+      "es2015",
+      "ES2017.Object"
     ],
     "removeComments": true,
     "downlevelIteration": true,

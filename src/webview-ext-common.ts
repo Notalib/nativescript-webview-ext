@@ -1225,10 +1225,18 @@ export class WebViewExtBase extends ContainerView {
                 // Rejected promise.
                 if (err && typeof err === "object") {
                     // err is an object. Might be a serialized Error-object.
-                    const error = new Error(err.message || err);
+                    const error = new Error(err.message || err.name || err);
                     if (err.stack) {
                         // Add the web stack to the Error object.
                         (error as any).webStack = err.stack;
+                    }
+
+                    for (const [key, value] of Object.entries(err)) {
+                        if (key in error) {
+                            continue;
+                        }
+
+                        error[key] = value;
                     }
 
                     reject(error);

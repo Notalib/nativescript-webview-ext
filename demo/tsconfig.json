@@ -1,5 +1,7 @@
 {
     "compilerOptions": {
+	"skipLibCheck": true,
+        "downlevelIteration": true,
         "target": "es5",
         "module": "commonjs",
         "declaration": false,

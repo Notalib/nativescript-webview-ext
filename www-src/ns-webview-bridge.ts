@@ -13,6 +13,49 @@ declare const androidWebViewBridge: {
 interface WKWebViewMessageHandler {
     postMessage(message: string): void;
 }
+if (!Object.keys) {
+    Object.keys = (function () {
+        "use strict";
+        var hasOwnProperty = Object.prototype.hasOwnProperty,
+            hasDontEnumBug = !{ toString: null }.propertyIsEnumerable("toString"),
+            dontEnums = ["toString", "toLocaleString", "valueOf", "hasOwnProperty", "isPrototypeOf", "propertyIsEnumerable", "constructor"],
+            dontEnumsLength = dontEnums.length;
+
+        return function (obj) {
+            if (typeof obj !== "function" && (typeof obj !== "object" || obj === null)) {
+                throw new TypeError("Object.keys called on non-object");
+            }
+
+            const result = new Array<any>();
+
+            for (const prop in obj) {
+                if (hasOwnProperty.call(obj, prop)) {
+                    result.push(prop);
+                }
+            }
+
+            if (hasDontEnumBug) {
+                for (let i = 0; i < dontEnumsLength; i++) {
+                    if (hasOwnProperty.call(obj, dontEnums[i])) {
+                        result.push(dontEnums[i]);
+                    }
+                }
+            }
+            return result;
+        };
+    })();
+}
+
+if (!Object.entries) {
+    Object.entries = function (this: null, obj: any) {
+        var ownProps = Object.keys(obj),
+            i = ownProps.length,
+            resArray = new Array(i); // preallocate the Array
+        while (i--) resArray[i] = [ownProps[i], obj[ownProps[i]]];
+
+        return resArray;
+    };
+}
 
 /**
  * With WKWebView it's assumed the there is a WKScriptMessage named nsBridge
@@ -51,7 +94,7 @@ class NSWebViewBridge {
         }
 
         for (const listener of events) {
-            const res = listener && listener(data);
+            const res = listener?.(data);
             // if any handler return false, not executing any further handlers for that event.
             if (res === false) {
                 break;
@@ -183,9 +226,9 @@ class NSWebViewBridge {
             const scriptElement = document.createElement("script");
             scriptElement.async = true;
             scriptElement.setAttribute("id", elId);
-            scriptElement.addEventListener("error", function (error) {
+            scriptElement.addEventListener("error", (error) => {
                 console.error(`Failed to load ${href} - error: ${error}`);
-                reject(error);
+                reject(this.serializeError(error));
 
                 if (scriptElement.parentElement) {
                     scriptElement.parentElement.removeChild(scriptElement);
@@ -232,7 +275,7 @@ class NSWebViewBridge {
 
             document.body.appendChild(scriptElement);
 
-            resolve();
+            window.requestAnimationFrame(() => resolve());
         });
     }
 
@@ -294,12 +337,17 @@ class NSWebViewBridge {
             styleElement.addEventListener("error", reject);
             styleElement.textContent = stylesheet;
             styleElement.setAttribute("id", elId);
-            if (document.head) {
-                if (insertBefore && document.head.childElementCount > 0) {
-                    document.head.insertBefore(styleElement, document.head.firstElementChild);
+
+            const parentElement = document.head ?? document.body;
+            if (parentElement) {
+                if (insertBefore && parentElement.childElementCount > 0) {
+                    document.head.insertBefore(styleElement, parentElement.firstElementChild);
                 } else {
                     document.head.appendChild(styleElement);
                 }
+            } else {
+                reject(new Error(`Couldn't find parent element`));
+                return;
             }
 
             resolve();
@@ -329,10 +377,7 @@ class NSWebViewBridge {
         if (typeof err === "object" && err?.message) {
             // Error objects cannot be serialized
             this.emit(eventName, {
-                err: {
-                    message: err.message,
-                    stack: err.stack,
-                },
+                err: this.serializeError(err),
             });
         } else {
             this.emit(eventName, {
@@ -343,6 +388,30 @@ class NSWebViewBridge {
 
     private elementIdFromHref(href: string) {
         return href.replace(/^[:]*:\/\//, "").replace(/[^a-z0-9]/g, "");
+    }
+
+    /**
+     * Error objects cannot be serialized properly.
+     */
+    private serializeError(error: any) {
+        const { name, message, stack } = error;
+        const res = {
+            name,
+            message,
+            stack,
+        };
+
+        for (const [key, value] of Object.entries(error)) {
+            if (value instanceof HTMLElement) {
+                continue;
+            }
+
+            if (!(key in res)) {
+                res[key] = value;
+            }
+        }
+
+        return res;
     }
 }
 
