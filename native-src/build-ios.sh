@@ -20,3 +20,6 @@ xcodebuild archive -scheme NotaWebViewExt -destination="iOS Simulator" -archiveP
 
 # Build xcframework with two archives
 xcodebuild -create-xcframework -framework /tmp/xcf/ios.xcarchive/Products/Library/Frameworks/NotaWebViewExt.framework -framework /tmp/xcf/iossimulator.xcarchive/Products/Library/Frameworks/NotaWebViewExt.framework -output $TARGET
+
+## Workaround for https://github.com/Notalib/nativescript-webview-ext/issues/71
+rm -rf ${TARGET}/ios-armv7_arm64/NotaWebViewExt.framework/Frameworks
