@@ -53,7 +53,9 @@ if (!Object.entries) {
         let i = ownProps.length;
         const resArray = new Array(i); // preallocate the Array
 
-        while (i--) resArray[i] = [ownProps[i], obj[ownProps[i]]];
+        while (i--) {
+            resArray[i] = [ownProps[i], obj[ownProps[i]]];
+        }
 
         return resArray;
     };
@@ -112,9 +114,6 @@ class NSWebViewBridge {
      * Emit event to native layer on iOS.
      *
      * With WKWebView it's assumed the there is a WKScriptMessage named nsBridge
-     *
-     * With UIWebView:
-     *   No longer supported
      */
     private emitEventToIOS(eventName: string, data: any) {
         const messageHandler = getWkWebViewMessageHandler();
@@ -129,7 +128,7 @@ class NSWebViewBridge {
             return;
         }
 
-        console.error("NSWebViewBridge cannot emit to UIWebView - no longer supported");
+        console.error("NSWebViewBridge only supports WKWebView");
     }
 
     /**
@@ -353,8 +352,8 @@ class NSWebViewBridge {
                 } else {
                     parentElement.appendChild(styleElement);
                 }
-
-                resolve();
+            } else {
+                reject(new Error(`Couldn't find parent element`));
 
                 return;
             }
