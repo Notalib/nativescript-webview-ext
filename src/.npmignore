@@ -6,3 +6,4 @@ polyfills
 make-bridge-loader.*
 .prettierignore
 nativescript-webview-bridge-loader.ts.tmpl
+www

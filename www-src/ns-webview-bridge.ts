@@ -16,10 +16,10 @@ interface WKWebViewMessageHandler {
 if (!Object.keys) {
     Object.keys = (function () {
         "use strict";
-        var hasOwnProperty = Object.prototype.hasOwnProperty,
-            hasDontEnumBug = !{ toString: null }.propertyIsEnumerable("toString"),
-            dontEnums = ["toString", "toLocaleString", "valueOf", "hasOwnProperty", "isPrototypeOf", "propertyIsEnumerable", "constructor"],
-            dontEnumsLength = dontEnums.length;
+        const hasOwnProperty = Object.prototype.hasOwnProperty;
+        const hasDontEnumBug = !{ toString: null }.propertyIsEnumerable("toString");
+        const dontEnums = ["toString", "toLocaleString", "valueOf", "hasOwnProperty", "isPrototypeOf", "propertyIsEnumerable", "constructor"];
+        const dontEnumsLength = dontEnums.length;
 
         return function (obj) {
             if (typeof obj !== "function" && (typeof obj !== "object" || obj === null)) {
@@ -41,6 +41,7 @@ if (!Object.keys) {
                     }
                 }
             }
+
             return result;
         };
     })();
@@ -48,10 +49,13 @@ if (!Object.keys) {
 
 if (!Object.entries) {
     Object.entries = function (this: null, obj: any) {
-        var ownProps = Object.keys(obj),
-            i = ownProps.length,
-            resArray = new Array(i); // preallocate the Array
-        while (i--) resArray[i] = [ownProps[i], obj[ownProps[i]]];
+        const ownProps = Object.keys(obj);
+        let i = ownProps.length;
+        const resArray = new Array(i); // preallocate the Array
+
+        while (i--) {
+            resArray[i] = [ownProps[i], obj[ownProps[i]]];
+        }
 
         return resArray;
     };
@@ -106,9 +110,6 @@ class NSWebViewBridge {
      * Emit event to native layer on iOS.
      *
      * With WKWebView it's assumed the there is a WKScriptMessage named nsBridge
-     *
-     * With UIWebView:
-     *   No longer supported
      */
     private emitEventToIOS(eventName: string, data: any) {
         const messageHandler = getWkWebViewMessageHandler();
@@ -123,7 +124,7 @@ class NSWebViewBridge {
             return;
         }
 
-        console.error("NSWebViewBridge cannot emit to UIWebView - no longer supported");
+        console.error("NSWebViewBridge only supports WKWebView");
     }
 
     /**
@@ -347,6 +348,7 @@ class NSWebViewBridge {
                 }
             } else {
                 reject(new Error(`Couldn't find parent element`));
+
                 return;
             }
 

@@ -17,11 +17,11 @@
     "url": "^0.11.0"
   },
   "devDependencies": {
-    "http-server": "^0.12.1",
+    "http-server": "^0.12.3",
     "nativescript-dev-webpack": "^1.5.1",
-    "prettier": "^2.0.4",
-    "tslint": "^6.1.1",
-    "typescript": "~3.8.3"
+    "prettier": "^2.0.5",
+    "tslint": "^6.1.2",
+    "typescript": "~3.9.3"
   },
   "scripts": {
     "format": "prettier --write --config ../.prettierrc.json 'app/**/*.ts' 'app/**/*.css' 'app/**/*.html'",
