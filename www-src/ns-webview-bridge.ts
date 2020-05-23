@@ -16,12 +16,12 @@ interface WKWebViewMessageHandler {
 if (!Object.keys) {
     Object.keys = (function () {
         "use strict";
-        var hasOwnProperty = Object.prototype.hasOwnProperty,
-            hasDontEnumBug = !{ toString: null }.propertyIsEnumerable("toString"),
-            dontEnums = ["toString", "toLocaleString", "valueOf", "hasOwnProperty", "isPrototypeOf", "propertyIsEnumerable", "constructor"],
-            dontEnumsLength = dontEnums.length;
+        const hasOwnProperty = Object.prototype.hasOwnProperty;
+        const hasDontEnumBug = !{ toString: null }.propertyIsEnumerable("toString");
+        const dontEnums = ["toString", "toLocaleString", "valueOf", "hasOwnProperty", "isPrototypeOf", "propertyIsEnumerable", "constructor"];
+        const dontEnumsLength = dontEnums.length;
 
-        return function (obj) {
+        return function (this: null, obj: any) {
             if (typeof obj !== "function" && (typeof obj !== "object" || obj === null)) {
                 throw new TypeError("Object.keys called on non-object");
             }
@@ -41,6 +41,7 @@ if (!Object.keys) {
                     }
                 }
             }
+
             return result;
         };
     })();
@@ -48,9 +49,10 @@ if (!Object.keys) {
 
 if (!Object.entries) {
     Object.entries = function (this: null, obj: any) {
-        var ownProps = Object.keys(obj),
-            i = ownProps.length,
-            resArray = new Array(i); // preallocate the Array
+        const ownProps = Object.keys(obj);
+        let i = ownProps.length;
+        const resArray = new Array(i); // preallocate the Array
+
         while (i--) resArray[i] = [ownProps[i], obj[ownProps[i]]];
 
         return resArray;
@@ -94,10 +96,14 @@ class NSWebViewBridge {
         }
 
         for (const listener of events) {
-            const res = listener?.(data);
-            // if any handler return false, not executing any further handlers for that event.
-            if (res === false) {
-                break;
+            try {
+                const res = listener?.(data);
+                // if any handler return false, not executing any further handlers for that event.
+                if (res === false) {
+                    break;
+                }
+            } catch (err) {
+                console.error(`NSWebViewBridge.onNativeEvent(${eventName}, ${data}) - error`, err);
             }
         }
     }
@@ -236,14 +242,10 @@ class NSWebViewBridge {
             });
             scriptElement.addEventListener("load", function () {
                 console.info(`Loaded ${href}`);
-                window.requestAnimationFrame(() => {
-                    resolve();
-                });
 
-                if (scriptElement.parentElement) {
-                    scriptElement.parentElement.removeChild(scriptElement);
-                }
+                window.requestAnimationFrame(() => resolve());
             });
+
             scriptElement.src = href;
 
             document.body.appendChild(scriptElement);
@@ -271,6 +273,7 @@ class NSWebViewBridge {
                     scriptElement.parentElement.removeChild(scriptElement);
                 }
             });
+
             scriptElement.text = scriptCode;
 
             document.body.appendChild(scriptElement);
@@ -304,21 +307,26 @@ class NSWebViewBridge {
             });
             linkElement.addEventListener("load", () => {
                 console.info(`Loaded ${href}`);
-                window.requestAnimationFrame(() => {
-                    resolve();
-                });
+
+                window.requestAnimationFrame(() => resolve());
             });
             linkElement.setAttribute("id", elId);
             linkElement.setAttribute("rel", "stylesheet");
             linkElement.setAttribute("type", "text/css");
             linkElement.setAttribute("href", href);
-            if (document.head) {
-                if (insertBefore && document.head.childElementCount > 0) {
-                    document.head.insertBefore(linkElement, document.head.firstElementChild);
+
+            const parentElement = document.head ?? document.body;
+            if (parentElement) {
+                if (insertBefore && parentElement.childElementCount > 0) {
+                    parentElement.insertBefore(linkElement, parentElement.firstElementChild);
                 } else {
-                    document.head.appendChild(linkElement);
+                    parentElement.appendChild(linkElement);
                 }
+
+                return;
             }
+
+            reject(new Error(`Couldn't find parent element`));
         });
     }
 
@@ -341,16 +349,17 @@ class NSWebViewBridge {
             const parentElement = document.head ?? document.body;
             if (parentElement) {
                 if (insertBefore && parentElement.childElementCount > 0) {
-                    document.head.insertBefore(styleElement, parentElement.firstElementChild);
+                    parentElement.insertBefore(styleElement, parentElement.firstElementChild);
                 } else {
-                    document.head.appendChild(styleElement);
+                    parentElement.appendChild(styleElement);
                 }
-            } else {
-                reject(new Error(`Couldn't find parent element`));
+
+                resolve();
+
                 return;
             }
 
-            resolve();
+            reject(new Error(`Couldn't find parent element`));
         });
     }
 

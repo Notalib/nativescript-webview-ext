@@ -427,6 +427,51 @@ function initializeWebViewClient(): void {
 
             return false;
         }
+
+        private async _onPermissionsRequest(permissionRequest: android.webkit.PermissionRequest) {
+            const requests = permissionRequest.getResources();
+
+            const wantedPermissions = new Array<string>();
+            const requestedPermissions = new Array<string>();
+
+            for (let i = 0; i < requests.length; i += 1) {
+                switch (requests[i]) {
+                    case android.webkit.PermissionRequest.RESOURCE_AUDIO_CAPTURE: {
+                        requestedPermissions.push(android.webkit.PermissionRequest.RESOURCE_AUDIO_CAPTURE);
+                        wantedPermissions.push("RECORD_AUDIO");
+                        break;
+                    }
+                    case android.webkit.PermissionRequest.RESOURCE_VIDEO_CAPTURE: {
+                        requestedPermissions.push(android.webkit.PermissionRequest.RESOURCE_VIDEO_CAPTURE);
+                        wantedPermissions.push("CAMERA");
+                        break;
+                    }
+                }
+            }
+
+            if (requestedPermissions.length === 0) {
+                permissionRequest.deny();
+
+                return;
+            }
+
+            try {
+                await this.owner.get()._onRequestPermissions(wantedPermissions);
+                permissionRequest.grant(requestedPermissions);
+            } catch {
+                permissionRequest.deny();
+            }
+        }
+
+        public onPermissionRequest(permissionRequest: android.webkit.PermissionRequest) {
+            this._onPermissionsRequest(permissionRequest);
+        }
+
+        public onPermissionRequestCanceled(permissionRequest: android.webkit.PermissionRequest) {
+            console.log("onPermissionRequestCanceled", permissionRequest);
+
+            return super.onPermissionRequestCanceled(permissionRequest);
+        }
     }
 
     WebChromeViewExtClient = WebChromeViewExtClientImpl;

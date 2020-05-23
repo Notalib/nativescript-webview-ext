@@ -190,6 +190,7 @@ export enum EventNames {
     EnterFullscreen = "enterFullscreen",
     ExitFullscreen = "exitFullscreen",
     WebPrompt = "webPrompt",
+    RequestPermissions = "RequestPermissions",
 }
 
 export interface LoadJavaScriptResource {
@@ -296,6 +297,13 @@ export interface WebConsoleEventData extends WebViewExtEventData {
     };
 }
 
+export interface RequestPermissionsEventData extends WebViewEventData {
+    eventName: EventNames.RequestPermissions;
+    url: string;
+    permissions: string[];
+    callback: (response: boolean) => void;
+}
+
 /**
  * Event data containing information for the loading events of a WebView.
  */
@@ -400,6 +408,9 @@ export class WebViewExtBase extends ContainerView {
     }
     public static get exitFullscreenEvent() {
         return EventNames.ExitFullscreen;
+    }
+    public static get requestPermissionsEvent() {
+        return EventNames.RequestPermissions;
     }
 
     public readonly supportXLocalScheme: boolean;
@@ -717,6 +728,30 @@ export class WebViewExtBase extends ContainerView {
         this.notify(args);
 
         return true;
+    }
+
+    public async _onRequestPermissions(permissions: string[]) {
+        if (!this.hasListeners(EventNames.RequestPermissions)) {
+            return false;
+        }
+
+        return new Promise<string>((resolve, reject) => {
+            const args = {
+                eventName: WebViewExtBase.requestPermissionsEvent,
+                object: this,
+                url: this.src,
+                permissions,
+                callback(allow: boolean) {
+                    if (allow) {
+                        resolve();
+                    } else {
+                        reject();
+                    }
+                },
+            } as RequestPermissionsEventData;
+
+            this.notify(args);
+        });
     }
 
     /**
@@ -1278,7 +1313,7 @@ export class WebViewExtBase extends ContainerView {
             const elId = resourceName.replace(/^[:]*:\/\//, "").replace(/[^a-z0-9]/g, "");
             const scriptCode = await fs.File.fromPath(this.resolveLocalResourceFilePath(path) as string).readText();
 
-            return `window.nsWebViewBridge.injectJavaScript(${JSON.stringify(elId)}, ${scriptCode});`;
+            return `window.nsWebViewBridge.injectJavaScript(${JSON.stringify(elId)}, ${JSON.stringify(scriptCode)});`;
         }
     }
 
