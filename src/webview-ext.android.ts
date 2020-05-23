@@ -10,6 +10,7 @@ import {
     displayZoomControlsProperty,
     domStorageProperty,
     isEnabledProperty,
+    RequestPermissionsString,
     supportZoomProperty,
     traceMessageType,
     UnsupportedSDKError,
@@ -431,7 +432,7 @@ function initializeWebViewClient(): void {
         private async _onPermissionsRequest(permissionRequest: android.webkit.PermissionRequest) {
             const requests = permissionRequest.getResources();
 
-            const wantedPermissions = new Array<string>();
+            const wantedPermissions = new Array<RequestPermissionsString>();
             const requestedPermissions = new Array<string>();
 
             for (let i = 0; i < requests.length; i += 1) {

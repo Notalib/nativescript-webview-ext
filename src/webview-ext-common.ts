@@ -297,10 +297,12 @@ export interface WebConsoleEventData extends WebViewExtEventData {
     };
 }
 
+export type RequestPermissionsString = "RECORD_AUDIO" | "CAMERA";
+
 export interface RequestPermissionsEventData extends WebViewEventData {
     eventName: EventNames.RequestPermissions;
     url: string;
-    permissions: string[];
+    permissions: RequestPermissionsString[];
     callback: (response: boolean) => void;
 }
 
@@ -730,7 +732,7 @@ export class WebViewExtBase extends ContainerView {
         return true;
     }
 
-    public async _onRequestPermissions(permissions: string[]) {
+    public async _onRequestPermissions(permissions: RequestPermissionsString[]) {
         if (!this.hasListeners(EventNames.RequestPermissions)) {
             return false;
         }
