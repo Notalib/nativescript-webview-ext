@@ -25,5 +25,7 @@ project and paste your dependencies and devDependencies here)
 Describe the steps to reproduce it.
 
 ### Is there any code involved?
- - If possible provide an example project demonstrating the issue.
- - Provide a code example to recreate the problem
+Please provide the smallest possible project needed to demonstrate the problem.
+It is very difficult to debug issues with small code snippets.
+
+If there is JavaScript code invalued inside the webview, this needs to be provided with the project.
