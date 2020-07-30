@@ -675,7 +675,7 @@ export class WKNavigationDelegateNotaImpl extends NSObject implements WKNavigati
         }
 
         owner.writeTrace(`WKNavigationDelegateClass.webViewDidFailProvisionalNavigationWithError(${error.localizedDescription}`);
-        owner._onLoadFinished(src, error.localizedDescription);
+        owner._onLoadFinished(src, error.localizedDescription).catch(() => void 0);
     }
 }
 

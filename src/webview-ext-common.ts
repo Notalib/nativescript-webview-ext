@@ -509,13 +509,13 @@ export class WebViewExtBase extends ContainerView {
         if (error) {
             this.notify(args);
 
-            return Promise.reject(args);
+            throw args;
         }
 
         this.writeTrace(`WebViewExt._onLoadFinished("${url}", ${error || void 0}) - > Injecting webview-bridge JS code`);
 
         if (!this.autoInjectJSBridge) {
-            return Promise.resolve(args);
+            return args;
         }
 
         try {
@@ -533,7 +533,9 @@ export class WebViewExtBase extends ContainerView {
 
         this.notify(args);
 
-        this.getTitle().then((title) => title && this._titleChanged(title));
+        this.getTitle()
+            .then((title) => title && this._titleChanged(title))
+            .catch(() => void 0);
 
         return args;
     }
