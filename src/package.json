@@ -90,7 +90,7 @@
     "@angular/router": "~8.2.14",
     "@types/node": "^13.11.1",
     "nativescript-angular": "~8.21.0",
-    "nativescript-vue": "^2.6.0",
+    "nativescript-vue": "^2.6.2",
     "npm-run-all": "^4.1.5",
     "prettier": "^2.0.5",
     "promise-polyfill": "^8.1.3",
