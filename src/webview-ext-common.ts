@@ -1,8 +1,17 @@
 /// <reference path="./types/url.d.ts" />
 
 import * as fs from "@nativescript/core/file-system";
-import { booleanConverter, ContainerView, CSSType, EventData, Property, traceEnabled, traceMessageType, traceWrite } from "@nativescript/core/ui/core/view";
-import { isEnabledProperty } from "tns-core-modules/ui/core/view/view";
+import {
+    booleanConverter,
+    ContainerView,
+    CSSType,
+    EventData,
+    isEnabledProperty,
+    Property,
+    traceEnabled,
+    traceMessageType,
+    traceWrite,
+} from "@nativescript/core/ui/core/view";
 import * as URL from "url";
 import { fetchPolyfill, metadataViewPort, promisePolyfill, webViewBridge } from "./nativescript-webview-bridge-loader";
 

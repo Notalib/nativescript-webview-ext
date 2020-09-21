@@ -15,9 +15,7 @@ export class WebViewExt extends WebViewExtBase {
         return this.nativeViewProtected as WKWebView;
     }
 
-    public static get supportXLocalScheme() {
-        return typeof CustomUrlSchemeHandler !== "undefined";
-    }
+    public static supportXLocalScheme = typeof CustomUrlSchemeHandler !== "undefined";
 
     protected wkWebViewConfiguration: WKWebViewConfiguration;
     protected wkNavigationDelegate: WKNavigationDelegateNotaImpl;
@@ -31,9 +29,7 @@ export class WebViewExt extends WebViewExtBase {
         wkUserScript: WKUserScript;
     }>;
 
-    public get supportXLocalScheme() {
-        return typeof CustomUrlSchemeHandler !== "undefined";
-    }
+    public readonly supportXLocalScheme = typeof CustomUrlSchemeHandler !== "undefined";
 
     public viewPortSize = { initialScale: 1.0 };
 

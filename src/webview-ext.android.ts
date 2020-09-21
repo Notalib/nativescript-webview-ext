@@ -467,17 +467,13 @@ function initializeWebViewClient(): void {
 
 let instanceNo = 0;
 export class WebViewExt extends WebViewExtBase {
-    public static get supportXLocalScheme() {
-        return true;
-    }
+    public static supportXLocalScheme = true;
 
     public nativeViewProtected: AndroidWebView | void;
 
     protected readonly localResourceMap = new Map<string, string>();
 
-    public get supportXLocalScheme() {
-        return true;
-    }
+    public supportXLocalScheme = true;
 
     public readonly instance = ++instanceNo;
 

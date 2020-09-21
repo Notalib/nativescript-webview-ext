@@ -18,7 +18,7 @@ async function nativescriptWebviewBridgeLoader() {
     };
 
     for (const [name, value] of Object.entries(values)) {
-        const terserRes = Terser.minify(value, {
+        const terserRes = await Terser.minify(value, {
             compress: true,
             mangle: false,
         });
