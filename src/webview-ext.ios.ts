@@ -1,12 +1,10 @@
-/// <reference path="./node_modules/tns-platform-declarations/ios.d.ts" />
 /// <reference path="./types/ios/NotaWebViewExt.d.ts" />
 
-import * as fs from "@nativescript/core/file-system";
-import { profile } from "@nativescript/core/profiling";
-import { traceMessageType } from "@nativescript/core/ui/core/view";
-import { alert, confirm, prompt } from "@nativescript/core/ui/dialogs";
+import "@nativescript/core";
+import { alert, confirm, profile, prompt, Trace } from "@nativescript/core";
+import { isEnabledProperty } from "@nativescript/core/ui/core/view";
 import { webViewBridge } from "./nativescript-webview-bridge-loader";
-import { autoInjectJSBridgeProperty, isEnabledProperty, NavigationType, scrollBounceProperty, WebViewExtBase } from "./webview-ext-common";
+import { autoInjectJSBridgeProperty, NavigationType, scrollBounceProperty, WebViewExtBase } from "./webview-ext-common";
 
 export * from "./webview-ext-common";
 
@@ -283,7 +281,7 @@ export class WebViewExt extends WebViewExtBase {
         const cls = `WebViewExt<${this}.ios>.registerLocalResource("${resourceName}", "${path}")`;
 
         if (!this.supportXLocalScheme) {
-            this.writeTrace(`${cls} -> custom schema isn't support on iOS <11`, traceMessageType.error);
+            this.writeTrace(`${cls} -> custom schema isn't support on iOS <11`, Trace.messageType.error);
 
             return;
         }
@@ -292,7 +290,7 @@ export class WebViewExt extends WebViewExtBase {
 
         const filepath = this.resolveLocalResourceFilePath(path);
         if (!filepath) {
-            this.writeTrace(`${cls} -> file doesn't exist`, traceMessageType.error);
+            this.writeTrace(`${cls} -> file doesn't exist`, Trace.messageType.error);
 
             return;
         }
@@ -305,7 +303,7 @@ export class WebViewExt extends WebViewExtBase {
     public unregisterLocalResource(resourceName: string) {
         const cls = `WebViewExt<${this}.ios>.unregisterLocalResource("${resourceName}")`;
         if (!this.supportXLocalScheme) {
-            this.writeTrace(`${cls} -> custom schema isn't support on iOS <11`, traceMessageType.error);
+            this.writeTrace(`${cls} -> custom schema isn't support on iOS <11`, Trace.messageType.error);
 
             return;
         }
@@ -321,7 +319,7 @@ export class WebViewExt extends WebViewExtBase {
         resourceName = this.fixLocalResourceName(resourceName);
         const cls = `WebViewExt<${this}.ios>.getRegisteredLocalResource("${resourceName}")`;
         if (!this.supportXLocalScheme) {
-            this.writeTrace(`${cls} -> custom schema isn't support on iOS <11`, traceMessageType.error);
+            this.writeTrace(`${cls} -> custom schema isn't support on iOS <11`, Trace.messageType.error);
 
             return;
         }
@@ -544,6 +542,7 @@ export class WebViewExt extends WebViewExtBase {
     }
 }
 
+@NativeClass()
 export class WKNavigationDelegateNotaImpl extends NSObject implements WKNavigationDelegate {
     public static ObjCProtocols = [WKNavigationDelegate];
     public static initWithOwner(owner: WeakRef<WebViewExt>): WKNavigationDelegateNotaImpl {
@@ -675,6 +674,7 @@ export class WKNavigationDelegateNotaImpl extends NSObject implements WKNavigati
     }
 }
 
+@NativeClass()
 export class WKScriptMessageHandlerNotaImpl extends NSObject implements WKScriptMessageHandler {
     public static ObjCProtocols = [WKScriptMessageHandler];
 
@@ -699,12 +699,13 @@ export class WKScriptMessageHandlerNotaImpl extends NSObject implements WKScript
         } catch (err) {
             owner.writeTrace(
                 `userContentControllerDidReceiveScriptMessage(${userContentController}, ${webViewMessage}) - bad message: ${webViewMessage.body}`,
-                traceMessageType.error,
+                Trace.messageType.error,
             );
         }
     }
 }
 
+@NativeClass()
 export class WKUIDelegateNotaImpl extends NSObject implements WKUIDelegate {
     public static ObjCProtocols = [WKUIDelegate];
     public owner: WeakRef<WebViewExt>;

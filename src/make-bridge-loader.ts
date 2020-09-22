@@ -1,8 +1,8 @@
-import "tslib";
+require("tslib");
 
-import * as fs from "fs";
-import * as Terser from "terser";
-import { promisify } from "util";
+const fs = require("fs");
+const Terser = require("terser");
+const { promisify } = require("util");
 
 const fsWriteFile = promisify(fs.writeFile);
 const fsReadFile = promisify(fs.readFile);

@@ -1,6 +1,7 @@
 *.ts
 !*.d.ts
 tsconfig*.json
+tsfmt.json
 hooks
 polyfills
 make-bridge-loader.*

@@ -16,7 +16,8 @@
       "es2015.iterable",
       "es2017.object"
     ],
-    "module": "commonjs",
+    "module": "esnext",
+    "moduleResolution": "node",
     "noEmitHelpers": true,
     "noEmitOnError": false,
     "noFallthroughCasesInSwitch": true,
@@ -28,7 +29,11 @@
     "pretty": false,
     "removeComments": true,
     "skipLibCheck": true,
-    "target": "es5"
+    "target": "ES2017",
+    "plugins": [{
+        "transform": "@nativescript/webpack/transformers/ns-transform-native-classes",
+        "type": "raw"
+    }]
   },
   "exclude": ["node_modules", "platforms"]
 }

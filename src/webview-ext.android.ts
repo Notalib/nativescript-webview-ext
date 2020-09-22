@@ -1,6 +1,8 @@
 /// <reference path="./types/android/webviewinterface.d.ts" />
 
-import * as fs from "@nativescript/core/file-system";
+import "@nativescript/core";
+import { File, knownFolders, Trace } from "@nativescript/core";
+import { isEnabledProperty } from "@nativescript/core/ui/core/view";
 import {
     builtInZoomControlsProperty,
     CacheMode,
@@ -9,9 +11,7 @@ import {
     debugModeProperty,
     displayZoomControlsProperty,
     domStorageProperty,
-    isEnabledProperty,
     supportZoomProperty,
-    traceMessageType,
     UnsupportedSDKError,
     WebViewExtBase,
 } from "./webview-ext-common";
@@ -64,6 +64,7 @@ function initializeWebViewClient(): void {
         ["normal", android.webkit.WebSettings.LOAD_NORMAL],
     ]);
 
+    @NativeClass()
     class WebViewExtClientImpl extends android.webkit.WebViewClient {
         private owner: WeakRef<WebViewExt>;
         constructor(owner: WebViewExt) {
@@ -153,13 +154,13 @@ function initializeWebViewClient(): void {
                 return super.shouldInterceptRequest(view, request as android.webkit.WebResourceRequest);
             }
 
-            if (!fs.File.exists(filepath)) {
+            if (!File.exists(filepath)) {
                 owner.writeTrace(`WebViewClientClass.shouldInterceptRequest("${url}") - file: "${filepath}" doesn't exists`);
 
                 return super.shouldInterceptRequest(view, request as android.webkit.WebResourceRequest);
             }
 
-            const tnsFile = fs.File.fromPath(filepath);
+            const tnsFile = File.fromPath(filepath);
 
             const javaFile = new java.io.File(tnsFile.path);
             const stream = new java.io.FileInputStream(javaFile);
@@ -259,6 +260,7 @@ function initializeWebViewClient(): void {
 
     WebViewExtClient = WebViewExtClientImpl;
 
+    @NativeClass()
     class WebChromeViewExtClientImpl extends android.webkit.WebChromeClient {
         private owner: WeakRef<WebViewExt>;
         private showCustomViewCallback?: android.webkit.WebChromeClient.CustomViewCallback;
@@ -431,6 +433,7 @@ function initializeWebViewClient(): void {
 
     WebChromeViewExtClient = WebChromeViewExtClientImpl;
 
+    @NativeClass()
     class WebViewBridgeInterfaceImpl extends dk.nota.webviewinterface.WebViewBridgeInterface {
         private owner: WeakRef<WebViewExt>;
         constructor(owner: WebViewExt) {
@@ -560,7 +563,7 @@ export class WebViewExt extends WebViewExtBase {
             return;
         }
 
-        const baseUrl = `file:///${fs.knownFolders.currentApp().path}/`;
+        const baseUrl = `file:///${knownFolders.currentApp().path}/`;
         this.writeTrace(`WebViewExt<android>._loadData("${src}") -> baseUrl: "${baseUrl}"`);
         nativeView.loadDataWithBaseURL(baseUrl, src, "text/html", "utf-8", null!);
     }
@@ -616,7 +619,7 @@ export class WebViewExt extends WebViewExtBase {
 
         const filepath = this.resolveLocalResourceFilePath(path);
         if (!filepath) {
-            this.writeTrace(`WebViewExt<android>.registerLocalResource("${resourceName}", "${path}") -> file doesn't exist`, traceMessageType.error);
+            this.writeTrace(`WebViewExt<android>.registerLocalResource("${resourceName}", "${path}") -> file doesn't exist`, Trace.messageType.error);
 
             return;
         }
@@ -668,7 +671,7 @@ export class WebViewExt extends WebViewExtBase {
 
     public async executeJavaScript<T>(scriptCode: string): Promise<T> {
         if (android.os.Build.VERSION.SDK_INT < 19) {
-            this.writeTrace(`WebViewExt<android>.executeJavaScript() -> SDK:${android.os.Build.VERSION.SDK_INT} not supported`, traceMessageType.error);
+            this.writeTrace(`WebViewExt<android>.executeJavaScript() -> SDK:${android.os.Build.VERSION.SDK_INT} not supported`, Trace.messageType.error);
 
             return Promise.reject(new UnsupportedSDKError(19));
         }
@@ -676,7 +679,7 @@ export class WebViewExt extends WebViewExtBase {
         const result = await new Promise<T>((resolve, reject) => {
             const androidWebView = this.nativeViewProtected;
             if (!androidWebView) {
-                this.writeTrace(`WebViewExt<android>.executeJavaScript() -> no nativeView?`, traceMessageType.error);
+                this.writeTrace(`WebViewExt<android>.executeJavaScript() -> no nativeView?`, Trace.messageType.error);
                 reject(new Error("Native Android not initialized, cannot call executeJavaScript"));
 
                 return;

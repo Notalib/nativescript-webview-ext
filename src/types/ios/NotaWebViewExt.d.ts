@@ -1,3 +1,5 @@
+/// <reference path="../../node_modules/@nativescript/types-ios/index.d.ts" />
+
 declare class CustomUrlSchemeHandler extends NSObject {
 
 	static alloc(): CustomUrlSchemeHandler; // inherited from NSObject

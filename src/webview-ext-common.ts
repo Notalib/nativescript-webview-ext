@@ -1,21 +1,11 @@
 /// <reference path="./types/url.d.ts" />
 
-import * as fs from "@nativescript/core/file-system";
-import {
-    booleanConverter,
-    ContainerView,
-    CSSType,
-    EventData,
-    isEnabledProperty,
-    Property,
-    traceEnabled,
-    traceMessageType,
-    traceWrite,
-} from "@nativescript/core/ui/core/view";
+import "@nativescript/core";
+import { booleanConverter, ContainerView, CSSType, EventData, File, knownFolders, path, Property, Trace } from "@nativescript/core";
+import { isEnabledProperty } from "@nativescript/core/ui/core/view";
 import * as URL from "url";
 import { fetchPolyfill, metadataViewPort, promisePolyfill, webViewBridge } from "./nativescript-webview-bridge-loader";
 
-export * from "@nativescript/core/ui/core/view";
 export interface ViewPortProperties {
     width?: number | "device-width";
     height?: number | "device-height";
@@ -801,7 +791,7 @@ export class WebViewExtBase extends ContainerView {
         // Add file:/// prefix for local files.
         // They should be loaded with _loadUrl() method as it handles query params.
         if (src.startsWith("~/")) {
-            src = `file://${fs.knownFolders.currentApp().path}/${src.substr(2)}`;
+            src = `file://${knownFolders.currentApp().path}/${src.substr(2)}`;
             this.writeTrace(`WebViewExt.src = "${originSrc}" startsWith ~/ resolved to "${src}"`);
         } else if (src.startsWith("/")) {
             src = `file://${src}`;
@@ -850,21 +840,21 @@ export class WebViewExtBase extends ContainerView {
 
     public resolveLocalResourceFilePath(filepath: string): string | void {
         if (!filepath) {
-            this.writeTrace("WebViewExt.resolveLocalResourceFilePath() no filepath", traceMessageType.error);
+            this.writeTrace("WebViewExt.resolveLocalResourceFilePath() no filepath", Trace.messageType.error);
 
             return;
         }
 
         if (filepath.startsWith("~")) {
-            filepath = fs.path.normalize(fs.knownFolders.currentApp().path + filepath.substr(1));
+            filepath = path.normalize(knownFolders.currentApp().path + filepath.substr(1));
         }
 
         if (filepath.startsWith("file://")) {
             filepath = filepath.replace(/^file:\/\//, "");
         }
 
-        if (!fs.File.exists(filepath)) {
-            this.writeTrace(`WebViewExt.resolveLocalResourceFilePath("${filepath}") - no such file`, traceMessageType.error);
+        if (!File.exists(filepath)) {
+            this.writeTrace(`WebViewExt.resolveLocalResourceFilePath("${filepath}") - no such file`, Trace.messageType.error);
 
             return;
         }
@@ -952,7 +942,7 @@ export class WebViewExtBase extends ContainerView {
         if (promiseScriptCodes.length !== files.length) {
             this.writeTrace(
                 `WebViewExt.loadJavaScriptFiles() - > Num of generated scriptCodes ${promiseScriptCodes.length} differ from num files ${files.length}`,
-                traceMessageType.error,
+                Trace.messageType.error,
             );
         }
 
@@ -1000,7 +990,7 @@ export class WebViewExtBase extends ContainerView {
         if (promiseScriptCodes.length !== files.length) {
             this.writeTrace(
                 `WebViewExt.loadStyleSheetFiles() - > Num of generated scriptCodes ${promiseScriptCodes.length} differ from num files ${files.length}`,
-                traceMessageType.error,
+                Trace.messageType.error,
             );
         }
 
@@ -1287,7 +1277,7 @@ export class WebViewExtBase extends ContainerView {
             return `window.nsWebViewBridge.injectJavaScriptFile(${JSON.stringify(scriptHref)});`;
         } else {
             const elId = resourceName.replace(/^[:]*:\/\//, "").replace(/[^a-z0-9]/g, "");
-            const scriptCode = await fs.File.fromPath(this.resolveLocalResourceFilePath(path) as string).readText();
+            const scriptCode = await File.fromPath(this.resolveLocalResourceFilePath(path) as string).readText();
 
             return `window.nsWebViewBridge.injectJavaScript(${JSON.stringify(elId)}, ${scriptCode});`;
         }
@@ -1309,7 +1299,7 @@ export class WebViewExtBase extends ContainerView {
         } else {
             const elId = resourceName.replace(/^[:]*:\/\//, "").replace(/[^a-z0-9]/g, "");
 
-            const stylesheetCode = await fs.File.fromPath(this.resolveLocalResourceFilePath(path) as string).readText();
+            const stylesheetCode = await File.fromPath(this.resolveLocalResourceFilePath(path) as string).readText();
 
             return `window.nsWebViewBridge.injectStyleSheet(${JSON.stringify(elId)}, ${JSON.stringify(stylesheetCode)}, ${!!insertBefore})`;
         }
@@ -1364,9 +1354,9 @@ export class WebViewExtBase extends ContainerView {
         }
     }
 
-    public writeTrace(message: string, type = traceMessageType.info) {
-        if (traceEnabled()) {
-            traceWrite(message, "NOTA", type);
+    public writeTrace(message: string, type = Trace.messageType.info) {
+        if (Trace.isEnabled()) {
+            Trace.write(message, "NOTA", type);
         }
     }
 
