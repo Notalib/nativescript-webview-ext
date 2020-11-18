@@ -488,6 +488,8 @@ export class WebViewExt extends WebViewExtBase {
 
         // Needed for the bridge library
         settings.setJavaScriptEnabled(true);
+        
+        settings.setAllowFileAccess(true); // Needed for Android 11
 
         settings.setBuiltInZoomControls(!!this.builtInZoomControls);
         settings.setDisplayZoomControls(!!this.displayZoomControls);
