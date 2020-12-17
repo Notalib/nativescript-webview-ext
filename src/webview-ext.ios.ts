@@ -66,6 +66,8 @@ export class WebViewExt extends WebViewExtBase {
     }
 
     public disposeNativeView() {
+        this.wkWebViewConfiguration.userContentController.removeScriptMessageHandlerForName("nsBridge");
+        this.wkWebViewConfiguration = null!;
         this.wkNavigationDelegate = null!;
         this.wkCustomUrlSchemeHandler = null!;
         this.wkUIDelegate = null!;
