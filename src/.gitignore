@@ -6,3 +6,5 @@ nativescript-webview-bridge-loader.ts
 polyfills
 platforms/android/nativescript_webview_ext.aar
 angular/dist
+angular/nota-webview-ext-angular.d.ts
+angular/package.json

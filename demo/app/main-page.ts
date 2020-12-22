@@ -1,14 +1,5 @@
-import * as trace from "@nativescript/core/trace";
-import { Button } from "@nativescript/core/ui/button";
-import { EventData, Page } from "@nativescript/core/ui/page/page";
-import {
-    EnterFullscreenEventData,
-    isAndroid,
-    LoadEventData,
-    LoadFinishedEventData,
-    ShouldOverrideUrlLoadEventData,
-    WebViewExt,
-} from "@nota/nativescript-webview-ext";
+import { Button, EventData, Page, Trace as trace } from "@nativescript/core";
+import { EnterFullscreenEventData, LoadEventData, LoadFinishedEventData, ShouldOverrideUrlLoadEventData, WebViewExt } from "@nota/nativescript-webview-ext";
 import * as fastEqual from "fast-deep-equal";
 
 let webview: WebViewExt;
@@ -26,7 +17,7 @@ let gotMessageData: any = null;
 export function webviewLoaded(args: LoadEventData) {
     webview = args.object;
 
-    if (isAndroid) {
+    if (global.isAndroid) {
         webview.src = "http://10.0.2.2:8080";
     } else {
         webview.src = "http://localhost:8080";

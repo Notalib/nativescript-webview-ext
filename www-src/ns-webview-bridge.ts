@@ -428,6 +428,7 @@ if (!w.nsWebViewBridge) {
     // Only create the NSWebViewBridge, if is doesn't already exist.
     w.nsWebViewBridge = new NSWebViewBridge();
 
+    // Handler old spelling error in event name...
     for (const eventName of [nsBridgeReadyEventName, `ns-brige-ready`]) {
         if (typeof CustomEvent !== "undefined") {
             window.dispatchEvent(

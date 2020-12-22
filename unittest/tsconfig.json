@@ -1,11 +1,11 @@
 {
     "compilerOptions": {
-	"skipLibCheck": true,
+        "skipLibCheck": true,
         "downlevelIteration": true,
-        "target": "es5",
-        "module": "commonjs",
+        "target": "es2017",
+        "module": "esnext",
         "declaration": false,
-        "removeComments": true,
+        "removeComments": false,
         "noLib": false,
         "emitDecoratorMetadata": true,
         "experimentalDecorators": true,
@@ -15,7 +15,8 @@
             "es6",
             "dom",
             "es2015.iterable",
-            "es2017.object"
+            "es2017.object",
+            "es2017"
         ],
         "pretty": true,
         "allowUnreachableCode": false,
@@ -39,7 +40,8 @@
                 "./node_modules/tns-core-modules/*",
                 "./node_modules/*"
             ]
-        }
+        },
+        "moduleResolution": "node"
     },
     "exclude": [
         "node_modules",
