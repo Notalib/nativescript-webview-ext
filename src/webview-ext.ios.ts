@@ -8,10 +8,10 @@ import { autoInjectJSBridgeProperty, NavigationType, scrollBounceProperty, WebVi
 
 export * from "./webview-ext-common";
 
+const messageHandlerName = "nsBridge";
+
 export class WebViewExt extends WebViewExtBase {
-    public get ios() {
-        return this.nativeViewProtected as WKWebView;
-    }
+    public ios: WKWebView;
 
     public static supportXLocalScheme = typeof CustomUrlSchemeHandler !== "undefined";
 
@@ -38,7 +38,7 @@ export class WebViewExt extends WebViewExtBase {
 
         const messageHandler = WKScriptMessageHandlerNotaImpl.initWithOwner(new WeakRef(this));
         const wkUController = (this.wkUserContentController = WKUserContentController.new());
-        wkUController.addScriptMessageHandlerName(messageHandler, "nsBridge");
+        wkUController.addScriptMessageHandlerName(messageHandler, messageHandlerName);
         configuration.userContentController = wkUController;
         configuration.preferences.setValueForKey(true, "allowFileAccessFromFileURLs");
         configuration.setValueForKey(true, "allowUniversalAccessFromFileURLs");
@@ -66,7 +66,7 @@ export class WebViewExt extends WebViewExtBase {
     }
 
     public disposeNativeView() {
-        this.wkWebViewConfiguration.userContentController.removeScriptMessageHandlerForName("nsBridge");
+        this.wkWebViewConfiguration?.userContentController?.removeScriptMessageHandlerForName(messageHandlerName);
         this.wkWebViewConfiguration = null!;
         this.wkNavigationDelegate = null!;
         this.wkCustomUrlSchemeHandler = null!;
