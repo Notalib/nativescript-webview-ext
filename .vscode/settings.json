@@ -57,8 +57,11 @@
     "{demo,unittest}/platforms/**/*": true
   },
   "cSpell.words": [
+    "APPICON",
+    "ASSETCATALOG",
     "Freiling",
     "HTMLX",
+    "IPHONEOS",
     "Morten",
     "NSURL",
     "Notalib",
@@ -74,6 +77,7 @@
     "armeabi",
     "bootstrapper",
     "devtool",
+    "dont",
     "downlevel",
     "endregion",
     "filepath",
