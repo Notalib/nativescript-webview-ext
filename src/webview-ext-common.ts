@@ -182,7 +182,7 @@ export enum EventNames {
     LoadProgress = "loadProgress",
     LoadStarted = "loadStarted",
     ShouldOverrideUrlLoading = "shouldOverrideUrlLoading",
-    TitleChanged = "titleChange",
+    TitleChanged = "titleChanged",
     WebAlert = "webAlert",
     WebConfirm = "webConfirm",
     WebConsole = "webConsole",
@@ -258,7 +258,7 @@ export interface LoadProgressEventData extends WebViewExtEventData {
 }
 
 export interface TitleChangedEventData extends WebViewExtEventData {
-    eventName: EventNames.LoadProgress;
+    eventName: EventNames.TitleChanged;
     url: string;
     title: string;
 }
