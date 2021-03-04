@@ -1,7 +1,7 @@
 /// <reference path="./types/ios/NotaWebViewExt.d.ts" />
 
 import "@nativescript/core";
-import { alert, confirm, profile, prompt, Trace } from "@nativescript/core";
+import { alert, confirm, profile, prompt, Trace, File, knownFolders } from "@nativescript/core";
 import { isEnabledProperty } from "@nativescript/core/ui/core/view";
 import { webViewBridge } from "./nativescript-webview-bridge-loader";
 import { autoInjectJSBridgeProperty, NavigationType, scrollBounceProperty, WebViewExtBase } from "./webview-ext-common";
@@ -197,7 +197,7 @@ export class WebViewExt extends WebViewExtBase {
             return;
         }
 
-        const baseUrl = `file:///${fs.knownFolders.currentApp().path}/`;
+        const baseUrl = `file:///${knownFolders.currentApp().path}/`;
         const nsBaseUrl = NSURL.URLWithString(baseUrl);
 
         this.writeTrace(`WKWebViewWrapper.loadUrl(content) -> this.ios.loadHTMLStringBaseURL("${nsBaseUrl}")`);
@@ -366,7 +366,7 @@ export class WebViewExt extends WebViewExtBase {
             return;
         }
 
-        const scriptCode = await fs.File.fromPath(filepath).readText();
+        const scriptCode = await File.fromPath(filepath).readText();
 
         this.addNamedWKUserScript(resourceName, scriptCode);
     }
