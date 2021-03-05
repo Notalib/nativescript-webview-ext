@@ -72,7 +72,7 @@ public class CustomUrlSchemeHandler: NSObject,WKURLSchemeHandler {
                 return;
             }
 
-            let urlResponse = HTTPURLResponse.init(url: url, statusCode: 200, httpVersion: "HTTP/1.1", headerFields: ["Content-Type": mimeType])
+            let urlResponse = HTTPURLResponse.init(url: url, statusCode: 200, httpVersion: "HTTP/1.1", headerFields: ["Content-Type": mimeType, "Access-Control-Allow-Origin": "*"])
 
             urlSchemeTask.didReceive(urlResponse!)
             urlSchemeTask.didReceive(data as Data)
