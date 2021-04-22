@@ -3,11 +3,6 @@ hooks/
 node_modules/
 platforms/
 
-# NativeScript Template
-*.js.map
-*.js
-!webpack.config.js
-
 # Logs
 logs
 *.log
@@ -31,4 +26,3 @@ typings/
 !.vscode/tasks.json
 !.vscode/launch.json
 !.vscode/extensions.json
-.tmp_backup
