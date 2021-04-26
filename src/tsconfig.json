@@ -31,7 +31,7 @@
     "skipLibCheck": true,
     "target": "ES2017",
     "plugins": [{
-        "transform": "@nativescript/webpack/transformers/ns-transform-native-classes",
+        "transform": "@nativescript/webpack/dist/transformers/NativeClass/index.js",
         "type": "raw"
     }]
   },

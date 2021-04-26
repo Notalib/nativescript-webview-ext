@@ -1,11 +1,11 @@
-import { NativeScriptConfig } from "@nativescript/core";
+import { NativeScriptConfig } from '@nativescript/core';
 
 export default {
-    id: "dk.nota.webviewexttest",
-    appResourcesPath: "app/App_Resources",
-    android: {
-        v8Flags: "--expose_gc",
-        markingMode: "none",
-    },
-    appPath: "app",
+  id: 'org.nativescript.unittest',
+  appPath: 'app',
+  appResourcesPath: 'App_Resources',
+  android: {
+    v8Flags: '--expose_gc',
+    markingMode: 'none'
+  }
 } as NativeScriptConfig;
