@@ -1,10 +1,17 @@
 /// <reference path="./types/ios/NotaWebViewExt.d.ts" />
 
 import "@nativescript/core";
-import { alert, confirm, profile, prompt, Trace, File, knownFolders } from "@nativescript/core";
+import { alert, confirm, File, knownFolders, profile, prompt, Trace } from "@nativescript/core";
 import { isEnabledProperty } from "@nativescript/core/ui/core/view";
 import { webViewBridge } from "./nativescript-webview-bridge-loader";
-import { autoInjectJSBridgeProperty, NavigationType, scrollBounceProperty, WebViewExtBase } from "./webview-ext-common";
+import {
+    autoInjectJSBridgeProperty,
+    limitsNavigationsToAppBoundDomainsProperty,
+    NavigationType,
+    scrollBounceProperty,
+    ViewPortProperties,
+    viewPortProperty, WebViewExtBase
+} from "./webview-ext-common";
 
 export * from "./webview-ext-common";
 
@@ -30,6 +37,7 @@ export class WebViewExt extends WebViewExtBase {
     public readonly supportXLocalScheme = typeof CustomUrlSchemeHandler !== "undefined";
 
     public viewPortSize = { initialScale: 1.0 };
+    public limitsNavigationsToAppBoundDomainsProperty = false;
 
     public createNativeView() {
         const configuration = WKWebViewConfiguration.new();
@@ -42,7 +50,7 @@ export class WebViewExt extends WebViewExtBase {
         configuration.userContentController = wkUController;
         configuration.preferences.setValueForKey(true, "allowFileAccessFromFileURLs");
         configuration.setValueForKey(true, "allowUniversalAccessFromFileURLs");
-
+        configuration.limitsNavigationsToAppBoundDomains = this.limitsNavigationsToAppBoundDomainsProperty;
         if (this.supportXLocalScheme) {
             this.wkCustomUrlSchemeHandler = new CustomUrlSchemeHandler();
             configuration.setURLSchemeHandlerForURLScheme(this.wkCustomUrlSchemeHandler, this.interceptScheme);
@@ -397,6 +405,20 @@ export class WebViewExt extends WebViewExtBase {
         }
 
         nativeView.scrollView.bounces = !!enabled;
+    }
+
+    [viewPortProperty.setNative](value: ViewPortProperties) {
+        if (this.src) {
+            this.injectViewPortMeta();
+        }
+    }
+
+    [limitsNavigationsToAppBoundDomainsProperty.setNative](enabled: boolean) {
+        this.limitsNavigationsToAppBoundDomainsProperty = enabled;
+    }
+
+    [limitsNavigationsToAppBoundDomainsProperty.getDefault]() {
+        return false;
     }
 
     [isEnabledProperty.setNative](enabled: boolean) {
