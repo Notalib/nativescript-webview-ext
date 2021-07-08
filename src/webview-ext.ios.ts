@@ -37,7 +37,7 @@ export class WebViewExt extends WebViewExtBase {
     public readonly supportXLocalScheme = typeof CustomUrlSchemeHandler !== "undefined";
 
     public viewPortSize = { initialScale: 1.0 };
-    public limitsNavigationsToAppBoundDomainsProperty = false;
+    private limitsNavigationsToAppBoundDomains = false;
 
     public createNativeView() {
         const configuration = WKWebViewConfiguration.new();
@@ -50,7 +50,7 @@ export class WebViewExt extends WebViewExtBase {
         configuration.userContentController = wkUController;
         configuration.preferences.setValueForKey(true, "allowFileAccessFromFileURLs");
         configuration.setValueForKey(true, "allowUniversalAccessFromFileURLs");
-        configuration.limitsNavigationsToAppBoundDomains = this.limitsNavigationsToAppBoundDomainsProperty;
+        configuration.limitsNavigationsToAppBoundDomains = this.limitsNavigationsToAppBoundDomains;
         if (this.supportXLocalScheme) {
             this.wkCustomUrlSchemeHandler = new CustomUrlSchemeHandler();
             configuration.setURLSchemeHandlerForURLScheme(this.wkCustomUrlSchemeHandler, this.interceptScheme);
@@ -390,10 +390,14 @@ export class WebViewExt extends WebViewExtBase {
     }
 
     [scrollBounceProperty.getDefault]() {
+
         const nativeView = this.nativeViewProtected;
         if (!nativeView) {
+            console.log(`SCROLL false`);
+
             return false;
         }
+        console.log(`SCROLL ${nativeView.scrollView.bounces}`);
 
         return nativeView.scrollView.bounces;
     }
@@ -414,7 +418,8 @@ export class WebViewExt extends WebViewExtBase {
     }
 
     [limitsNavigationsToAppBoundDomainsProperty.setNative](enabled: boolean) {
-        this.limitsNavigationsToAppBoundDomainsProperty = enabled;
+        console.log(`ENABLED ${enabled}`);
+        this.limitsNavigationsToAppBoundDomains = enabled;
     }
 
     [limitsNavigationsToAppBoundDomainsProperty.getDefault]() {
