@@ -393,12 +393,8 @@ export class WebViewExt extends WebViewExtBase {
 
         const nativeView = this.nativeViewProtected;
         if (!nativeView) {
-            console.log(`SCROLL false`);
-
             return false;
         }
-        console.log(`SCROLL ${nativeView.scrollView.bounces}`);
-
         return nativeView.scrollView.bounces;
     }
 
@@ -418,7 +414,6 @@ export class WebViewExt extends WebViewExtBase {
     }
 
     [limitsNavigationsToAppBoundDomainsProperty.setNative](enabled: boolean) {
-        console.log(`ENABLED ${enabled}`);
         this.limitsNavigationsToAppBoundDomains = enabled;
     }
 
