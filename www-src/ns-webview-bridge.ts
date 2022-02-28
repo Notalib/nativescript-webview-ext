@@ -13,6 +13,7 @@ declare const androidWebViewBridge: {
 interface WKWebViewMessageHandler {
     postMessage(message: string): void;
 }
+
 if (!Object.keys) {
     Object.keys = (function () {
         "use strict";
@@ -138,7 +139,7 @@ class NSWebViewBridge {
             return;
         }
 
-        androidWebViewBridge.emitEvent(eventName, data);
+        androidWebViewBridge.emitEvent(eventName, data ?? "null");
     }
 
     /**
@@ -417,27 +418,32 @@ class NSWebViewBridge {
     }
 }
 
-interface WindowWithNSWebViewBridge {
-    nsWebViewBridge: NSWebViewBridge;
-}
-
 const nsBridgeReadyEventName = "ns-bridge-ready";
 
-const w = window as any;
-if (!w.nsWebViewBridge) {
-    // Only create the NSWebViewBridge, if is doesn't already exist.
-    w.nsWebViewBridge = new NSWebViewBridge();
+if (!("nsWebViewBridge" in window)) {
+    ((fn) => {
+        // Only create the NSWebViewBridge, if is doesn't already exist.
+        window["nsWebViewBridge"] = new NSWebViewBridge();
 
-    // Handler old spelling error in event name...
-    for (const eventName of [nsBridgeReadyEventName, `ns-brige-ready`]) {
-        if (typeof CustomEvent !== "undefined") {
-            window.dispatchEvent(
-                new CustomEvent(eventName, {
-                    detail: w.nsWebViewBridge,
-                }),
-            );
+        // see if DOM is already available
+        if (document.readyState === "complete" || document.readyState === "interactive") {
+            // call on next available tick
+            setTimeout(fn, 1);
         } else {
-            window.dispatchEvent(new Event(eventName));
+            document.addEventListener("DOMContentLoaded", fn);
         }
-    }
+    })(() => {
+        // Handler old spelling error in event name...
+        for (const eventName of [nsBridgeReadyEventName, `ns-brige-ready`]) {
+            if (typeof CustomEvent !== "undefined") {
+                window.dispatchEvent(
+                    new CustomEvent(eventName, {
+                        detail: window["nsWebViewBridge"],
+                    }),
+                );
+            } else {
+                window.dispatchEvent(new Event(eventName));
+            }
+        }
+    });
 }

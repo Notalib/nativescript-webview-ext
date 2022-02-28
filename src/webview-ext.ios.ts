@@ -700,7 +700,7 @@ export class WKScriptMessageHandlerNotaImpl extends NSObject implements WKScript
             owner.onWebViewEvent(message.eventName, message.data);
         } catch (err) {
             owner.writeTrace(
-                `userContentControllerDidReceiveScriptMessage(${userContentController}, ${webViewMessage}) - bad message: ${webViewMessage.body}`,
+                `userContentControllerDidReceiveScriptMessage(${userContentController}, ${webViewMessage}) - bad message: ${JSON.stringify(webViewMessage.body)}`,
                 Trace.messageType.error,
             );
         }

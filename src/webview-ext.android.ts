@@ -39,7 +39,7 @@ const extToBinaryEncoding = new Set<string>(["gif", "jpeg", "jpg", "otf", "png",
 //#region android_native_classes
 let cacheModeMap: Map<CacheMode, number>;
 
-export interface AndroidWebViewClient extends android.webkit.WebViewClient {}
+export interface AndroidWebViewClient extends android.webkit.WebViewClient { }
 
 export interface AndroidWebView extends android.webkit.WebView {
     client: AndroidWebViewClient | null;
@@ -453,14 +453,17 @@ function initializeWebViewClient(): void {
             }
 
             try {
-                owner.onWebViewEvent(eventName, JSON.parse(data));
+                if (typeof data == "string" && data) {
+                    owner.onWebViewEvent(eventName, JSON.parse(data));
+                    return;
+                }
+
+                owner.onWebViewEvent(eventName, null);
 
                 return;
             } catch (err) {
-                owner.writeTrace(`WebViewExtClientImpl.emitEventToNativeScript("${eventName}") - couldn't parse data: ${data} err: ${err}`);
+                owner.writeTrace(`WebViewExtClientImpl.emitEventToNativeScript("${eventName}") - couldn't parse data: ${JSON.stringify(data)} err: ${err}`);
             }
-
-            owner.onWebViewEvent(eventName, data);
         }
     }
 
@@ -488,7 +491,7 @@ export class WebViewExt extends WebViewExtBase {
 
         // Needed for the bridge library
         settings.setJavaScriptEnabled(true);
-        
+
         settings.setAllowFileAccess(true); // Needed for Android 11
 
         settings.setBuiltInZoomControls(!!this.builtInZoomControls);
