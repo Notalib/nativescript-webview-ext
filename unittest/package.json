@@ -31,18 +31,11 @@
   "homepage": "https://github.com/NativeScript/nativescript-app-templates",
   "dependencies": {
     "@nativescript/core": "~8.0.0",
-    "@nativescript/theme": "~3.0.1",
-    "@nativescript/unit-test-runner": "^1.0.2",
-    "@nota/nativescript-webview-ext": "file:../src"
+    "@nativescript/theme": "~3.0.1"
   },
   "devDependencies": {
     "@nativescript/types": "~8.0.0",
     "@nativescript/webpack": "beta",
-    "@types/jasmine": "3.6.9",
-    "karma": "6.3.2",
-    "karma-jasmine": "4.0.1",
-    "karma-nativescript-launcher": "0.4.0",
-    "karma-webpack": "3.0.5",
     "typescript": "~4.0.0"
   },
   "private": "true",
