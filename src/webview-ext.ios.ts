@@ -10,7 +10,8 @@ import {
     NavigationType,
     scrollBounceProperty,
     ViewPortProperties,
-    viewPortProperty, WebViewExtBase
+    viewPortProperty,
+    WebViewExtBase,
 } from "./webview-ext-common";
 
 export * from "./webview-ext-common";
@@ -390,7 +391,6 @@ export class WebViewExt extends WebViewExtBase {
     }
 
     [scrollBounceProperty.getDefault]() {
-
         const nativeView = this.nativeViewProtected;
         if (!nativeView) {
             return false;
@@ -722,7 +722,9 @@ export class WKScriptMessageHandlerNotaImpl extends NSObject implements WKScript
             owner.onWebViewEvent(message.eventName, message.data);
         } catch (err) {
             owner.writeTrace(
-                `userContentControllerDidReceiveScriptMessage(${userContentController}, ${webViewMessage}) - bad message: ${JSON.stringify(webViewMessage.body)}`,
+                `userContentControllerDidReceiveScriptMessage(${userContentController}, ${webViewMessage}) - bad message: ${JSON.stringify(
+                    webViewMessage.body,
+                )}`,
                 Trace.messageType.error,
             );
         }

@@ -39,7 +39,7 @@ const extToBinaryEncoding = new Set<string>(["gif", "jpeg", "jpg", "otf", "png",
 //#region android_native_classes
 let cacheModeMap: Map<CacheMode, number>;
 
-export interface AndroidWebViewClient extends android.webkit.WebViewClient { }
+export interface AndroidWebViewClient extends android.webkit.WebViewClient {}
 
 export interface AndroidWebView extends android.webkit.WebView {
     client: AndroidWebViewClient | null;
