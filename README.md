@@ -37,7 +37,7 @@ tns plugin add @nota/nativescript-webview-ext
 
 ### Update minSdkVersion to 19 or higher
 
-Android SDK 19 is required, update `App_Resources/Android/app.gradle`:  
+Android SDK 19 is required, update `App_Resources/Android/app.gradle`:
 ```
 android {
   defaultConfig {
@@ -101,6 +101,7 @@ Custom-scheme support for `iOS <11` was removed because of [ITMS-90809](https://
 | scrollBounce | true / false | iOS: Should the scrollView bounce? Defaults to true. |
 | supportZoom | true / false | Android: should the webview support zoom |
 | viewPortSize | false / view-port string / ViewPortProperties | Set the viewport metadata on load finished. **Note:** WkWebView sets initial-scale=1.0 by default. |
+| limitsNavigationsToAppBoundDomains | false | iOS: allows to enable Service Workers **Note:** If set to true, WKAppBoundDomains also should be set in info.plist. |
 
 | Function | Description |
 | --- | --- |
@@ -150,7 +151,7 @@ Inside the WebView we have the `nsWebViewBridge` for sending events between the 
 ```javascript
     window.addEventListener("ns-bridge-ready", function(e) {
         var nsWebViewBridge = e.detail || window.nsWebViewBridge;
-        
+
         // do stuff here
     });
 ```

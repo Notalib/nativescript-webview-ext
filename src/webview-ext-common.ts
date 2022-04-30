@@ -73,6 +73,11 @@ export const scrollBounceProperty = new Property<WebViewExtBase, boolean>({
     valueConverter: booleanConverter,
 });
 
+export const limitsNavigationsToAppBoundDomainsProperty = new Property<WebViewExtBase, boolean>({
+    name: "limitsNavigationsToAppBoundDomains",
+    valueConverter: booleanConverter,
+});
+
 export type ViewPortValue = boolean | ViewPortProperties;
 export const viewPortProperty = new Property<WebViewExtBase, ViewPortValue>({
     name: "viewPortSize",
@@ -1499,3 +1504,4 @@ srcProperty.register(WebViewExtBase);
 supportZoomProperty.register(WebViewExtBase);
 scrollBounceProperty.register(WebViewExtBase);
 viewPortProperty.register(WebViewExtBase);
+limitsNavigationsToAppBoundDomainsProperty.register(WebViewExtBase);

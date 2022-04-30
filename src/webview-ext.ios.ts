@@ -1,10 +1,18 @@
 /// <reference path="./types/ios/NotaWebViewExt.d.ts" />
 
 import "@nativescript/core";
-import { alert, confirm, profile, prompt, Trace, File, knownFolders } from "@nativescript/core";
+import { alert, confirm, File, knownFolders, profile, prompt, Trace } from "@nativescript/core";
 import { isEnabledProperty } from "@nativescript/core/ui/core/view";
 import { webViewBridge } from "./nativescript-webview-bridge-loader";
-import { autoInjectJSBridgeProperty, NavigationType, scrollBounceProperty, WebViewExtBase } from "./webview-ext-common";
+import {
+    autoInjectJSBridgeProperty,
+    limitsNavigationsToAppBoundDomainsProperty,
+    NavigationType,
+    scrollBounceProperty,
+    ViewPortProperties,
+    viewPortProperty,
+    WebViewExtBase,
+} from "./webview-ext-common";
 
 export * from "./webview-ext-common";
 
@@ -30,6 +38,7 @@ export class WebViewExt extends WebViewExtBase {
     public readonly supportXLocalScheme = typeof CustomUrlSchemeHandler !== "undefined";
 
     public viewPortSize = { initialScale: 1.0 };
+    private limitsNavigationsToAppBoundDomains = false;
 
     public createNativeView() {
         const configuration = WKWebViewConfiguration.new();
@@ -42,7 +51,7 @@ export class WebViewExt extends WebViewExtBase {
         configuration.userContentController = wkUController;
         configuration.preferences.setValueForKey(true, "allowFileAccessFromFileURLs");
         configuration.setValueForKey(true, "allowUniversalAccessFromFileURLs");
-
+        configuration.limitsNavigationsToAppBoundDomains = this.limitsNavigationsToAppBoundDomains;
         if (this.supportXLocalScheme) {
             this.wkCustomUrlSchemeHandler = new CustomUrlSchemeHandler();
             configuration.setURLSchemeHandlerForURLScheme(this.wkCustomUrlSchemeHandler, this.interceptScheme);
@@ -386,7 +395,6 @@ export class WebViewExt extends WebViewExtBase {
         if (!nativeView) {
             return false;
         }
-
         return nativeView.scrollView.bounces;
     }
 
@@ -397,6 +405,20 @@ export class WebViewExt extends WebViewExtBase {
         }
 
         nativeView.scrollView.bounces = !!enabled;
+    }
+
+    [viewPortProperty.setNative](value: ViewPortProperties) {
+        if (this.src) {
+            this.injectViewPortMeta();
+        }
+    }
+
+    [limitsNavigationsToAppBoundDomainsProperty.setNative](enabled: boolean) {
+        this.limitsNavigationsToAppBoundDomains = enabled;
+    }
+
+    [limitsNavigationsToAppBoundDomainsProperty.getDefault]() {
+        return false;
     }
 
     [isEnabledProperty.setNative](enabled: boolean) {
@@ -700,7 +722,9 @@ export class WKScriptMessageHandlerNotaImpl extends NSObject implements WKScript
             owner.onWebViewEvent(message.eventName, message.data);
         } catch (err) {
             owner.writeTrace(
-                `userContentControllerDidReceiveScriptMessage(${userContentController}, ${webViewMessage}) - bad message: ${JSON.stringify(webViewMessage.body)}`,
+                `userContentControllerDidReceiveScriptMessage(${userContentController}, ${webViewMessage}) - bad message: ${JSON.stringify(
+                    webViewMessage.body,
+                )}`,
                 Trace.messageType.error,
             );
         }
